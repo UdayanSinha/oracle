@@ -1,0 +1,36 @@
+Kernel documentation:
+	* https://docs.kernel.org
+	* https://elixir.bootlin.com/linux/latest/source
+	* https://kernelnewbies.org/
+
+1) Check defconfig options:
+	* Enable these options for debugging:
+		a) CONFIG_EARLY_PRINTK
+			- Enable use of early printk() to detect kernel failures before console is initialized.
+		b) CONFIG_DEBUG_KERNEL
+			- Enable kernel debugging.
+		c) CONFIG_DETECT_HUNG_TASK
+			- Enable identification of kernel-freeze culprits.
+		d) CONFIG_DEBUG_INFO
+			-  Allows decoding of kernel OOPS symbols.
+		e) CONFIG_LOG_BUF_SHIFT=21
+			- Sets the kernel buffer log size to the biggest possible value.
+
+2) Check kernel command-line parameters:
+	* Can be reviewed in /proc/cmdline for the current environment.
+	* Statically added parameters at compile-time is reflected in CONFIG_CMDLINE.
+	* Should be possible to modify at run-time via bootloader shell.
+
+3) Check dmesg and syslog.
+
+4) Enable dynamic debug:
+	* Can be toggled by writing to /sys/kernel/debug/dynamic_debug/control.
+	* E.g. of enabling dynamic debug to see pr_debug() logs for a module:
+		- echo "module <module_name> +p" > /sys/kernel/debug/dynamic_debug/control
+
+5) Check basic system information:
+	a) CPU: /proc/cpuinfo
+	b) Memory: /proc/meminfo
+	c) IRQs: /proc/interrupts
+	
+6) Check bootloader (BIOS/UEFI/U-Boot) options.
