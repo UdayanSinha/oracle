@@ -1,0 +1,31 @@
+Tested on Ubuntu 22.04 LTS.
+
+1) Install QEMU and its dependencies:
+	* sudo apt install qemu qemu-kvm libvirt-daemon libvirt-clients bridge-utils virt-manager
+	
+2) Install necessary dependencies for compiling the kernel (see https://docs.kernel.org/process/changes.html).
+
+3) Download the kernel source from https://kernel.org.
+
+4) Compile the kernel:
+	* make x86_64_defconfig
+		- To list available defconfig files: make ARCH=x86 help | grep defconfig
+		- To load a specific defconfig file via menuconfig: export KBUILD_CONFIG=/path/to/file.config
+		- To make changes to the default (or the one pointed to by KBUILD_CONFIG) defconfig file: make menuconfig
+	* make -j16
+
+5) Create a QEMU disk image:
+	* export IMG=/path/to/disk.img
+	* export MNT=/mnt/qemufs
+		- Create a /mnt/qemufs directory if it doesn't already exist.
+	* qemu-img create $IMG 1g
+	* mkfs.ext4 $IMG
+	* sudo mount -o loop $IMG $MNT
+	* sudo debootstrap stable $MNT http://deb.debian.org/debian
+		- Additions can be made to the image (e.g. more packages) if needed. See https://linux.die.net/man/8/debootstrap.
+	* sudo chroot $MNT /usr/bin/passwd
+		- Additions can be made to the image (e.g. more packages) if needed.
+	* sudo unmount $MNT
+
+6) Run QEMU:
+	* sudo qemu-system-x86_64 -cpu <CPU_MODEL> -nographic -machine q35 -kernel /path/to/bzImage -hda /path/to/disk.img -append "root=/dev/sda rw console=ttyS0"
