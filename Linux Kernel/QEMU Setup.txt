@@ -25,7 +25,7 @@ Tested on Ubuntu 22.04 LTS.
 		- Additions can be made to the image (e.g. more packages) if needed. See https://linux.die.net/man/8/debootstrap.
 	* sudo chroot $MNT /usr/bin/passwd
 		- Additions can be made to the image (e.g. more packages) if needed.
-	* sudo unmount $MNT
+	* sudo umount $MNT
 
 6) Run QEMU:
 	* sudo qemu-system-x86_64 -cpu <CPU_MODEL> -nographic -machine q35 -kernel /path/to/bzImage -hda /path/to/disk.img -append "root=/dev/sda rw console=ttyS0"
