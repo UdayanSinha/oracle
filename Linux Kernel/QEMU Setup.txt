@@ -1,5 +1,7 @@
 Tested on Ubuntu 22.04 LTS.
 
+Note: If a hypervisor is used to run Ubuntu, then it is recommended to enable nested virtualization for better QEMU performance.
+
 1) Install QEMU and its dependencies:
 	* sudo apt install qemu qemu-kvm libvirt-daemon libvirt-clients bridge-utils virt-manager
 	
@@ -29,3 +31,30 @@ Tested on Ubuntu 22.04 LTS.
 
 6) Run QEMU:
 	* sudo qemu-system-x86_64 -enable-kvm -cpu CPU_MODEL -nographic -machine q35 -kernel /path/to/bzImage -hda /path/to/disk.img -append "root=/dev/sda rw console=ttyS0"
+7) If network interfaces are needed for the QEMU target:
+	a) Make sure that systemd is running on the host (otherwise the commands below may need modifications).
+	b) Make sure that libvirtd is running.
+		* service libvirtd status
+	c) Make sure that there is a network bridge called virbr0 created by libvirtd and listed among the network interfaces.
+	d) Create a script named qemu-ifup.sh to bring-up a TAP network interfaces on QEMU:
+		#!/bin/sh
+		set -x
+		switch=virbr0	# change this if needed
+
+		if [ -n "$1" ];then
+			ip tuntap add $1 mode tap user `whoami`
+			ip link set $1 up
+			sleep 0.5s
+			ip link set $1 master $switch
+			exit 0
+		else
+			echo "Error: no interface specified"
+			exit 1
+		fi
+	e) Run QEMU with a TAP network interface enabled:
+		* sudo qemu-system-x86_64 -enable-kvm -cpu CPU_MODEL -nographic -machine q35 -kernel /path/to/bzImage -hda /path/to/disk.img -append "root=/dev/sda rw console=ttyS0" -nic tap,model=e1000,script=/path/to/qemu-ifup.sh
+	f) [Optional] If the target network interface is not brought up automatically, then bring up the interface, and assign an IP address using DHCP:
+		* ip link set enp0s2 up		--> run on target
+		* dhclient enp0s2		--> run on target
+	g) [Optional] The target network interface may need to be in promiscous mode with certain kernel builds to ensure consistent communication:
+		* ip link set enp0s2 promisc on		--> run on target
