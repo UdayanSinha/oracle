@@ -53,3 +53,5 @@ Kernel documentation:
 	c) IRQs: /proc/interrupts
 	
 9) Check bootloader (BIOS/UEFI/U-Boot) options.
+
+10) Use perf for performance profiling, it can analyze both user and kernel space code.
