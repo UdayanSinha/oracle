@@ -53,6 +53,7 @@ Kernel documentation:
 	a) CPU: /proc/cpuinfo
 	b) Memory: /proc/meminfo
 	c) IRQs: /proc/interrupts
+	d) Taint: /proc/sys/kernel/tainted
 	
 9) Check bootloader (BIOS/UEFI/U-Boot) options.
 
