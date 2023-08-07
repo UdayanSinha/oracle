@@ -15,6 +15,8 @@ Kernel documentation:
 			-  Allows decoding of kernel OOPS symbols.
 		e) CONFIG_LOG_BUF_SHIFT=21
 			- Sets the kernel buffer log size to the biggest possible value.
+		f) CONFIG_PRINTK_TIME
+			- Enables time-stamping when using printk().
 
 2) Check kernel command-line parameters:
 	* Can be reviewed in /proc/cmdline for the current environment.
