@@ -17,6 +17,12 @@ Kernel documentation:
 			- Sets the kernel buffer log size to the biggest possible value.
 		f) CONFIG_PRINTK_TIME
 			- Enables time-stamping when using printk().
+	* The defconfig for the running kernel may be possible to examine. 
+		- This requires that the kernel was built with CONFIG_IKCONFIG_PROC enabled.
+		- The location varies depending on the installation, but is usually found in one of the following places:
+			a) /proc/config.gz
+			b) /boot/config
+			c) /boot/config-$(uname -r)
 
 2) Check kernel command-line parameters:
 	* Can be reviewed in /proc/cmdline for the current environment.
