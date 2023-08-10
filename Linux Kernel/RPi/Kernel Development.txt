@@ -1,0 +1,25 @@
+RPi Linux kernel development documentation: https://www.raspberrypi.com/documentation/computers/linux_kernel.html
+Target: Raspberry Pi 4 Model B Rev 1.1 running kernel v6.1.21-v8+
+
+1) To use the latest available kernel for RPi, simply follow the instructions in the official RPi documentation.
+
+2) If there is a need to use a specific kernel version, the Git tag corresponding to that version must be known.
+
+3) To find the Git tag of the running RPi OS kernel:
+	* dpkg -l raspberrypi-kernel
+	* Example:
+		$ dpkg -l raspberrypi-kernel
+		Desired=Unknown/Install/Remove/Purge/Hold
+		| Status=Not/Inst/Conf-files/Unpacked/halF-conf/Half-inst/trig-aWait/Trig-pend
+		|/ Err?=(none)/Reinst-required (Status,Err: uppercase=bad)
+		||/ Name               Version        Architecture Description
+		+++-==================-==============-============-=================================
+		ii  raspberrypi-kernel 1:1.20230405-1 arm64        Raspberry Pi bootloader
+	* In the above example, the tag is 1.20230405. This can be cross-checked on the RPi kernel repo webpage.
+
+4) Use the Git tag to setup the correct branch when cloning the RPi kernel repo:
+	* git clone --depth=1 -b <git_tag> https://github.com/raspberrypi/linux <dir_to_clone_into>
+	* Example:
+		* git clone --depth=1 -b 1.20230405 https://github.com/raspberrypi/linux linux-v6.1.21-v8+
+
+5) The remaining steps should be the same for compiling the kernel source code.
