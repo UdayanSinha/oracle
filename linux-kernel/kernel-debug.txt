@@ -17,7 +17,7 @@ Kernel documentation:
 			- Sets the kernel buffer log size to the biggest possible value.
 		f) CONFIG_PRINTK_TIME
 			- Enables time-stamping when using printk().
-	* The defconfig for the running kernel may be possible to examine. 
+	* The defconfig for the running kernel may be possible to examine.
 		- This requires that the kernel was built with CONFIG_IKCONFIG_PROC enabled.
 		- The location varies depending on the installation, but is usually found in one of the following places:
 			a) /proc/config.gz
@@ -31,20 +31,20 @@ Kernel documentation:
 
 3) Check dmesg and syslog.
 
-4) Enable dynamic debug: https://www.kernel.org/doc/html/latest/admin-guide/dynamic-debug-howto.html
+4) Enable dynamic debug: https://docs.kernel.org/admin-guide/dynamic-debug-howto.html
 	* Example of enabling dynamic debug to see pr_debug() logs for a module:
 		- echo "module <module_name> +p" > /sys/kernel/debug/dynamic_debug/control
 
 5) Check for kernel memory-access violations:
-	a) kmemleak: https://www.kernel.org/doc/html/latest/dev-tools/kmemleak.html
-	b) KASAN: https://www.kernel.org/doc/html/latest/dev-tools/kasan.html
-	
-6) Use sysrq: https://www.kernel.org/doc/html/latest/admin-guide/sysrq.html
+	a) kmemleak: https://docs.kernel.org/dev-tools/kmemleak.html
+	b) KASAN: https://docs.kernel.org/dev-tools/kasan.html
+
+6) Use sysrq: https://docs.kernel.org/admin-guide/sysrq.html
 	* Example of causing a kernel panic via sysrq:
 		- echo 1 > /proc/sys/kernel/sysrq
 		- echo c > /proc/sysrq-trigger
-		
-7) Enable lock-validation via lockdep: https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt
+
+7) Enable lock-validation via lockdep: https://docs.kernel.org/locking/lockdep-design.html
 	* Can be enabled in defconfig under "Hacking Options":
 		 a) Detect Hard and Soft Lockups
 		 b) Detect Hung Tasks
@@ -60,7 +60,7 @@ Kernel documentation:
 	b) Memory: /proc/meminfo
 	c) IRQs: /proc/interrupts
 	d) Taint: /proc/sys/kernel/tainted
-	
+
 9) Check bootloader (BIOS/UEFI/U-Boot) options.
 
 10) Use perf for performance profiling, it can analyze both user and kernel space code.
