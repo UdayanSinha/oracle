@@ -41,7 +41,6 @@ Kernel documentation:
 
 6) Use sysrq: https://docs.kernel.org/admin-guide/sysrq.html
 	* Example of causing a kernel panic via sysrq:
-		- echo 1 > /proc/sys/kernel/sysrq
 		- echo c > /proc/sysrq-trigger
 
 7) Enable lock-validation via lockdep: https://docs.kernel.org/locking/lockdep-design.html
