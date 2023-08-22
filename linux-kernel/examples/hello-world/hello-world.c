@@ -1,5 +1,5 @@
 /*
- * hello_world.c: Hello-World Kernel Module
+ * hello-world.c: Hello-World Kernel Module
  * Author: Udayan Prabir Sinha
  * Date: 2023-08-12
  */
