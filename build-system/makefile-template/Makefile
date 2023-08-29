@@ -1,6 +1,6 @@
 # template Makefile
 # Credits: https://makefiletutorial.com
-TARGET_EXEC := prog-name
+TARGET_EXEC := makefile-template
 
 BUILD_DIR := ./build
 SRC_DIRS := ./src

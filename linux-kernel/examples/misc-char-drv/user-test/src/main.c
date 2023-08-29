@@ -1,8 +1,6 @@
 /*
  * main.c: User-space test program
-	   For misc-char-drv kernel module
- * Author: Udayan Prabir Sinha
- * Date: 2023-08-26
+ *	- For misc-char-drv kernel module
  */
 
 #include <stdio.h>

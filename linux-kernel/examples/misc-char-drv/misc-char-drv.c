@@ -1,8 +1,6 @@
 /*
  * misc-char-drv.c: Misc. Character Device Driver
-		    Kernel module for study/experiments
- * Author: Udayan Prabir Sinha
- * Date: 2023-08-21
+ *	- Kernel module for study/experiments
  */
 
 #include <linux/module.h>	/* module_*(), MODULE_*() */
