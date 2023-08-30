@@ -57,7 +57,9 @@ Kernel documentation:
 8) Check basic system information:
 	a) CPU: /proc/cpuinfo
 	b) Memory: /proc/meminfo
-	c) IRQs: /proc/interrupts
+	c) IRQs: 
+		* /proc/interrupts
+		* /proc/softirqs
 	d) Taint: /proc/sys/kernel/tainted
 
 9) Check bootloader (BIOS/UEFI/U-Boot) options.
