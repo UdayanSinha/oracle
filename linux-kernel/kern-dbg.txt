@@ -35,15 +35,23 @@ Kernel documentation:
 	* Example of enabling dynamic debug to see pr_debug() logs for a module:
 		- echo "module <module_name> +p" > /sys/kernel/debug/dynamic_debug/control
 
-5) Check for kernel memory-access violations:
+5) Enable event-tracing: https://docs.kernel.org/trace/events.html
+	* Example of enabling tracing for context-switch scheduling events:
+		- echo 0 > /sys/kernel/debug/tracing/tracing_on		# disable tracing
+		- echo > /sys/kernel/debug/tracing/trace		# flush previous traces
+		- echo 1 > /sys/kernel/debug/tracing/events/sched/sched_switch/enable	# enable context-switch event traces
+		- echo 1 > /sys/kernel/debug/tracing/tracing_on		# enable tracing
+		- Trace logs can be found at: /sys/kernel/debug/tracing/per_cpu/cpu<n>/trace
+
+6) Check for kernel memory-access violations:
 	a) kmemleak: https://docs.kernel.org/dev-tools/kmemleak.html
 	b) KASAN: https://docs.kernel.org/dev-tools/kasan.html
 
-6) Use sysrq: https://docs.kernel.org/admin-guide/sysrq.html
+7) Use sysrq: https://docs.kernel.org/admin-guide/sysrq.html
 	* Example of causing a kernel panic via sysrq:
 		- echo c > /proc/sysrq-trigger
 
-7) Enable lock-validation via lockdep: https://docs.kernel.org/locking/lockdep-design.html
+8) Enable lock-validation via lockdep: https://docs.kernel.org/locking/lockdep-design.html
 	* Can be enabled in defconfig under "Hacking Options":
 		 a) Detect Hard and Soft Lockups
 		 b) Detect Hung Tasks
@@ -54,7 +62,7 @@ Kernel documentation:
 		 g) Lock debugging: prove locking correctness
 		 h) Lock usage statistics
 
-8) Check basic system information:
+9) Check basic system information:
 	a) CPU: /proc/cpuinfo
 	b) Memory: /proc/meminfo
 	c) IRQs: 
@@ -62,6 +70,6 @@ Kernel documentation:
 		* /proc/softirqs
 	d) Taint: /proc/sys/kernel/tainted
 
-9) Check bootloader (BIOS/UEFI/U-Boot) options.
+10) Check bootloader (BIOS/UEFI/U-Boot) options.
 
-10) Use perf for performance profiling, it can analyze both user and kernel space code.
+11) Use perf for performance profiling, it can analyze both user and kernel space code.
