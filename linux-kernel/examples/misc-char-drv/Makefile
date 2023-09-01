@@ -1,1 +1,1 @@
-obj-m := misc-char-drv.o
+obj-m := misc_char_drv.o

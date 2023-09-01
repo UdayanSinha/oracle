@@ -1,1 +1,1 @@
-obj-m := hello-world.o
+obj-m := hello_world.o

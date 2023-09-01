@@ -1,9 +1,9 @@
 /*
- * hello-world.c: Hello-World Kernel Module
+ * hello_world.c: Hello-World Kernel Module
  */
 
-# include <linux/module.h>
-# include <linux/init.h>
+#include <linux/module.h>	/* module_*(), MODULE_*() */
+#include <linux/init.h>		/* __init, __exit */
 
 static int __init hello_world_init(void)
 {

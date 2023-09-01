@@ -1,5 +1,5 @@
 /*
- * misc-char-drv.c: Misc. Character Device Driver
+ * misc_char_drv.c: Misc. Character Device Driver
  *	- Kernel module for study/experiments
  */
 
@@ -13,7 +13,7 @@
 #include <linux/random.h>	/* random-number APIs */
 #include <linux/panic.h>	/* panic() */
 
-#define DEV_NAME "misc-char-drv"		/* name under /dev */
+#define DEV_NAME "misc_char_drv"		/* name under /dev */
 
 /* ioctl() commands */
 #define MISC_CHAR_DRV_BASE	'X'

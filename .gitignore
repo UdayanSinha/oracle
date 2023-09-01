@@ -3,4 +3,5 @@
 *.order
 *.o
 *.ko
+*.d
 *.mod*
