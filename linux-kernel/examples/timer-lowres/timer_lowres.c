@@ -4,10 +4,10 @@
 
 #include <linux/module.h>	/* module_*(), MODULE_*() */
 #include <linux/init.h>		/* __init, __exit */
-#include <linux/types.h>	/* data types */
+#include <linux/types.h>	/* data types and utils */
 #include <linux/jiffies.h>	/* jiffies and utils */
 #include <linux/slab.h>		/* memory allocation APIs */
-#include <linux/timer.h>	/* timer APIs */
+#include <linux/timer.h>	/* low-res timer APIs */
 
 struct callback_struct {
 	u64 data;		/* dummy data for use by the callback */
@@ -21,7 +21,7 @@ static void timer_callback(struct timer_list *t)
 {
 	struct callback_struct *data_struct = from_timer(data_struct, t, timer);
 
-	pr_debug("Callback executing in timer-lowres, data: 0x%llu\n",
+	pr_debug("Callback executing in timer_lowres, data: 0x%llu\n",
 			data_struct->data);
 
 	/* manipulate dummy data */
@@ -32,7 +32,7 @@ static void timer_callback(struct timer_list *t)
 
 	/* re-activate timer */
 	data_struct->delay = get_jiffies_64() + (1 * HZ);	/* 1 second */
-	mod_timer(&data_struct->timer, data_struct->delay);
+	(void)mod_timer(&data_struct->timer, data_struct->delay);
 	return;
 }
 
@@ -50,7 +50,7 @@ static int __init timer_lowres_init(void)
 
 	/* activate timer */
 	sample_data->delay = get_jiffies_64() + (1 * HZ);	/* 1 second */
-	mod_timer(&sample_data->timer, sample_data->delay);
+	(void)mod_timer(&sample_data->timer, sample_data->delay);
 	return 0;
 }
 
