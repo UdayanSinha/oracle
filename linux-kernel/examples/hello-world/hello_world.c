@@ -4,6 +4,7 @@
 
 #include <linux/module.h>	/* module_*(), MODULE_*() */
 #include <linux/init.h>		/* __init, __exit */
+#include <linux/printk.h>	/* printk() and utils */
 
 static int __init hello_world_init(void)
 {

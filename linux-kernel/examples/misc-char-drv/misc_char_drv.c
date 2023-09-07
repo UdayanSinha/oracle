@@ -5,10 +5,10 @@
 
 #include <linux/module.h>	/* module_*(), MODULE_*() */
 #include <linux/init.h>		/* __init, __exit */
-#include <linux/printk.h>	/* printk() and its variants */
+#include <linux/printk.h>	/* printk() and utils */
 #include <linux/fs.h>		/* struct file, file_operations, inode */
 #include <linux/slab.h>		/* memory allocation APIs */
-#include <linux/ioctl.h>	/* ioctl() utilities */
+#include <linux/ioctl.h>	/* ioctl() and utils */
 #include <linux/miscdevice.h>	/* misc char-drv APIs */
 #include <linux/random.h>	/* random-number APIs */
 #include <linux/panic.h>	/* panic() */

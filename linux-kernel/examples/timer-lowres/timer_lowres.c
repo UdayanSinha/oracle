@@ -4,6 +4,7 @@
 
 #include <linux/module.h>	/* module_*(), MODULE_*() */
 #include <linux/init.h>		/* __init, __exit */
+#include <linux/printk.h>	/* printk() and utils */
 #include <linux/types.h>	/* data types and utils */
 #include <linux/jiffies.h>	/* jiffies and utils */
 #include <linux/slab.h>		/* memory allocation APIs */
