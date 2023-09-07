@@ -1,6 +1,5 @@
 /*
- * misc_char_drv.c: Misc. Character Device Driver
- *	- Kernel module for study/experiments
+ * misc_char_drv.c: Misc. Character Device Driver Example
  */
 
 #include <linux/module.h>	/* module_*(), MODULE_*() */

@@ -1,5 +1,5 @@
 /*
- * timer_highres.c: High-Resolution Timer Sample Kernel Module
+ * timer_highres.c: High-Resolution Timer Example
  */
 
 #include <linux/module.h>	/* module_*(), MODULE_*() */
