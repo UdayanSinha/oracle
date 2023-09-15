@@ -20,7 +20,7 @@
 #define SHARED_LIMIT	100
 
 static struct task_struct *kt[3] = {NULL};
-spinlock_t lock;			/* see DEFINE_SPINLOCK() as well */
+static spinlock_t lock;			/* see DEFINE_SPINLOCK() as well */
 static u64 shared = SHARED_INIT;	/* shared-access resource */
 
 int kt0_func(void *data)
