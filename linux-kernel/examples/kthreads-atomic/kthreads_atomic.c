@@ -13,8 +13,8 @@
 #include <linux/limits.h>	/* limits for data types */
 #include <linux/atomic.h>	/* atomic-type APIs */
 
-#define KT0_NAME	"kthread-example-0"
-#define KT1_NAME	"kthread-example-1"
+#define KT0_NAME	"kt-example-0"
+#define KT1_NAME	"kt-example-1"
 
 static struct task_struct *kt[2] = {NULL};
 static atomic_t atomic_var = ATOMIC_INIT(0);	/* writer = kt0, reader = kt1 */
