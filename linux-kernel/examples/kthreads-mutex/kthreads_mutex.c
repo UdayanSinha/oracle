@@ -89,7 +89,7 @@ int kt2_func(void *data)
 
 			mutex_unlock(&lock);
 		} else if (ret == -EINTR) {	/* IRQ received */
-			pr_warn("[%s] Mutex lock wait aborted due to IRQ\n",
+			pr_warn("[%s] Mutex lock wait interrupted\n",
 					KT2_NAME);
 		}
 
