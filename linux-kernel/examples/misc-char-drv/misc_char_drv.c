@@ -5,6 +5,7 @@
 #include <linux/module.h>	/* module_*(), MODULE_*() */
 #include <linux/init.h>		/* __init, __exit */
 #include <linux/printk.h>	/* printk() and utils */
+#include <linux/errno.h>	/* error codes */
 #include <linux/fs.h>		/* struct file, file_operations, inode */
 #include <linux/slab.h>		/* memory allocation APIs */
 #include <linux/ioctl.h>	/* ioctl() and utils */
