@@ -1,0 +1,22 @@
+Tested on Ubuntu 22.04 LTS with QEMU x86.
+
+Buildroot official website:
+	* https://buildroot.org
+
+1) Download Buildroot and its dependencies.
+
+2) Compile a Linux image:
+	* If using WSL:
+ 		- PATH must be redefined with the Windows paths removed.
+   		- Otherwise the compilation will fail.
+	* Buildroot uses a defconfig-based setup similar to Linux Kernel.
+	* make qemu_x86_64_defconfig
+ 		- To list available defconfig files: make list-defconfigs
+		- To make changes to the default defconfig: make menuconfig
+	* make -j16
+
+3) The build output is located at: /path/to/buildroot-dir/output
+
+4) A ready-made script is provided for starting QEMU with the compiled rootfs and kernel:
+	* /path/to/buildroot-dir/output/images/start-qemu.sh serial-only
+ 
