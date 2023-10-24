@@ -19,4 +19,3 @@ Buildroot official website:
 
 4) A ready-made script is provided for starting QEMU with the compiled rootfs and kernel:
 	* /path/to/buildroot-dir/output/images/start-qemu.sh serial-only
- 
