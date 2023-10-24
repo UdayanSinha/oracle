@@ -16,6 +16,11 @@ Buildroot official website:
 	* make -j16
 
 3) The build output is located at: /path/to/buildroot-dir/output
+	a) images/ --> kernel, rootfs, bootloader images to put on the target.
+	b) build/ --> directory where all the components were built, one sub-directory per component.
+	c) host/ --> sysroot + host-tools compiled for Buildroot to work.
+	d) staging/ --> symlink to the sysroot under host/. 
+	e) target/ --> Near-complete rootfs, but should NOT be confused with the one under images/.
 
 4) A ready-made script is provided for starting QEMU with the compiled rootfs and kernel:
 	* /path/to/buildroot-dir/output/images/start-qemu.sh serial-only
