@@ -15,7 +15,7 @@ Buildroot official website:
 		- To make changes to the default defconfig: make menuconfig
 	* make -j16
 
-3) The build output is located at: /path/to/buildroot-dir/output
+3) The compile output is located at: /path/to/buildroot-dir/output
 	a) images/ --> kernel, rootfs, bootloader images to put on the target.
 	b) build/ --> directory where all the components were built, one sub-directory per component.
 	c) host/ --> sysroot + host-tools compiled for Buildroot to work.
@@ -24,3 +24,6 @@ Buildroot official website:
 
 4) A ready-made script is provided for starting QEMU with the compiled rootfs and kernel:
 	* /path/to/buildroot-dir/output/images/start-qemu.sh serial-only
+
+5) [Optional] If an initramfs is needed, it should be enabled in the defconfig:
+	* BR2_TARGET_ROOTFS_CPIO
