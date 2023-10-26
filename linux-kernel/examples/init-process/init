@@ -1,5 +1,6 @@
 #!/bin/sh
 # Make sure that this script has execute permissions!
+# Put this under /
 
 mount -t proc none /proc	# make sure that kernel supports procfs
 mount -t sysfs none /sys	# make sure that kernel supports sysfs
