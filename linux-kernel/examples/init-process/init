@@ -1,0 +1,14 @@
+#!/bin/sh
+# Make sure that this script has execute permissions!
+
+mount -t proc none /proc	# make sure that kernel supports procfs
+mount -t sysfs none /sys	# make sure that kernel supports sysfs
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+
+# Add anything else that needs doing. Examples of such activities:
+#	- Mount additional filesystems/volumes.
+#	- Start other user-space apps.
+#	- Set up IRQ affinities, CPU groups, etc.
+
+exec /bin/sh
