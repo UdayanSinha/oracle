@@ -31,38 +31,7 @@ Kernel documentation:
 
 3) Check dmesg and syslog.
 
-4) Enable dynamic debug: https://docs.kernel.org/admin-guide/dynamic-debug-howto.html
-	* Example of enabling dynamic debug to see pr_debug() logs for a module:
-		- echo "module <module_name> +p" > /sys/kernel/debug/dynamic_debug/control
-
-5) Enable event-tracing: https://docs.kernel.org/trace/events.html
-	* Example of enabling tracing for context-switch scheduling events:
-		- echo 0 > /sys/kernel/debug/tracing/tracing_on		# disable tracing
-		- echo > /sys/kernel/debug/tracing/trace		# flush previous traces
-		- echo 1 > /sys/kernel/debug/tracing/events/sched/sched_switch/enable	# enable context-switch event traces
-		- echo 1 > /sys/kernel/debug/tracing/tracing_on		# enable tracing
-		- Trace logs can be found at: /sys/kernel/debug/tracing/per_cpu/cpu<n>/trace
-
-6) Check for kernel memory-access violations:
-	a) kmemleak: https://docs.kernel.org/dev-tools/kmemleak.html
-	b) KASAN: https://docs.kernel.org/dev-tools/kasan.html
-
-7) Use sysrq: https://docs.kernel.org/admin-guide/sysrq.html
-	* Example of causing a kernel panic via sysrq:
-		- echo c > /proc/sysrq-trigger
-
-8) Enable lock-validation via lockdep: https://docs.kernel.org/locking/lockdep-design.html
-	* Can be enabled in defconfig under "Hacking Options":
-		 a) Detect Hard and Soft Lockups
-		 b) Detect Hung Tasks
-		 c) RT Mutex debugging, deadlock detection
-		 d) Spinlock and rw-lock debugging: basic checks
-		 e) Mutex debugging: basic checks
-		 f) Lock debugging: detect incorrect freeing of live locks
-		 g) Lock debugging: prove locking correctness
-		 h) Lock usage statistics
-
-9) Check basic system information:
+4) Check basic system information:
 	a) CPU: /proc/cpuinfo
 	b) Memory: /proc/meminfo
 	c) IRQs: 
@@ -70,6 +39,42 @@ Kernel documentation:
 		* /proc/softirqs
 	d) Taint: /proc/sys/kernel/tainted
 
-10) Check bootloader (BIOS/UEFI/U-Boot) options.
+5) Check bootloader (BIOS/UEFI/U-Boot) options.
 
-11) Use perf for performance profiling, it can analyze both user and kernel space code.
+6) Use perf for performance profiling, it can analyze both user and kernel space code.
+
+7) Enable dynamic debug: https://docs.kernel.org/admin-guide/dynamic-debug-howto.html
+	* Example of enabling dynamic debug to see pr_debug() logs for a module:
+		- echo "module <module_name> +p" > /sys/kernel/debug/dynamic_debug/control
+
+8) Enable event-tracing: https://docs.kernel.org/trace/events.html
+	* Example of enabling tracing for context-switch scheduling events:
+		- echo 0 > /sys/kernel/debug/tracing/tracing_on		# disable tracing
+		- echo > /sys/kernel/debug/tracing/trace		# flush previous traces
+		- echo 1 > /sys/kernel/debug/tracing/events/sched/sched_switch/enable	# enable context-switch event traces
+		- echo 1 > /sys/kernel/debug/tracing/tracing_on		# enable tracing
+		- Trace logs can be found at: /sys/kernel/debug/tracing/per_cpu/cpu<n>/trace
+
+9) Check for kernel memory-access violations:
+	a) kmemleak: https://docs.kernel.org/dev-tools/kmemleak.html
+	b) KASAN: https://docs.kernel.org/dev-tools/kasan.html
+
+10) Use sysrq: https://docs.kernel.org/admin-guide/sysrq.html
+	* Example of causing a kernel panic via sysrq:
+		- echo c > /proc/sysrq-trigger
+
+11) Enable lock-validation via lockdep: https://docs.kernel.org/locking/lockdep-design.html
+	* Can be enabled in defconfig under "Hacking Options":
+		a) Detect Hard and Soft Lockups
+		b) Detect Hung Tasks
+		c) RT Mutex debugging, deadlock detection
+		d) Spinlock and rw-lock debugging: basic checks
+		e) Mutex debugging: basic checks
+		f) Lock debugging: detect incorrect freeing of live locks
+		g) Lock debugging: prove locking correctness
+		h) Lock usage statistics
+
+12) Use kdump to analyze the system memory dump: https://docs.kernel.org/admin-guide/kdump/kdump.html
+	a) In addition to the defconfig options stated in the link above, ensure that these options are also enabled:
+		- CONFIG_SYSFS (crash and system kernels)
+		- CONFIG_PROC_KCORE (system kernel)
