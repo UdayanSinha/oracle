@@ -1,9 +1,10 @@
-RHEL Documentation: https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/building_running_and_managing_containers/index
-Tested on Ubuntu 22.04 LTS.
+Documentation: https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/building_running_and_managing_containers/index
 
 Note:
-	1) crun is used as the OCI runtime (default).
-	2) Generally, buildah and podman have several commands for the same purpose. This guide focuses on podman unless otherwise necessary.
+	1) Tested on Ubuntu 22.04 LTS.
+	2) Generally, buildah and podman have several commands for the same purpose.
+		- This guide focuses on podman unless otherwise necessary.
+	3) crun was used as the underlying OCI run-time with podman/buildah (default).
 
 1) Install necessary tools:
 	* sudo apt install buildah podman
@@ -13,7 +14,7 @@ Note:
 	b) Fill it with the following contents:
 		# base image
 		FROM ubuntu:latest
-		MAINTAINER ipbabble email udayanprabirsinha@gmail.com
+		MAINTAINER ipbabble email myemail@service.com
 
 		# install packages
 		# each RUN command adds a new layer
@@ -52,12 +53,15 @@ Note:
 10) Load a locally-saved image:
 	* podman load -i /path/to/saved/image
 
-11) To obtain the OCI bundle for a container image:
+11) To run a container image directly with an OCI run-time:
 	a) Save the image as a tarball:
 		* podman export $(podman create <container-repo>:<tag>) > /path/to/image/archive.tar
-	b) Create the directory structure for the bundle:
+	b) Create the directory structure for an OCI bundle:
 		* mkdir -p /path/to/image/bundle/rootfs
-	c) Unpack the tarball:
+	c) Unpack the tarball into the bundle:
 		* tar -C /path/to/image/bundle/rootfs -xvf /path/to/image/archive.tar
 	d) Prepare the OCI container specification for the bundle:
-		* crun spec -b /path/to/image/bundle
+		* /path/to/crun spec -b /path/to/image/bundle
+		* Modify this if needed.
+	e) Run the OCI bundle in a container:
+		* /path/to/crun run --bundle=/path/to/image/bundle <container-name>
