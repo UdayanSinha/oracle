@@ -1,0 +1,63 @@
+RHEL Documentation: https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/building_running_and_managing_containers/index
+Tested on Ubuntu 22.04 LTS.
+
+Note:
+	1) crun is used as the OCI runtime (default).
+	2) Generally, buildah and podman have several commands for the same purpose. This guide focuses on podman unless otherwise necessary.
+
+1) Install necessary tools:
+	* sudo apt install buildah podman
+
+2) Create a basic container image based on a Dockerfile:
+	a) Create a file named Dockerfile.
+	b) Fill it with the following contents:
+		# base image
+		FROM ubuntu:latest
+		MAINTAINER ipbabble email udayanprabirsinha@gmail.com
+
+		# install packages
+		# each RUN command adds a new layer
+		RUN apt -y update; apt -y upgrade
+		RUN apt -y install coreutils bash inetutils-ping
+
+		# command to run on container
+		CMD ["ping", "localhost"]
+	c) Build the container image:
+		* buildah build -t <image-name>
+
+3) Run the image in a container:
+	* podman run --rm <image-name>
+
+4) List currently running containers:
+	* podman container list
+	* podman ps
+
+5) List containers currently running or previously run:
+	* podman ps -a
+
+6) To clean up previously-run container history:
+	* podman container prune -f
+
+7) List images:
+	* podman images
+
+8) Run a command on a running container instance:
+	* podman exec -it <container-id> <command>
+	* Example of invoking a shell on a running container:
+		* podman exec -it c253d46d79f1 /bin/bash
+
+9) Save a container image locally:
+	* podman image save <image-repo>:<tag> > /path/to/saved/image
+
+10) Load a locally-saved image:
+	* podman load -i /path/to/saved/image
+
+11) To obtain the OCI bundle for a container image:
+	a) Save the image as a tarball:
+		* podman export $(podman create <container-repo>:<tag>) > /path/to/image/archive.tar
+	b) Create the directory structure for the bundle:
+		* mkdir -p /path/to/image/bundle/rootfs
+	c) Unpack the tarball:
+		* tar -C /path/to/image/bundle/rootfs -xvf /path/to/image/archive.tar
+	d) Prepare the OCI container specification for the bundle:
+		* crun spec -b /path/to/image/bundle
