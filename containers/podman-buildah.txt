@@ -1,4 +1,7 @@
-Documentation: https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/building_running_and_managing_containers/index
+Documentation: 
+	1) https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/building_running_and_managing_containers/index
+	2) https://github.com/opencontainers/runtime-spec/tree/main
+	3) https://github.com/opencontainers/image-spec/tree/main
 
 Note:
 	1) Tested on Ubuntu 22.04 LTS.
@@ -45,15 +48,20 @@ Note:
 8) Run a command on a running container instance:
 	* podman exec -it <container-id> <command>
 	* Example of invoking a shell on a running container:
-		* podman exec -it c253d46d79f1 /bin/bash
+		- podman exec -it c253d46d79f1 /bin/bash
 
 9) Save a container image locally:
 	* podman image save <image-repo>:<tag> > /path/to/saved/image
 
-10) Load a locally-saved image:
+10) Save a container image locally in OCI Image Format:
+	* podman save --format oci-archive -o /path/to/image.tar <image-repo:tag>
+	* The rootfs can be prepared manually if desired, by applying the layers in the defined order from the manifest. E.g. for a tar.gz layer:
+		- tar -C /path/to/bundle/rootfs -xvzf /path/to/layer
+
+11) Load a locally-saved image:
 	* podman load -i /path/to/saved/image
 
-11) To run a container image directly with an OCI run-time:
+12) To run a container image directly with an OCI run-time:
 	a) Save the image as a tarball:
 		* podman export $(podman create <container-repo>:<tag>) > /path/to/image/archive.tar
 	b) Create the directory structure for an OCI bundle:
@@ -61,7 +69,9 @@ Note:
 	c) Unpack the tarball into the bundle:
 		* tar -C /path/to/image/bundle/rootfs -xvf /path/to/image/archive.tar
 	d) Prepare the OCI container specification for the bundle:
-		* /path/to/crun spec -b /path/to/image/bundle
+		* /path/to/oci-runtime spec -b /path/to/image/bundle
 		* Modify this if needed.
 	e) Run the OCI bundle in a container:
-		* /path/to/crun run --bundle=/path/to/image/bundle <container-name>
+		* /path/to/oci-runtime run --bundle=/path/to/image/bundle <container-name>
+		* For additional details on starting the runtime and container stdio management, see: https://github.com/opencontainers/runc/blob/main/docs/terminals.md
+			- Both runc and crun have similar functional behavior in this regard.
