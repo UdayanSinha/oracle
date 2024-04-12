@@ -4,7 +4,7 @@ Note: If a hypervisor is used to run Ubuntu, then it is recommended to enable ne
 
 1) Install QEMU and its dependencies:
 	* sudo apt install qemu qemu-kvm libvirt-daemon libvirt-clients bridge-utils virt-manager
-	
+
 2) Install necessary dependencies for compiling the kernel (see https://docs.kernel.org/process/changes.html).
 
 3) Download the kernel source from https://kernel.org.
@@ -31,6 +31,7 @@ Note: If a hypervisor is used to run Ubuntu, then it is recommended to enable ne
 
 6) Run QEMU:
 	* sudo qemu-system-x86_64 -enable-kvm -cpu CPU_MODEL -smp NUM_CPU -m RAM_SIZE -nographic -machine q35 -kernel /path/to/bzImage -hda /path/to/disk.img -append "root=/dev/sda rw console=ttyS0"
+
 7) If network interfaces are needed for the QEMU target:
 	a) Make sure that systemd is running on the host (otherwise the commands below may need modifications).
 	b) Make sure that libvirtd is running.

@@ -1,0 +1,100 @@
+Tested on Legion Pro 7i 16IRX8H with Fedora Workstation 40 KDE
+Battery Charging Limiter on Legion Pro 7i 16IRX8H: /sys/bus/platform/drivers/ideapad_acpi/VPC2004:00/conservation_mode
+Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
+
+1) General setup:
+	- Enable Nvidia Non-Free Repos in SW Center.
+	- Enable & install Google Chrome Repos in SW Center.
+	- Enable & install Steam Repos in SW Center.
+	- Enable FlatHub Repos in SW Center.
+	- Optional: Install snapd from SW Center.
+	- Add max_parallel_downloads=20 to /etc/dnf/dnf.conf
+
+2) Perform a system update and install a basic set of packages:
+	- sudo dnf check-update
+	- sudo dnf upgrade
+	- sudo systemctl reboot
+	- sudo dnf groupinstall "Development Tools" "Development Libraries"
+	- sudo dnf install htop btop
+	- sudo dnf install neofetch
+	- sudo dnf install dracut-config-rescue
+	- sudo dnf install efivar
+	- sudo dnf install acpitool
+	- sudo systemctl reboot
+
+3) Prepare signing keys for SecureBoot:
+	- For details, see https://rpmfusion.org/Howto/Secure%20Boot
+	- sudo dnf install kmodtool akmods mokutil openssl
+	- sudo kmodgenca -a
+	- sudo mokutil --import /etc/pki/akmods/certs/public_key.der
+	- sudo systemctl reboot
+	- Enroll the key with UEFI.
+
+4) Optional: Install Nvidia proprietary drivers:
+	- For details, see https://rpmfusion.org/Howto/NVIDIA
+	- sudo dnf install gcc kernel-headers kernel-devel
+	- sudo dnf install akmod-nvidia
+	- Wait atleast 5-10 minutes before proceeding further
+	- modinfo -F version nvidia			--> do not proceed until this prints out the driver version
+	- sudo systemctl reboot
+	- Ensure that nouveau is blacklisted in the command-line.
+	- sudo dnf install xorg-x11-drv-nvidia-cuda	--> Optional: needed for CUDA support
+	- nvidia-smi					--> this should print out GPU info if CUDA support was properly added
+	- sudo grubby --update-kernel=ALL --args="nvidia-drm.modeset=1"
+	- sudo systemctl reboot
+
+5) Perform a test of the HW:
+	- Touchpad gestures.
+	- Ports.
+	- Audio.
+	- Display refresh rate.
+	- External monitor setup.
+	- Printer.
+
+6) Configure system settings.
+
+7) Setup SSH server:
+	- ssh-keygen -t ed25519
+	- eval "$(ssh-agent -s)"
+	- sudo systemctl enable sshd
+	- sudo systemctl start sshd
+	- sudo touch /etc/ssh/sshd_config.d/${USER}.conf
+	- Add the following settings into /etc/ssh/sshd_config.d/${USER}.conf:
+		PasswordAuthentication no
+		PermitRootLogin no
+		PubkeyAuthentication yes
+	- touch ~/.ssh/authorized_keys			--> add client public keys to this file
+	- sudo systemctl reload sshd
+
+8) Setup casual-use apps:
+	- sudo dnf install vlc
+	- sudo dnf install java
+	- sudo dnf install google-chrome-stable
+	- sudo dnf groupinstall Multimedia
+	- sudo dnf install thunderbird
+	- sudo dnf install steam
+	- sudo dnf install blender
+	- sudo dnf install yacreader
+	- Install 1Password from official website.
+	- Install Visual Studio Code from official website.
+	- Install Portmaster.
+	- Setup WhatsApp Web.
+	- Setup Libreoffice. For details, see https://youtu.be/G0che2Az9hw?si=srUlNr3YHD33ByAd
+		- sudo dnf install mscore-fonts-all		--> needed for MS fonts
+	- Remove unnecessary apps.
+
+9) Set up the development environment.
+
+10) To do a release upgrade of Fedora:
+	- For details, see https://docs.fedoraproject.org/en-US/quick-docs/upgrading-fedora-offline
+	- sudo dnf check-update
+	- sudo dnf upgrade --refresh				--> do not skip!
+	- sudo dnf install dnf-plugin-system-upgrade
+	- sudo dnf system-upgrade download --releasever=XX
+		* Example of upgrading to Fedora Workstation 40:
+			- sudo dnf system-upgrade download --releasever=40
+	- sudo dnf system-upgrade reboot
+	- Proceed with the following once the upgrade is complete:
+		* sudo depmod -a
+		* sudo dnf install remove-retired-packages
+		* remove-retired-packages
