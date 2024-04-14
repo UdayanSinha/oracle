@@ -7,7 +7,7 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 	- Enable & install Google Chrome Repos in SW Center.
 	- Enable & install Steam Repos in SW Center.
 	- Enable FlatHub Repos in SW Center.
-	- Optional: Install snapd from SW Center.
+	- [Optional] Install snapd from SW Center.
 	- Add max_parallel_downloads=10 to /etc/dnf/dnf.conf
 
 2) Perform a system update and install a basic set of packages:
@@ -22,7 +22,7 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 	- sudo dnf install acpitool
 	- sudo systemctl reboot
 
-3) Prepare signing keys for SecureBoot:
+3) [Optional] Prepare signing keys for SecureBoot:
 	- For details, see https://rpmfusion.org/Howto/Secure%20Boot
 	- sudo dnf install kmodtool akmods mokutil openssl
 	- sudo kmodgenca -a
@@ -30,7 +30,7 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 	- sudo systemctl reboot
 	- Enroll the key with UEFI.
 
-4) Optional: Install Nvidia proprietary drivers:
+4) [Optional] Install Nvidia proprietary drivers:
 	- For details, see https://rpmfusion.org/Howto/NVIDIA
 	- sudo dnf install gcc kernel-headers kernel-devel
 	- sudo dnf install akmod-nvidia
@@ -38,7 +38,7 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 	- modinfo -F version nvidia			--> do not proceed until this prints out the driver version
 	- sudo systemctl reboot
 	- Ensure that Nouveau is blacklisted in the kernel command-line.
-	- sudo dnf install xorg-x11-drv-nvidia-cuda	--> Optional: needed for CUDA support
+	- sudo dnf install xorg-x11-drv-nvidia-cuda	--> [Optional] needed for CUDA support
 	- nvidia-smi					--> this should print out GPU info if CUDA support was properly added
 	- sudo grubby --update-kernel=ALL --args="nvidia-drm.modeset=1"
 	- sudo systemctl reboot
