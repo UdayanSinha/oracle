@@ -8,7 +8,7 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 	- Enable & install Steam Repos in SW Center.
 	- Enable FlatHub Repos in SW Center.
 	- Optional: Install snapd from SW Center.
-	- Add max_parallel_downloads=20 to /etc/dnf/dnf.conf
+	- Add max_parallel_downloads=10 to /etc/dnf/dnf.conf
 
 2) Perform a system update and install a basic set of packages:
 	- sudo dnf check-update
@@ -37,7 +37,7 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 	- Wait atleast 5-10 minutes before proceeding further
 	- modinfo -F version nvidia			--> do not proceed until this prints out the driver version
 	- sudo systemctl reboot
-	- Ensure that nouveau is blacklisted in the command-line.
+	- Ensure that Nouveau is blacklisted in the kernel command-line.
 	- sudo dnf install xorg-x11-drv-nvidia-cuda	--> Optional: needed for CUDA support
 	- nvidia-smi					--> this should print out GPU info if CUDA support was properly added
 	- sudo grubby --update-kernel=ALL --args="nvidia-drm.modeset=1"
@@ -77,7 +77,6 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 	- sudo dnf install yacreader
 	- Install 1Password from official website.
 	- Install Visual Studio Code from official website.
-	- Install Portmaster.
 	- Setup WhatsApp Web.
 	- Setup Libreoffice. For details, see https://youtu.be/G0che2Az9hw?si=srUlNr3YHD33ByAd
 		- sudo dnf install mscore-fonts-all		--> needed for MS fonts
