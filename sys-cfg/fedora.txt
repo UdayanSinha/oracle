@@ -43,13 +43,7 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 	- sudo grubby --update-kernel=ALL --args="nvidia-drm.modeset=1"
 	- sudo systemctl reboot
 
-5) Perform a test of the HW:
-	- Touchpad gestures.
-	- Ports.
-	- Audio.
-	- Display refresh rate.
-	- External monitor setup.
-	- Printer.
+5) Perform a sanity test of the HW.
 
 6) Configure system settings.
 
