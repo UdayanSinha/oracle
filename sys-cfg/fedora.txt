@@ -38,8 +38,9 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 	- modinfo -F version nvidia			--> do not proceed until this prints out the driver version
 	- sudo systemctl reboot
 	- Ensure that Nouveau is blacklisted in the kernel command-line.
-	- sudo dnf install xorg-x11-drv-nvidia-cuda	--> [Optional] needed for CUDA support
-	- nvidia-smi					--> this should print out GPU info if CUDA support was properly added
+	- [Optional] Add CUDA support:
+		- sudo dnf install xorg-x11-drv-nvidia-cuda
+		- nvidia-smi				--> this should print out GPU info if CUDA support was properly added
 	- sudo grubby --update-kernel=ALL --args="nvidia-drm.modeset=1"
 	- sudo systemctl reboot
 
@@ -66,7 +67,6 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 	- sudo dnf install google-chrome-stable
 	- sudo dnf groupinstall Multimedia
 	- sudo dnf install thunderbird
-	- sudo dnf install steam
 	- sudo dnf install blender
 	- sudo dnf install yacreader
 	- Install 1Password from official website.
@@ -78,7 +78,10 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 
 9) Set up the development environment.
 
-10) To do a release upgrade of Fedora:
+10) [Optional] Set up the gaming environment.
+	- sudo dnf install steam lutris
+
+11) To do a release upgrade of Fedora:
 	- For details, see https://docs.fedoraproject.org/en-US/quick-docs/upgrading-fedora-offline
 	- sudo dnf check-update
 	- sudo dnf upgrade --refresh				--> do not skip!
