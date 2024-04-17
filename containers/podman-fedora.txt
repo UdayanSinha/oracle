@@ -1,0 +1,78 @@
+Documentation:
+	1) https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/building_running_and_managing_containers/index
+	2) https://github.com/opencontainers/runtime-spec/tree/main
+	3) https://github.com/opencontainers/image-spec/tree/main
+
+Note:
+	1) Tested on Fedora Workstation 39 KDE.
+	2) crun was used as the underlying OCI run-time with podman (default).
+
+1) Install necessary tools:
+	* sudo dnf install podman
+
+2) Create a basic container image based on a Dockerfile:
+	a) Create a file named Dockerfile.
+	b) Fill it with the following contents:
+		# base image
+		FROM fedora:latest
+		MAINTAINER ipbabble email myemail@service.com
+
+		# install packages
+		# each RUN command adds a new layer
+		RUN dnf -y check-update; dnf -y upgrade
+		RUN dnf -y install coreutils bash iputils
+
+		# copy stuff from host, if needed
+		# COPY /path/on/host/to/copy/from /path/on/target/to/copy/into
+
+		# command to run on container
+		CMD ["ping", "localhost"]
+	c) Build the container image:
+		* podman build --tag fedora:<image-name> -f /path/to/Dockerfile
+
+3) Run the image in a container:
+	* podman run --rm <image-name>
+
+4) List currently running containers:
+	* podman container list
+	* podman ps
+
+5) List containers currently running or previously run:
+	* podman ps -a
+
+6) To clean up previously-run container history:
+	* podman container prune -f
+
+7) List images:
+	* podman images
+
+8) Run a command on a running container instance:
+	* podman exec -it <container-id> <command>
+	* Example of invoking a shell on a running container:
+		- podman exec -it c253d46d79f1 /bin/bash
+
+9) Save a container image locally:
+	* podman image save <image-repo>:<tag> > /path/to/saved/image
+
+10) Save a container image locally in OCI Image Format:
+	* podman save --format oci-archive -o /path/to/image.tar <image-repo:tag>
+	* The rootfs can be prepared manually if desired, by applying the layers in the defined order from the manifest. E.g. for a tar.gz layer:
+		- tar -C /path/to/bundle/rootfs -xvzf /path/to/layer
+
+11) Load a locally-saved image:
+	* podman load -i /path/to/saved/image
+
+12) To run a container image directly with an OCI run-time:
+	a) Save the image as a tarball:
+		* podman export $(podman create <container-repo>:<tag>) > /path/to/image/archive.tar
+	b) Create the directory structure for an OCI bundle:
+		* mkdir -p /path/to/image/bundle/rootfs
+	c) Unpack the tarball into the bundle:
+		* tar -C /path/to/image/bundle/rootfs -xvf /path/to/image/archive.tar
+	d) Prepare the OCI container specification for the bundle:
+		* /path/to/oci-runtime spec -b /path/to/image/bundle
+		* Modify this if needed.
+	e) Run the OCI bundle in a container:
+		* /path/to/oci-runtime run --bundle=/path/to/image/bundle <container-name>
+		* For additional details on starting the runtime and container stdio management, see: https://github.com/opencontainers/runc/blob/main/docs/terminals.md
+			- Both runc and crun have similar functional behavior in this regard.
