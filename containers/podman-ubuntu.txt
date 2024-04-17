@@ -1,16 +1,14 @@
-Documentation: 
+Documentation:
 	1) https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/building_running_and_managing_containers/index
 	2) https://github.com/opencontainers/runtime-spec/tree/main
 	3) https://github.com/opencontainers/image-spec/tree/main
 
 Note:
 	1) Tested on Ubuntu 22.04 LTS.
-	2) Generally, buildah and podman have several commands for the same purpose.
-		- This guide focuses on podman unless otherwise necessary.
-	3) crun was used as the underlying OCI run-time with podman/buildah (default).
+	2) crun was used as the underlying OCI run-time with podman (default).
 
 1) Install necessary tools:
-	* sudo apt install buildah podman
+	* sudo apt install podman
 
 2) Create a basic container image based on a Dockerfile:
 	a) Create a file named Dockerfile.
@@ -24,10 +22,13 @@ Note:
 		RUN apt -y update; apt -y upgrade
 		RUN apt -y install coreutils bash inetutils-ping
 
+		# copy stuff from host, if needed
+		# COPY /path/on/host/to/copy/from /path/on/target/to/copy/into
+
 		# command to run on container
 		CMD ["ping", "localhost"]
 	c) Build the container image:
-		* buildah build -t <image-name>
+		* podman build --tag ubuntu:<image-name> -f /path/to/Dockerfile
 
 3) Run the image in a container:
 	* podman run --rm <image-name>
