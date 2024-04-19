@@ -16,7 +16,7 @@ Note: If a hypervisor is used to run the host environment, then it is recommende
 		- To make changes to the default (or the one pointed to by KBUILD_CONFIG) defconfig file: make menuconfig
 	* make -j16
 
-5) Create a QEMU disk image:
+5) Create a QEMU disk image and run QEMU:
 	* export IMG=/path/to/disk.img
 	* export MNT=/mnt/qemufs
 		- Create a /mnt/qemufs directory if it doesn't already exist.
@@ -28,11 +28,12 @@ Note: If a hypervisor is used to run the host environment, then it is recommende
 	* sudo chroot ${MNT} /usr/bin/passwd
 		- Additions can be made to the image (e.g. more packages) if needed.
 	* sudo umount ${MNT}
+	* CPU="host"
+	* RAM=4096
+	* SMP=4
+	* sudo qemu-system-x86_64 -enable-kvm -cpu ${CPU} -smp ${SMP} -m ${RAM} -nographic -machine q35 -kernel /path/to/bzImage -hda /path/to/disk.img -append "root=/dev/sda rw console=ttyS0"
 
-6) Run QEMU:
-	* sudo qemu-system-x86_64 -enable-kvm -cpu CPU_MODEL -smp NUM_CPU -m RAM_SIZE -nographic -machine q35 -kernel /path/to/bzImage -hda /path/to/disk.img -append "root=/dev/sda rw console=ttyS0"
-
-7) If network interfaces are needed for the QEMU target:
+6) If network interfaces are needed for the QEMU target:
 	a) Make sure that systemd is running on the host (otherwise the commands below may need modifications).
 	b) Make sure that libvirtd is running.
 		* sudo systemctl status libvirtd
@@ -53,7 +54,7 @@ Note: If a hypervisor is used to run the host environment, then it is recommende
 			exit 1
 		fi
 	e) Run QEMU with a TAP network interface enabled:
-		* sudo qemu-system-x86_64 -enable-kvm -cpu CPU_MODEL -smp NUM_CPU -m RAM_SIZE -nographic -machine q35 -kernel /path/to/bzImage -hda /path/to/disk.img -append "root=/dev/sda rw console=ttyS0" -nic tap,model=e1000,script=/path/to/qemu-ifup.sh
+		* sudo qemu-system-x86_64 -enable-kvm -cpu ${CPU} -smp ${SMP} -m ${RAM} -nographic -machine q35 -kernel /path/to/bzImage -hda /path/to/disk.img -append "root=/dev/sda rw console=ttyS0" -nic tap,model=e1000,script=/path/to/qemu-ifup.sh
 	f) [Optional] If the target network interface is not brought up automatically, then bring up the interface, and assign an IP address using DHCP:
 		* ip link set enp0s2 up		--> run on target
 		* dhclient enp0s2		--> run on target
