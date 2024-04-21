@@ -68,7 +68,6 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 	- sudo dnf install java
 	- sudo dnf install google-chrome-stable
 	- sudo dnf groupinstall Multimedia
-	- sudo dnf install thunderbird
 	- sudo dnf install blender
 	- sudo dnf install yacreader
 	- Install 1Password from official website.
