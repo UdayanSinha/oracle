@@ -78,6 +78,11 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 	- Remove unnecessary apps.
 
 9) Set up the development environment.
+	- Git: oracle/git
+	- Linux kernel: oracle/linux-kernel/docs
+	- Containers: oracle/containers
+	- Arduino CLI: https://arduino.github.io/arduino-cli/latest
+	- Zephyr: https://docs.zephyrproject.org/latest/develop/getting_started
 
 10) [Optional] Set up the gaming environment.
 	- sudo dnf install steam lutris
