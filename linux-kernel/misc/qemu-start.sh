@@ -14,11 +14,13 @@
 
 QEMU_SIM_DIR=/tmp/qemu
 QEMU_UTIL_DIR=/home/${USER}/Workspace/qemu-utils
+QEMU_ROOTFS=${QEMU_UTIL_DIR}/disk.img
+QEMU_KERN=${QEMU_UTIL_DIR}/bzImage
 QEMU_MAX_INSTANCE=4
 QEMU_INSTANCE=0
 QEMU_CPU="host"
-QEMU_NUM_CPU=4
-QEMU_RAM="512M"
+QEMU_NUM_CPU=2
+QEMU_RAM="256M"
 
 if [[ ${1} = "sync" ]]
 then
@@ -26,8 +28,7 @@ then
 	# useful to sync. changes in rootfs
 	sudo qemu-system-x86_64 -enable-kvm -nographic -machine q35 \
 		-cpu ${QEMU_CPU} -smp ${QEMU_NUM_CPU} -m ${QEMU_RAM} \
-		-kernel ${QEMU_UTIL_DIR}/bzImage \
-		-hda ${QEMU_UTIL_DIR}/disk.img \
+		-kernel ${QEMU_KERN} -hda ${QEMU_ROOTFS} \
 		-append "root=/dev/sda rw console=ttyS0" \
 		-nic tap,model=e1000,script=${QEMU_UTIL_DIR}/qemu-ifup.sh
 else
@@ -56,8 +57,8 @@ else
 		echo " "
 	else
 		mkdir -p ${QEMU_SIM_DIR}/${QEMU_INSTANCE}
-		cp ${QEMU_UTIL_DIR}/bzImage ${QEMU_SIM_DIR}/${QEMU_INSTANCE}/
-		cp ${QEMU_UTIL_DIR}/disk.img ${QEMU_SIM_DIR}/${QEMU_INSTANCE}/
+		cp ${QEMU_KERN} ${QEMU_SIM_DIR}/${QEMU_INSTANCE}/bzImage
+		cp ${QEMU_ROOTFS} ${QEMU_SIM_DIR}/${QEMU_INSTANCE}/disk.img
 		cp ${QEMU_UTIL_DIR}/qemu-ifup.sh ${QEMU_SIM_DIR}/${QEMU_INSTANCE}/
 
 		sudo qemu-system-x86_64 -enable-kvm -nographic -machine q35 \
