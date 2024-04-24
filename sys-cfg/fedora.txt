@@ -84,19 +84,28 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 	- Arduino CLI: https://arduino.github.io/arduino-cli/latest
 	- Zephyr: https://docs.zephyrproject.org/latest/develop/getting_started
 
-10) [Optional] Set up the gaming environment.
-	- sudo dnf install steam lutris
+10) [Optional] Set up USB/IP (Windows Server - Fedora client)
+	- Install usbipd-win on the server:
+		* winget install -e --id dorssel.usbipd-win
+	- Setup usbip on the client:
+		* Make sure that the vhci-hcd and usbip_core kernel modules are loaded.
+			- modprobe vhci-hcd		--> should also load usbip_core as a dependency
+		* To automatically load these modules at startup, add the following into /etc/modules-load.d/${USER}.conf:
+			vhci-hcd
+		* sudo dnf install usbip
+	- Connect a USB device to the client:
+		* Bind the device on the server (use Powershell with Administrator privileges):
+			- usbipd list
+			- usbipd bind -i <VID>:<DID>
+		* Attach the device on the client:
+			- sudo usbip list -r <IP-Address-of-Server>
+			- sudo usbip attach -r <IP-Address-of-Server> -b <BUSID>
+	- Disconnect a USB device from the client:
+		* Detach the device from the client:
+			- sudo usbip port
+			- sudo usbip detach -p <port-number>
+		* Unbind the device on the server (use Powershell with Administrator privileges):
+			- usbipd unbind -i <VID>:<DID>
 
-11) To do a release upgrade of Fedora:
-	- For details, see https://docs.fedoraproject.org/en-US/quick-docs/upgrading-fedora-offline
-	- sudo dnf check-update
-	- sudo dnf upgrade --refresh				--> do not skip!
-	- sudo dnf install dnf-plugin-system-upgrade
-	- sudo dnf system-upgrade download --releasever=XX
-		* Example of upgrading to Fedora Workstation 40:
-			- sudo dnf system-upgrade download --releasever=40
-	- sudo dnf system-upgrade reboot
-	- Proceed with the following once the upgrade is complete:
-		* sudo depmod -a
-		* sudo dnf install remove-retired-packages
-		* remove-retired-packages
+11) [Optional] Set up the gaming environment.
+	- sudo dnf install steam lutris
