@@ -17,8 +17,7 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 	- sudo dnf groupinstall "Development Tools"
 	- sudo dnf groupinstall "Development Libraries"
 	- sudo dnf groupinstall "C Development Tools and Libraries"
-	- sudo dnf install htop btop
-	- sudo dnf install neofetch inxi
+	- sudo dnf install htop
 	- sudo dnf install dracut-config-rescue
 	- sudo dnf install efivar
 	- sudo dnf install acpitool
@@ -70,6 +69,7 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 	- sudo dnf groupinstall Multimedia
 	- sudo dnf install blender
 	- sudo dnf install yacreader
+	- sudo dnf install transmission
 	- Install 1Password from official website.
 	- Install Visual Studio Code from official website.
 	- Setup WhatsApp Web.
@@ -107,5 +107,9 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 		* Unbind the device on the server (use Powershell with Administrator privileges):
 			- usbipd unbind -i <VID>:<DID>
 
-11) [Optional] Set up the gaming environment.
+11) [Optional] Set up AI assistance.
+	- Install Warp AI Terminal. For details, see: https://www.warp.dev
+	- Install LLM chatbot(s). For details, see: https://github.com/ollama/ollama
+
+12) [Optional] Set up the gaming environment.
 	- sudo dnf install steam lutris
