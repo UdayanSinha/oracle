@@ -1,4 +1,4 @@
-Tested on Legion Pro 7i 16IRX8H with Fedora Workstation 40 KDE
+Tested on Legion Pro 7i 16IRX8H with Fedora Workstation 40 KDE.
 Battery Charging Limiter on Legion Pro 7i 16IRX8H: /sys/bus/platform/drivers/ideapad_acpi/VPC2004:00/conservation_mode
 Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 
@@ -9,6 +9,8 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 	- Enable FlatHub Repos in SW Center.
 	- [Optional] Install snapd from SW Center.
 	- Add max_parallel_downloads=10 to /etc/dnf/dnf.conf
+	- Make sure that Bluetooth is always enabled at start-up.
+		- Add AutoEnable=true to /etc/bluetooth/main.conf, if needed.
 
 2) Perform a system update and install a basic set of packages:
 	- sudo dnf check-update
@@ -23,7 +25,24 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 	- sudo dnf install acpitool
 	- sudo systemctl reboot
 
-3) [Optional] Prepare signing keys for SecureBoot:
+3) Setup SSH server:
+	- ssh-keygen -t rsa -b 4096
+	- eval "$(ssh-agent -s)"
+	- sudo systemctl enable sshd
+	- sudo systemctl start sshd
+	- sudo touch /etc/ssh/sshd_config.d/${USER}.conf
+	- Add the following settings into /etc/ssh/sshd_config.d/${USER}.conf:
+		PasswordAuthentication no
+		PermitRootLogin no
+		PubkeyAuthentication yes
+	- touch ~/.ssh/authorized_keys			--> add client public keys to this file
+	- sudo systemctl reload sshd
+	- Share WiFi password for all users. On the command-line, this can be checked with nmcli:
+		- nmcli con show						--> to get GUIDs for the networks
+		- nmcli connection show "WiFi-SSID"				--> connection.permissions must be set to "--"
+		- nmcli con modify Network-GUID connection.permissions ''	--> to set connection.permissions to "--" if not already so
+
+4) [Optional] Prepare signing keys for SecureBoot:
 	- For details, see https://rpmfusion.org/Howto/Secure%20Boot
 	- sudo dnf install kmodtool akmods mokutil openssl
 	- sudo kmodgenca -a
@@ -31,7 +50,7 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 	- sudo systemctl reboot
 	- Enroll the key with UEFI.
 
-4) [Optional] Install Nvidia proprietary drivers:
+5) [Optional] Install Nvidia proprietary drivers:
 	- For details, see https://rpmfusion.org/Howto/NVIDIA
 	- sudo dnf install gcc kernel-headers kernel-devel
 	- sudo dnf install akmod-nvidia
@@ -45,22 +64,9 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 	- sudo grubby --update-kernel=ALL --args="nvidia-drm.modeset=1"
 	- sudo systemctl reboot
 
-5) Perform a sanity test of the HW.
+6) Perform a sanity test of the HW.
 
-6) Configure system settings.
-
-7) Setup SSH server:
-	- ssh-keygen -t ed25519
-	- eval "$(ssh-agent -s)"
-	- sudo systemctl enable sshd
-	- sudo systemctl start sshd
-	- sudo touch /etc/ssh/sshd_config.d/${USER}.conf
-	- Add the following settings into /etc/ssh/sshd_config.d/${USER}.conf:
-		PasswordAuthentication no
-		PermitRootLogin no
-		PubkeyAuthentication yes
-	- touch ~/.ssh/authorized_keys			--> add client public keys to this file
-	- sudo systemctl reload sshd
+7) Configure system settings.
 
 8) Setup casual-use apps:
 	- sudo dnf install vlc
@@ -68,6 +74,7 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 	- sudo dnf install google-chrome-stable
 	- sudo dnf groupinstall Multimedia
 	- sudo dnf install blender
+	- sudo dnf install gimp
 	- sudo dnf install yacreader
 	- sudo dnf install transmission
 	- Install 1Password from official website.
@@ -108,8 +115,9 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 			- usbipd unbind -i <VID>:<DID>
 
 11) [Optional] Set up AI assistance.
-	- Install Warp AI Terminal. For details, see: https://www.warp.dev
+	- Install an AI-assisted terminal emulator, e.g. Warp. For details, see: https://www.warp.dev
 	- Install LLM chatbot(s). For details, see: https://github.com/ollama/ollama
 
 12) [Optional] Set up the gaming environment.
-	- sudo dnf install steam lutris
+	- sudo dnf install steam
+	- sudo dnf install lutris
