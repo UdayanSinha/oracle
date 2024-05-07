@@ -1,0 +1,14 @@
+Tested on Ubuntu 22.04 LTS.
+
+BusyBox official website:
+	* https://www.busybox.net
+
+1) Download BusyBox and its dependencies.
+
+2) Compile BusyBox:
+	* make menuconfig
+		- BusyBox Settings ---> Build Options ---> Build BusyBox as a static binary (no shared libs) ---> yes
+		- Setup other options if needed.
+	* make
+
+3) Run BusyBox. E.g. To run BusyBox shell: /path/to/busybox sh
