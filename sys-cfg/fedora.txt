@@ -81,7 +81,10 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 	- Install Visual Studio Code from official website.
 	- Setup WhatsApp Web.
 	- Setup Libreoffice. For details, see https://youtu.be/G0che2Az9hw?si=srUlNr3YHD33ByAd
-		- sudo dnf install mscore-fonts-all		--> needed for MS fonts
+	- To install MS fonts:
+		- sudo dnf install curl cabextract xorg-x11-font-utils fontconfig
+		- wget https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm
+		- sudo dnf install /path/to/msttcore-fonts-installer-2.6-1.noarch.rpm
 	- Remove unnecessary apps.
 
 9) Set up the development environment.
