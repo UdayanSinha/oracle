@@ -35,8 +35,20 @@ Note: If a hypervisor is used to run the host environment, then it is recommende
 
 6) If network interfaces are needed for the QEMU target:
 	a) Make sure that systemd is running on the host (otherwise the commands below may need modifications).
-	b) Make sure that libvirtd is running.
-		* sudo systemctl status libvirtd
+	b) Create a script named qemu-virt.sh to enable libvirt daemons on host (a restart is needed to take effect):
+		#!/bin/bash
+		for drv in qemu interface network nodedev nwfilter secret storage
+		do
+			systemctl unmask virt${drv}d.service
+			systemctl unmask virt${drv}d{,-ro,-admin}.socket
+			systemctl enable virt${drv}d.service
+			systemctl enable virt${drv}d{,-ro,-admin}.socket
+		done
+
+		for drv in qemu network nodedev nwfilter secret storage
+		do
+			systemctl start virt${drv}d{,-ro,-admin}.socket
+		done
 	c) Make sure that there is a network bridge called virbr0 created by libvirtd and listed among the network interfaces.
 	d) Create a script named qemu-ifup.sh to bring-up a TAP network interfaces on QEMU:
 		#!/bin/sh
