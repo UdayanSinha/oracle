@@ -1,4 +1,6 @@
-Tested on Ubuntu 22.04 LTS with QEMU x86.
+Tested on:
+	- Ubuntu 22.04 LTS.
+	- Fedora Workstation 40 KDE.
 
 Buildroot official website:
 	* https://buildroot.org
@@ -12,8 +14,8 @@ Buildroot official website:
 	* Buildroot uses a defconfig-based setup similar to Linux Kernel.
 	* make qemu_x86_64_defconfig
  		- To list available defconfig files: make list-defconfigs
-		- To make changes to the default defconfig: make menuconfig
-	* make -j16
+		- To make changes to the default defconfig: make menuconfig OR make nconfig
+	* make
 
 3) The compile output is located at: /path/to/buildroot-dir/output
 	a) images/ --> kernel, rootfs, bootloader images to put on the target.

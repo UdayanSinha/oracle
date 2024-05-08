@@ -14,7 +14,7 @@ Note: If a hypervisor is used to run the host environment, then it is recommende
 		- To list available defconfig files: make ARCH=x86 help | grep defconfig
 		- To load a specific defconfig file via menuconfig: export KBUILD_CONFIG=/path/to/file.config
 		- To make changes to the default (or the one pointed to by KBUILD_CONFIG) defconfig file: make menuconfig
-	* make -j16
+	* make
 
 5) Create a QEMU disk image and run QEMU:
 	* export IMG=/path/to/disk.img
