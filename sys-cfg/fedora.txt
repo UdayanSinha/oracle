@@ -93,6 +93,7 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 	- Containers: oracle/containers
 	- Arduino CLI: https://arduino.github.io/arduino-cli/latest
 	- Zephyr: https://docs.zephyrproject.org/latest/develop/getting_started
+	- Work apps.
 
 10) [Optional] Set up USB/IP (Windows Server - Fedora client)
 	- Install usbipd-win on the server:
