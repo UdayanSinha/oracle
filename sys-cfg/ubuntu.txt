@@ -1,0 +1,61 @@
+Tested on Legion Pro 7i 16IRX8H with Ubuntu 24.04 LTS.
+Battery Charging Limiter on Legion Pro 7i 16IRX8H: /sys/bus/platform/drivers/ideapad_acpi/VPC2004:00/conservation_mode
+
+1) Perform a system update and install a basic set of packages:
+	- sudo apt update
+	- sudo apt upgrade
+	- sudo apt install htop
+	- sudo apt install curl
+	- sudo apt install git
+	- sudo apt install gnupg2
+	- sudo apt install efivar
+	- sudo apt install acpitool
+	- sudo apt install pciutils
+	- sudo apt install i2c-tools
+	- sudo apt install openssh-server
+	- sudo apt install gparted
+
+2) Setup SSH server:
+	- ssh-keygen -t rsa -b 4096
+	- eval "$(ssh-agent -s)"
+	- sudo systemctl enable ssh
+	- sudo systemctl start ssh
+	- sudo touch /etc/ssh/sshd_config.d/${USER}.conf
+	- Add the following settings into /etc/ssh/sshd_config.d/${USER}.conf:
+		PasswordAuthentication no
+		PermitRootLogin no
+		PubkeyAuthentication yes
+	- touch ~/.ssh/authorized_keys			--> add client public keys to this file
+	- sudo systemctl reload ssh
+
+4) Perform a sanity test of the HW.
+
+5) Configure system settings.
+
+6) Setup casual-use apps:
+	- sudo apt install vlc
+	- sudo apt install blender
+	- sudo apt install gimp
+	- sudo apt install mcomix
+	- Install Chrome from official website.
+	- Install 1Password from official website (also available as a snap).
+	- Install Visual Studio Code from official website (also available as a snap).
+	- Setup WhatsApp Web.
+	- Setup Libreoffice. For details, see https://youtu.be/G0che2Az9hw?si=srUlNr3YHD33ByAd
+	- Remove unnecessary apps.
+
+7) Set up the development environment.
+	- Git: oracle/git
+	- Linux kernel: oracle/linux-kernel/docs
+	- Containers: oracle/containers
+	- Arduino CLI: https://arduino.github.io/arduino-cli/latest
+	- Zephyr: https://docs.zephyrproject.org/latest/develop/getting_started
+	- Work apps.
+
+8) [Optional] Set up AI assistance.
+	- Install an AI-assisted terminal emulator, e.g. Warp. For details, see: https://www.warp.dev
+	- Install LLM chatbot(s). For details, see: https://github.com/ollama/ollama
+
+9) [Optional] Set up the gaming environment.
+	- sudo apt install steam
+	- sudo apt install lutris
