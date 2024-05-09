@@ -87,7 +87,7 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 		- sudo dnf install /path/to/msttcore-fonts-installer-2.6-1.noarch.rpm
 	- Remove unnecessary apps.
 
-9) Set up the development environment.
+9) Set up the development environment:
 	- Git: oracle/git
 	- Linux kernel: oracle/linux-kernel/docs
 	- Containers: oracle/containers
@@ -95,7 +95,7 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 	- Zephyr: https://docs.zephyrproject.org/latest/develop/getting_started
 	- Work apps.
 
-10) [Optional] Set up USB/IP (Windows Server - Fedora client)
+10) [Optional] Set up USB/IP (Windows Server - Fedora client):
 	- Install usbipd-win on the server:
 		* winget install -e --id dorssel.usbipd-win
 	- Setup usbip on the client:
@@ -118,10 +118,10 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 		* Unbind the device on the server (use Powershell with Administrator privileges):
 			- usbipd unbind -i <VID>:<DID>
 
-11) [Optional] Set up AI assistance.
+11) [Optional] Set up AI assistance:
 	- Install an AI-assisted terminal emulator, e.g. Warp. For details, see: https://www.warp.dev
 	- Install LLM chatbot(s). For details, see: https://github.com/ollama/ollama
 
-12) [Optional] Set up the gaming environment.
+12) [Optional] Set up the gaming environment:
 	- sudo dnf install steam
 	- sudo dnf install lutris
