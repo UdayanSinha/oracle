@@ -28,11 +28,11 @@ Battery Charging Limiter on Legion Pro 7i 16IRX8H: /sys/bus/platform/drivers/ide
 	- touch ~/.ssh/authorized_keys			--> add client public keys to this file
 	- sudo systemctl reload ssh
 
-4) Perform a sanity test of the HW.
+3) Perform a sanity test of the HW.
 
-5) Configure system settings.
+4) Configure system settings.
 
-6) Setup casual-use apps:
+5) Setup casual-use apps:
 	- sudo apt install vlc
 	- sudo apt install blender
 	- sudo apt install gimp
@@ -44,7 +44,7 @@ Battery Charging Limiter on Legion Pro 7i 16IRX8H: /sys/bus/platform/drivers/ide
 	- Setup Libreoffice. For details, see https://youtu.be/G0che2Az9hw?si=srUlNr3YHD33ByAd
 	- Remove unnecessary apps.
 
-7) Set up the development environment.
+6) Set up the development environment:
 	- Git: oracle/git
 	- Linux kernel: oracle/linux-kernel/docs
 	- Containers: oracle/containers
@@ -52,10 +52,16 @@ Battery Charging Limiter on Legion Pro 7i 16IRX8H: /sys/bus/platform/drivers/ide
 	- Zephyr: https://docs.zephyrproject.org/latest/develop/getting_started
 	- Work apps.
 
-8) [Optional] Set up AI assistance.
+7) Set up ufw rules:
+	- sudo ufw enable
+	- sudo ufw allow ssh
+	- sudo ufw limit ssh
+	- sudo ufw status verbose
+
+8) [Optional] Set up AI assistance:
 	- Install an AI-assisted terminal emulator, e.g. Warp. For details, see: https://www.warp.dev
 	- Install LLM chatbot(s). For details, see: https://github.com/ollama/ollama
 
-9) [Optional] Set up the gaming environment.
+9) [Optional] Set up the gaming environment:
 	- sudo apt install steam
 	- sudo apt install lutris
