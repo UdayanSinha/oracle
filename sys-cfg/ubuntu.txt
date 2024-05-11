@@ -44,7 +44,31 @@ Battery Charging Limiter on Legion Pro 7i 16IRX8H: /sys/bus/platform/drivers/ide
 	- Setup Libreoffice. For details, see https://youtu.be/G0che2Az9hw?si=srUlNr3YHD33ByAd
 	- Remove unnecessary apps.
 
-6) Set up the development environment:
+6) [Optional] Set up USB/IP (Windows Server - Ubuntu client):
+	- Install usbipd-win on the server:
+		* winget install -e --id dorssel.usbipd-win
+	- Setup usbip on the client:
+		* Make sure that the vhci-hcd and usbip_core kernel modules are loaded.
+			- modprobe vhci-hcd		--> should also load usbip_core as a dependency
+		* To automatically load these modules at startup, add the following into /etc/modules-load.d/${USER}.conf:
+			vhci-hcd
+		* sudo apt install linux-tools-$(uname -r) hwdata
+		* sudo apt install linux-tools-generic
+	- Connect a USB device to the client:
+		* Bind the device on the server (use Powershell with Administrator privileges):
+			- usbipd list
+			- usbipd bind -i <VID>:<DID>
+		* Attach the device on the client:
+			- sudo usbip list -r <IP-Address-of-Server>
+			- sudo usbip attach -r <IP-Address-of-Server> -b <BUSID>
+	- Disconnect a USB device from the client:
+		* Detach the device from the client:
+			- sudo usbip port
+			- sudo usbip detach -p <port-number>
+		* Unbind the device on the server (use Powershell with Administrator privileges):
+			- usbipd unbind -i <VID>:<DID>
+
+7) Set up the development environment:
 	- Git: oracle/git
 	- Linux kernel: oracle/linux-kernel/docs
 	- Containers: oracle/containers
@@ -52,16 +76,16 @@ Battery Charging Limiter on Legion Pro 7i 16IRX8H: /sys/bus/platform/drivers/ide
 	- Zephyr: https://docs.zephyrproject.org/latest/develop/getting_started
 	- Work apps.
 
-7) Set up ufw rules:
+8) Set up ufw rules:
 	- sudo ufw enable
 	- sudo ufw allow ssh
 	- sudo ufw limit ssh
 	- sudo ufw status verbose
 
-8) [Optional] Set up AI assistance:
+9) [Optional] Set up AI assistance:
 	- Install an AI-assisted terminal emulator, e.g. Warp. For details, see: https://www.warp.dev
 	- Install LLM chatbot(s). For details, see: https://github.com/ollama/ollama
 
-9) [Optional] Set up the gaming environment:
+10) [Optional] Set up the gaming environment:
 	- sudo apt install steam
 	- sudo apt install lutris
