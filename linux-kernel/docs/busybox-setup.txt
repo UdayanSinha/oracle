@@ -1,4 +1,4 @@
-Tested on Ubuntu 22.04 LTS.
+Tested on Ubuntu 24.04 LTS.
 
 BusyBox official website:
 	* https://www.busybox.net

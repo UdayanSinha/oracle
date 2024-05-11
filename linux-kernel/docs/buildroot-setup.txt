@@ -1,5 +1,5 @@
 Tested on:
-	- Ubuntu 22.04 LTS.
+	- Ubuntu 24.04 LTS.
 	- Fedora Workstation 40 KDE.
 
 Buildroot official website:
