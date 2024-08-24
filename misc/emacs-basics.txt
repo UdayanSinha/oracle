@@ -1,0 +1,56 @@
+Documentation: https://www.gnu.org/software/emacs/manual/html_node/emacs
+
+1) Glossary:
+	a) C (Control) -> Ctrl (PC)
+	b) M (Meta) -> Alt (PC)
+	c) Frame => ~Window
+	d) Buffer => ~Tab
+	e) Window => ~Split-Screen-Mode
+
+2) General info:
+	a) Exit Emacs: C-x C-c
+	b) Open Emacs-in-shell (CLI):
+		* emacs --no-window-system
+	c) Suspend Emacs-in-shell: C-z (use fg to resume)
+	d) Open menu: F10
+	e) Cancel a command: C-g
+	f) General-purpose abort: Esc Esc Esc
+	g) Emacs init. file: /home/${USER}/.emacs (default)
+	h) Run commands: M-x (enter command)
+
+3) Buffer handling:
+	a) Open a file in a new buffer (will create one if needed): C-x C-f (enter path to the file)
+	b) Open a file via SSH in a new buffer (will create one if needed): C-x C-f (enter path to the file as /ssh:user@XX.XX.XX.XX:/path/to/file)
+	c) Navigate among buffer: C-x-Left, C-x-Right
+	d) Go to specific buffer: C-x b (enter buffer name)
+	e) List all open buffers (in a new window): C-x C-b
+	f) Close a buffer: C-x k (enter name of buffer to close, defaults to current buffer)
+	g) Save changes in current buffer to file: C-x C-s
+	h) Save changes in all buffers to file: C-x s
+
+4) Window handling:
+	a) Open a new window: C-x 2
+	b) Switch to another window: C-x o
+	c) Close all windows except current one: C-x 1
+
+5) Frame handling:
+	a) Open a new Emacs frame: C-x 5 2
+	b) Close currently active Emacs frame: C-x 5 0
+
+6) Text handling:
+	a) Move forward a word: M-f
+	b) Move backward a word: M-b
+	c) Move forward to end of sentence: M-e
+	d) Move backward to beginning of sentence: M-a
+	e) Delete all text in line after the cursor: C-k
+	f) Move to beginning of line: C-a (equivalent to Home)
+	g) Move to end of line: C-e (equivalent of End)
+	h) Move forward by one screen: C-v (equivalent to Page Up)
+	i) Move backward by one screen: M-v (equivalent to Page Down)
+	j) Undo: C-x u
+	k) Redo: C-M-_
+	l) Cut: C-w
+	m) Copy: M-w
+	n) Paste: C-y
+	o) Go to line: M-g g (enter line number)
+	p) Search for text: C-s (forward), C-r (backward)
