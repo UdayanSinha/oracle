@@ -1,8 +1,8 @@
 Documentation: https://www.gnu.org/software/emacs/manual/html_node/emacs
 
 1) Glossary:
-	a) C (Control) -> Ctrl (PC)
-	b) M (Meta) -> Alt (PC)
+	a) C (Control) -> Ctrl (PC, Mac)
+	b) M (Meta) -> Alt (PC), Option (Mac)
 	c) Frame => ~Window
 	d) Buffer => ~Tab
 	e) Window => ~Split-Screen-Mode
@@ -42,17 +42,19 @@ Documentation: https://www.gnu.org/software/emacs/manual/html_node/emacs
 	b) Move backward a word: M-b
 	c) Move forward to end of sentence: M-e
 	d) Move backward to beginning of sentence: M-a
-	e) Delete all text in line after the cursor: C-k
-	f) Move to beginning of line: C-a (equivalent to Home)
-	g) Move to end of line: C-e (equivalent of End)
-	h) Move forward by one screen: C-v (equivalent to Page Up)
-	i) Move backward by one screen: M-v (equivalent to Page Down)
-	j) Undo: C-x u
-	k) Redo: C-M-_
-	l) Cut: C-w
-	m) Copy: M-w
-	n) Paste: C-y
-	o) Search for text: C-s (forward), C-r (backward)
+	e) Note: Ctrl + Arrow keys will approx. have the same effect as a, b, c, d.
+	f) Delete all text in line after the cursor: C-k
+	g) Move to beginning of line: C-a (equivalent to Home)
+	h) Move to end of line: C-e (equivalent of End)
+	i) Move forward by one screen: C-v (equivalent to Page Up)
+	j) Move backward by one screen: M-v (equivalent to Page Down)
+	k) Undo: C-x u
+	l) Redo: C-M-_
+	m) Cut: C-w
+	n) Copy: M-w
+	o) Paste: C-y
+	p) Search for text: C-s (forward), C-r (backward)
+	q) Select all text: C-x h
 
 7) Useful commands (M-x):
 	a) Go to specified line number: goto-line (enter line number)
