@@ -19,34 +19,37 @@
  ;; If there is more than one, they won't work right.
  '(default ((t (:family "Noto Sans Mono" :foundry "GOOG" :slant normal :weight regular :height 120 :width normal)))))
 
-;; Set indentation width
+;; set indentation width
 (setq-default indent-tabs-mode t)
 (setq-default tab-width 8)
 (setq c-basic-offset 8)
 
-;; Enable whitespace-mode
+;; enable whitespace-mode
 (global-whitespace-mode t)
 
-;; Set the default fill-column value
+;; set the default fill-column value
 (setq-default fill-column 80)
 
-;; Enable column indicator globally
+;; enable column indicator globally
 (global-display-fill-column-indicator-mode)
 
-;; Highlight lines longer than 80 columns
+;; highlight lines longer than 80 columns
 (setq whitespace-line-column 80)
 
-;; Remove trailing whitespace on file save globally
+;; remove trailing whitespace on file save globally
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 
-;; Remember recently opened files
+;; remember recently opened files
 (recentf-mode 1)
 
-;; Remember last location in files
+;; remember last location in files
 (save-place-mode 1)
 
-;; Revert buffers for changed files
+;; revert buffers for changed files
 (global-auto-revert-mode 1)
 
-;; Revert dired and other buffers
+;; revert dired and other buffers
 (setq global-auto-revert-non-file-buffers t)
+
+;; start every frame maximized
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
