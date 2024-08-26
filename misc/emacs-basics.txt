@@ -16,7 +16,6 @@ Documentation: https://www.gnu.org/software/emacs/manual/html_node/emacs
 	e) Cancel a command: C-g
 	f) General-purpose abort: Esc Esc Esc
 	g) Emacs init. file: /home/${USER}/.emacs (default)
-	h) Run commands: M-x (enter command)
 
 3) Buffer handling:
 	a) Open a file in a new buffer (will create one if needed): C-x C-f (enter path to the file)
@@ -27,6 +26,7 @@ Documentation: https://www.gnu.org/software/emacs/manual/html_node/emacs
 	f) Close a buffer: C-x k (enter name of buffer to close, defaults to current buffer)
 	g) Save changes in current buffer to file: C-x C-s
 	h) Save changes in all buffers to file: C-x s
+	i) Open Dired for specified directory: C-x d (enter path to directory)
 
 4) Window handling:
 	a) Open a new window: C-x 2
@@ -52,5 +52,10 @@ Documentation: https://www.gnu.org/software/emacs/manual/html_node/emacs
 	l) Cut: C-w
 	m) Copy: M-w
 	n) Paste: C-y
-	o) Go to line: M-g g (enter line number)
-	p) Search for text: C-s (forward), C-r (backward)
+	o) Search for text: C-s (forward), C-r (backward)
+
+7) Useful commands (M-x):
+	a) Go to specified line number: goto-line (enter line number)
+	b) Evaluate Lisp expressions in current buffer: eval-buffer
+	c) Open Emacs shell: eshell
+	d) List of recently opened files: recentf-open-files
