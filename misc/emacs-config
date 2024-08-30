@@ -9,6 +9,7 @@
  '(display-time-mode t)
  '(global-display-line-numbers-mode t)
  '(inhibit-startup-screen t)
+ '(package-selected-packages '(git-gutter company))
  '(size-indication-mode t)
  '(tool-bar-mode nil))
 (custom-set-faces
@@ -57,3 +58,9 @@
 
 ;; start every frame maximized
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
+
+;; enable company mode
+(global-company-mode 1)
+
+;; enable git gutter
+(global-git-gutter-mode 1)

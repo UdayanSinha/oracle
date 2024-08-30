@@ -29,7 +29,7 @@ Documentation: https://www.gnu.org/software/emacs/manual/html_node/emacs
 	i) Open Dired for specified directory: C-x d (enter path to directory)
 
 4) Window handling:
-	a) Open a new window: C-x 2
+	a) Open a new window: C-x 2 (horizontal), C-x 3 (vertical)
 	b) Switch to another window: C-x o
 	c) Close all windows except current one: C-x 1
 
