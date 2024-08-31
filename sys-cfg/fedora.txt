@@ -12,7 +12,7 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 	- Make sure that Bluetooth is always enabled at start-up.
 		- Add AutoEnable=true to /etc/bluetooth/main.conf, if needed.
 
-2) Perform a system update and install a basic set of packages:
+2) Perform a system update and install general-purpose packages:
 	- sudo dnf check-update
 	- sudo dnf upgrade
 	- sudo systemctl reboot
@@ -23,6 +23,22 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 	- sudo dnf install dracut-config-rescue
 	- sudo dnf install efivar
 	- sudo dnf install acpitool
+	- sudo dnf install vlc
+	- sudo dnf install java
+	- sudo dnf install google-chrome-stable
+	- sudo dnf groupinstall Multimedia
+	- sudo dnf install blender
+	- sudo dnf install gimp
+	- sudo dnf install yacreader
+	- sudo dnf install transmission
+	- Install 1Password from official website.
+	- Setup WhatsApp Web.
+	- Setup Libreoffice. For details, see https://youtu.be/G0che2Az9hw?si=srUlNr3YHD33ByAd
+	- To install MS fonts:
+		- sudo dnf install curl cabextract xorg-x11-font-utils fontconfig
+		- wget https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm
+		- sudo dnf install /path/to/msttcore-fonts-installer-2.6-1.noarch.rpm
+	- Remove unnecessary apps.
 	- sudo systemctl reboot
 
 3) Setup SSH server:
@@ -68,34 +84,20 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 
 7) Configure system settings.
 
-8) Setup casual-use apps:
-	- sudo dnf install vlc
-	- sudo dnf install java
-	- sudo dnf install google-chrome-stable
-	- sudo dnf groupinstall Multimedia
-	- sudo dnf install blender
-	- sudo dnf install gimp
-	- sudo dnf install yacreader
-	- sudo dnf install transmission
-	- Install 1Password from official website.
-	- Install Visual Studio Code from official website.
-	- Setup WhatsApp Web.
-	- Setup Libreoffice. For details, see https://youtu.be/G0che2Az9hw?si=srUlNr3YHD33ByAd
-	- To install MS fonts:
-		- sudo dnf install curl cabextract xorg-x11-font-utils fontconfig
-		- wget https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm
-		- sudo dnf install /path/to/msttcore-fonts-installer-2.6-1.noarch.rpm
-	- Remove unnecessary apps.
-
-9) Set up the development environment:
-	- Git: oracle/git
+8) Set up the development environment:
+	- Git: oracle/misc
+	- Emacs: oracle/misc
+		* sudo dnf install emacs
+		* Setup emacs config-file and download necessary packages.
+		* Setup Emacs daemon. For details, see: https://www.emacswiki.org/emacs/EmacsAsDaemon
+		* Setup Emacs client. For details, see: https://www.emacswiki.org/emacs/EmacsClient
 	- Linux kernel: oracle/linux-kernel/docs
 	- Containers: oracle/containers
 	- Arduino CLI: https://arduino.github.io/arduino-cli/latest
 	- Zephyr: https://docs.zephyrproject.org/latest/develop/getting_started
 	- Work apps.
 
-10) [Optional] Set up USB/IP (Windows Server - Fedora client):
+9) [Optional] Set up USB/IP (Windows Server - Fedora client):
 	- Install usbipd-win on the server:
 		* winget install -e --id dorssel.usbipd-win
 	- Setup usbip on the client:
@@ -118,10 +120,10 @@ Fedora quick docs: https://docs.fedoraproject.org/en-US/quick-docs/
 		* Unbind the device on the server (use Powershell with Administrator privileges):
 			- usbipd unbind -i <VID>:<DID>
 
-11) [Optional] Set up AI assistance:
+10) [Optional] Set up AI assistance:
 	- Install an AI-assisted terminal emulator, e.g. Warp. For details, see: https://www.warp.dev
 	- Install LLM chatbot(s). For details, see: https://github.com/ollama/ollama
 
-12) [Optional] Set up the gaming environment:
+11) [Optional] Set up the gaming environment:
 	- sudo dnf install steam
 	- sudo dnf install lutris
