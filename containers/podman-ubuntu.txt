@@ -15,7 +15,6 @@ Note:
 	b) Fill it with the following contents:
 		# base image
 		FROM ubuntu:latest
-		MAINTAINER ipbabble email myemail@service.com
 
 		# install packages
 		# each RUN command adds a new layer

@@ -4,7 +4,7 @@ Documentation:
 	3) https://github.com/opencontainers/image-spec/tree/main
 
 Note:
-	1) Tested on Fedora Workstation 39 KDE.
+	1) Tested on Fedora Workstation 40 KDE.
 	2) crun was used as the underlying OCI run-time with podman (default).
 
 1) Install necessary tools:
@@ -15,7 +15,6 @@ Note:
 	b) Fill it with the following contents:
 		# base image
 		FROM fedora:latest
-		MAINTAINER ipbabble email myemail@service.com
 
 		# install packages
 		# each RUN command adds a new layer
