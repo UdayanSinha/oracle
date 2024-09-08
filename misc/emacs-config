@@ -44,6 +44,9 @@
 ;; remove trailing whitespace on file save globally
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 
+;; smoother keyboard scrolling
+(setq scroll-step 1)
+
 ;; remember recently opened files
 (recentf-mode 1)
 
