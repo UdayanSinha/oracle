@@ -17,7 +17,6 @@ Battery Charging Limiter on Legion Pro 7i 16IRX8H: /sys/bus/platform/drivers/ide
 	- sudo apt install vlc
 	- sudo apt install blender
 	- sudo apt install gimp
-	- sudo apt install mcomix
 	- Install Google Chrome from official website.
 	- Install 1Password from official website (also available as a snap).
 	- Install Visual Studio Code from official website (also available as a snap).
