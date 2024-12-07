@@ -23,10 +23,10 @@ Note: If a hypervisor is used to run the host environment, then it is recommende
 	* qemu-img create ${IMG} 8G
 	* mkfs.ext4 ${IMG}
 	* sudo mount -o loop ${IMG} ${MNT}
-	* sudo debootstrap stable ${MNT} http://deb.debian.org/debian
+	* sudo debootstrap --variant=minbase --merged-usr stable ${MNT} http://deb.debian.org/debian
 		* Additions can be made to the image (e.g. more packages) if needed. See https://linux.die.net/man/8/debootstrap.
+	* sudo chroot ${MNT} apt clean
 	* sudo chroot ${MNT} /usr/bin/passwd
-		* Additions can be made to the image (e.g. more packages) if needed.
 	* sudo umount ${MNT}
 	* CPU="host"
 	* RAM="256M"

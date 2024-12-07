@@ -23,52 +23,21 @@ Note: If a hypervisor is used to run the host environment, then it is recommende
 	* qemu-img create ${IMG} 8G
 	* mkfs.ext4 ${IMG}
 	* sudo mount -o loop ${IMG} ${MNT}
-	* sudo debootstrap stable ${MNT} http://deb.debian.org/debian
+	* sudo debootstrap --variant=minbase --merged-usr stable ${MNT} http://deb.debian.org/debian
 		- Additions can be made to the image (e.g. more packages) if needed. See https://linux.die.net/man/8/debootstrap.
+	* sudo chroot ${MNT} apt clean
 	* sudo chroot ${MNT} /usr/bin/passwd
-		- Additions can be made to the image (e.g. more packages) if needed.
 	* sudo umount ${MNT}
 	* CPU="host"
 	* RAM="256M"
 	* SMP=2
 	* sudo qemu-system-x86_64 -enable-kvm -cpu ${CPU} -smp ${SMP} -m ${RAM} -nographic -machine q35 -kernel /path/to/bzImage -hda /path/to/disk.img -append "root=/dev/sda rw console=ttyS0"
 
-6) If network interfaces are needed for the QEMU target:
-	a) Make sure that systemd is running on the host (otherwise the commands below may need modifications).
-	b) Create a script named qemu-virt.sh to enable libvirt daemons on host (a restart is needed to take effect):
-		#!/bin/bash
-		for drv in qemu interface network nodedev nwfilter secret storage
-		do
-			systemctl unmask virt${drv}d.service
-			systemctl unmask virt${drv}d{,-ro,-admin}.socket
-			systemctl enable virt${drv}d.service
-			systemctl enable virt${drv}d{,-ro,-admin}.socket
-		done
-
-		for drv in qemu network nodedev nwfilter secret storage
-		do
-			systemctl start virt${drv}d{,-ro,-admin}.socket
-		done
-	c) Make sure that there is a network bridge called virbr0 created by libvirtd and listed among the network interfaces.
-	d) Create a script named qemu-ifup.sh to bring-up a TAP network interfaces on QEMU:
-		#!/bin/sh
-		set -x
-		switch=virbr0	# change this if needed
-
-		if [ -n "${1}" ];then
-			ip tuntap add ${1} mode tap user `whoami`
-			ip link set ${1} up
-			sleep 0.5s
-			ip link set ${1} master ${switch}
-			exit 0
-		else
-			echo "Error: no interface specified"
-			exit 1
-		fi
-	e) Run QEMU with a TAP network interface enabled:
-		* sudo qemu-system-x86_64 -enable-kvm -cpu ${CPU} -smp ${SMP} -m ${RAM} -nographic -machine q35 -kernel /path/to/bzImage -hda /path/to/disk.img -append "root=/dev/sda rw console=ttyS0" -nic tap,model=e1000,script=/path/to/qemu-ifup.sh
-	f) [Optional] If the target network interface is not brought up automatically, then bring up the interface, and assign an IP address using DHCP:
+6) If network interfaces are needed for the QEMU target (see https://wiki.qemu.org/Documentation/Networking):
+	a) Run QEMU (host port 5555 forwarded to target port 22 for SSH access):
+		* sudo qemu-system-x86_64 -enable-kvm -cpu ${CPU} -smp ${SMP} -m ${RAM} -nographic -machine q35 -kernel /path/to/bzImage -hda /path/to/disk.img -append "root=/dev/sda rw console=ttyS0" --device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5555-:22
+	b) [Optional] If the target network interface is not brought up automatically, then bring up the interface, and assign an IP address using DHCP:
 		* ip link set enp0s2 up		--> run on target
 		* dhclient enp0s2		--> run on target
-	g) [Optional] The target network interface may need to be in promiscous mode with certain kernel builds to ensure consistent communication:
+	c) [Optional] The target network interface may need to be in promiscous mode with certain kernel builds to ensure consistent communication:
 		* ip link set enp0s2 promisc on		--> run on target

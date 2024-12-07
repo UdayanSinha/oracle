@@ -13,7 +13,7 @@
 # QEMU_MAX_INSTANCE = Max. number of allowed QEMU instances.
 
 QEMU_SIM_DIR=/tmp/qemu
-QEMU_UTIL_DIR=/home/${USER}/Workspace/qemu-utils
+QEMU_UTIL_DIR=/home/${USER}/Workspace/linux-kernel/qemu-utils
 QEMU_ROOTFS=${QEMU_UTIL_DIR}/disk.img
 QEMU_KERN=${QEMU_UTIL_DIR}/bzImage
 QEMU_MAX_INSTANCE=4
@@ -21,6 +21,7 @@ QEMU_INSTANCE=0
 QEMU_CPU="host"
 QEMU_NUM_CPU=2
 QEMU_RAM="256M"
+QEMU_SSH_PORT=5555
 
 if [[ ${1} = "sync" ]]
 then
@@ -30,7 +31,8 @@ then
 		-cpu ${QEMU_CPU} -smp ${QEMU_NUM_CPU} -m ${QEMU_RAM} \
 		-kernel ${QEMU_KERN} -hda ${QEMU_ROOTFS} \
 		-append "root=/dev/sda rw console=ttyS0" \
-		-nic tap,model=e1000,script=${QEMU_UTIL_DIR}/qemu-ifup.sh
+		--device e1000,netdev=net0 \
+		-netdev user,id=net0,hostfwd=tcp::${QEMU_SSH_PORT}-:22
 else
 	# assign an instance number for the QEMU instance
 	for (( i=1; i<=${QEMU_MAX_INSTANCE}; i++ ))
@@ -59,14 +61,14 @@ else
 		mkdir -p ${QEMU_SIM_DIR}/${QEMU_INSTANCE}
 		cp ${QEMU_KERN} ${QEMU_SIM_DIR}/${QEMU_INSTANCE}/bzImage
 		cp ${QEMU_ROOTFS} ${QEMU_SIM_DIR}/${QEMU_INSTANCE}/disk.img
-		cp ${QEMU_UTIL_DIR}/qemu-ifup.sh ${QEMU_SIM_DIR}/${QEMU_INSTANCE}/
 
 		sudo qemu-system-x86_64 -enable-kvm -nographic -machine q35 \
 			-cpu ${QEMU_CPU} -smp ${QEMU_NUM_CPU} -m ${QEMU_RAM} \
 			-kernel ${QEMU_SIM_DIR}/${QEMU_INSTANCE}/bzImage \
 			-hda ${QEMU_SIM_DIR}/${QEMU_INSTANCE}/disk.img \
 			-append "root=/dev/sda rw console=ttyS0" \
-			-nic tap,model=e1000,script=${QEMU_SIM_DIR}/${QEMU_INSTANCE}/qemu-ifup.sh
+			--device e1000,netdev=net0 \
+			-netdev user,id=net0,hostfwd=tcp::${QEMU_SSH_PORT}-:22
 
 		echo "Cleaning up ${QEMU_SIM_DIR}/${QEMU_INSTANCE}"
 		rm -rf ${QEMU_SIM_DIR}/${QEMU_INSTANCE}
