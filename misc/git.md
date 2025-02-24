@@ -12,8 +12,8 @@
 ### Set up Git configuration (one-time step)
 
 ```console
-$ git config --global user.email example@email.com
-$ git config --global user.name "John Doe"
+git config --global user.email example@email.com
+git config --global user.name "John Doe"
 ```
 
 Also generate and add SSH keys into Git server.
@@ -22,13 +22,13 @@ Also generate and add SSH keys into Git server.
 ### Downloading repositories
 
 ```console
-$ git clone -b <branch-to-checkout> <repo-clone-URL>
+git clone -b <branch-to-checkout> <repo-clone-URL>
 ```
 
 ### Rebasing local repository tree
 
 ```console
-$ git pull --rebase origin <branch-to-rebase-from>
+git pull --rebase origin <branch-to-rebase-from>
 ```
 
 ### Creating a Gerrit Change
@@ -37,24 +37,24 @@ $ git pull --rebase origin <branch-to-rebase-from>
 2. Stage files to be committed.
 
     ```console
-    $ git status
-    $ git add …
+    git status
+    git add …
     ```
 
 3. Setup Change ID hook (one-time step for local repository tree).
 
     ```console
-    $ scp -p -P 29418 ${USER}@example.gerrit.server.com:hooks/commit-msg /path/to/repo-dir/.git/hooks/
-    $ chmod u+x /path/to/repo-dir/.git/hooks/commit-msg
+    scp -p -P 29418 ${USER}@example.gerrit.server.com:hooks/commit-msg /path/to/repo-dir/.git/hooks/
+    chmod u+x /path/to/repo-dir/.git/hooks/commit-msg
     ```
 
 4. Create a commit and push to Gerrit.
 
     ```console
-    $ git commit -m "commit message"
-    $ git pull --rebase origin <branch-to-rebase-from>        # if needed
-    $ git push origin HEAD:refs/for/<branch-to-push-to>       # if change is not a Gerrit Draft
-    $ git push origin HEAD:refs/drafts/<branch-to-push-to>    # if change is a Gerrit Draft
+    git commit -m "commit message"
+    git pull --rebase origin <branch-to-rebase-from>        # if needed
+    git push origin HEAD:refs/for/<branch-to-push-to>       # if change is not a Gerrit Draft
+    git push origin HEAD:refs/drafts/<branch-to-push-to>    # if change is a Gerrit Draft
     ```
 
 5. Use the Gerrit Change webpage to add reviewers.
@@ -62,21 +62,21 @@ $ git pull --rebase origin <branch-to-rebase-from>
 ### Amending a Gerrit Change
 
 ```console
-$ git status
-$ git add …
-$ git commit --amend
-$ git pull --rebase origin <branch-to-rebase-from>        # if needed
-$ git push origin HEAD:refs/for/<branch-to-push-to>       # if change is not a Gerrit Draft
-$ git push origin HEAD:refs/drafts/<branch-to-push-to>    # if change is a Gerrit Draft
+git status
+git add …
+git commit --amend
+git pull --rebase origin <branch-to-rebase-from>        # if needed
+git push origin HEAD:refs/for/<branch-to-push-to>       # if change is not a Gerrit Draft
+git push origin HEAD:refs/drafts/<branch-to-push-to>    # if change is a Gerrit Draft
 ```
 
 ### Rebasing during merge conflicts
 
 ```console
-$ git pull --rebase origin <branch-to-rebase-from>    # resolve conflicts in specified files
-$ git status
-$ git add …
-$ git rebase --continue
+git pull --rebase origin <branch-to-rebase-from>    # resolve conflicts in specified files
+git status
+git add …
+git rebase --continue
 ```
 
 

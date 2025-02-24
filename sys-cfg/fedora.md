@@ -5,7 +5,7 @@
 
 - Tested on Legion Pro 7i 16IRX8H with Fedora Workstation 40 KDE.
 - Battery Charging Limiter on Legion Pro 7i 16IRX8H: `/sys/bus/platform/drivers/ideapad_acpi/VPC2004:00/conservation_mode`
-- [Fedora Quick Docs](https://docs.fedoraproject.org/en-US/quick-docs).
+- See [Fedora Quick Docs](https://docs.fedoraproject.org/en-US/quick-docs).
 
 
 ## Prerequisites

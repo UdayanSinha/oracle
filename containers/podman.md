@@ -20,8 +20,8 @@
 ### Install necessary tools
 
 ```console
-$ sudo apt install podman    # Ubuntu
-$ sudo dnf install podman    # Fedora
+sudo apt install podman    # Ubuntu
+sudo dnf install podman    # Fedora
 ```
 
 ### Create a basic container image based on a Dockerfile
@@ -47,13 +47,13 @@ $ sudo dnf install podman    # Fedora
 ### Build the container image
 
 ```console
-$ podman build --tag ubuntu:<image-name> -f /path/to/Dockerfile
+podman build --tag ubuntu:<image-name> -f /path/to/Dockerfile
 ```
 
 ### Run the image in a container
 
 ```console
-$ podman run --rm <image-name>
+podman run --rm <image-name>
 ```
 
 
@@ -62,51 +62,51 @@ $ podman run --rm <image-name>
 ### List currently running containers
 
 ```console
-$ podman container list
-$ podman ps
+podman container list
+podman ps
 ```
 
 ### List containers currently running or previously run
 
 ```console
-$ podman ps -a
+podman ps -a
 ```
 
 ### To clean up previously-run container history
 
 ```console
-$ podman container prune -f
+podman container prune -f
 ```
 
 ### List images
 
 ```console
-$ podman images
+podman images
 ```
 
 ### Run a command on a running container instance
 
 ```console
-$ podman exec -it <container-id> <command>
-$ podman exec -it c253d46d79f1 /bin/sh    # example of invoking a shell on a running container
+podman exec -it <container-id> <command>
+podman exec -it c253d46d79f1 /bin/sh    # example of invoking a shell on a running container
 ```
 
 ### Save a container image locally
 
 ```console
-$ podman image save <image-repo>:<tag> > /path/to/saved/image
+podman image save <image-repo>:<tag> > /path/to/saved/image
 ```
 
 ### Save a container image locally in OCI Image Specification Format
 
 ```console
-$ podman save --format oci-archive -o /path/to/image.tar <image-repo:tag>
+podman save --format oci-archive -o /path/to/image.tar <image-repo:tag>
 ```
 
 ### Load a locally-saved image
 
 ```console
-$ podman load -i /path/to/saved/image
+podman load -i /path/to/saved/image
 ```
 
 ### To run a container image directly with an OCI run-time
@@ -114,31 +114,31 @@ $ podman load -i /path/to/saved/image
 1. Save the image as a tarball.
 
     ```console
-    $ podman export $(podman create <container-repo>:<tag>) > /path/to/image/archive.tar
+    podman export $(podman create <container-repo>:<tag>) > /path/to/image/archive.tar
     ```
 
 2. Create the directory structure for an OCI bundle.
 
     ```console
-    $ mkdir -p /path/to/image/bundle/rootfs
+    mkdir -p /path/to/image/bundle/rootfs
     ```
 
 3. Unpack the tarball into the bundle.
 
     ```console
-    $ tar -C /path/to/image/bundle/rootfs -xvf /path/to/image/archive.tar
+    tar -C /path/to/image/bundle/rootfs -xvf /path/to/image/archive.tar
     ```
 
 4. Prepare the OCI container specification for the bundle.
 
     ```console
-    $ crun spec -b /path/to/image/bundle    # this is a template, modify if needed
+    crun spec -b /path/to/image/bundle    # this is a template, modify if needed
     ```
 
 5. Run the OCI bundle in a container.
 
     ```console
-    $ crun run --bundle=/path/to/image/bundle <container-name>
+    crun run --bundle=/path/to/image/bundle <container-name>
     ```
 
     For additional details on starting the runtime and container stdio management,
