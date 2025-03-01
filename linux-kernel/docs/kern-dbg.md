@@ -1,80 +1,105 @@
-Kernel documentation:
-	* https://docs.kernel.org
-	* https://elixir.bootlin.com/linux/latest/source
-	* https://kernelnewbies.org/
+# Kernel Debugging Guide
 
-1) Check defconfig options:
-	* Enable these options for debugging:
-		a) CONFIG_EARLY_PRINTK
-			- Enable use of early printk() to detect kernel failures before console is initialized.
-		b) CONFIG_DEBUG_KERNEL
-			- Enable kernel debugging.
-		c) CONFIG_DETECT_HUNG_TASK
-			- Enable identification of kernel-freeze culprits.
-		d) CONFIG_DEBUG_INFO
-			-  Allows decoding of kernel OOPS symbols.
-		e) CONFIG_LOG_BUF_SHIFT=21
-			- Sets the kernel buffer log size to the biggest possible value.
-		f) CONFIG_PRINTK_TIME
-			- Enables time-stamping when using printk().
-	* The defconfig for the running kernel may be possible to examine.
-		- This requires that the kernel was built with CONFIG_IKCONFIG_PROC enabled.
-		- The location varies depending on the installation, but is usually found in one of the following places:
-			a) /proc/config.gz
-			b) /boot/config
-			c) /boot/config-$(uname -r)
 
-2) Check kernel command-line parameters:
-	* Can be reviewed in /proc/cmdline for the current environment.
-	* Statically added parameters at compile-time is reflected in CONFIG_CMDLINE.
-	* Should be possible to modify at run-time via bootloader shell.
+## References
 
-3) Check dmesg and syslog.
+1. [The Linux Kernel Documentation](https://docs.kernel.org)
+2. [Linux source code - Bootlin Elixir Cross Referencer](https://elixir.bootlin.com/linux/latest/source)
 
-4) Check basic system information:
-	a) CPU: /proc/cpuinfo
-	b) Memory: /proc/meminfo
-	c) IRQs: 
-		* /proc/interrupts
-		* /proc/softirqs
-	d) Taint: /proc/sys/kernel/tainted
 
-5) Check bootloader (BIOS/UEFI/U-Boot) options.
+## Defconfig Options
 
-6) Use perf for performance profiling, it can analyze both user and kernel space code.
+1. Enable these options for debugging:
+    - `CONFIG_EARLY_PRINTK` : Enable use of early printk() to detect kernel
+    failures before console is initialized.
+    - `CONFIG_DEBUG_KERNEL` : Enable kernel debugging.
+    - `CONFIG_DETECT_HUNG_TASK` : Enable identification of kernel-freeze culprits.
+    - `CONFIG_DEBUG_INFO` : Allows decoding of kernel OOPS symbols.
+    - `CONFIG_LOG_BUF_SHIFT=21` : Sets the kernel buffer log size to the biggest
+    possible value.
+    - `CONFIG_PRINTK_TIME` : Enables time-stamping when using printk().
+2. The defconfig for the running kernel may be possible to examine.
+    - This requires that the kernel was built with `CONFIG_IKCONFIG_PROC` enabled.
+    - The location varies depending on the installation, but is usually found
+    in one of the following places:
+        - `/proc/config.gz`
+        - `/boot/config`
+        - `/boot/config-$(uname -r)`
 
-7) Enable dynamic debug: https://docs.kernel.org/admin-guide/dynamic-debug-howto.html
-	* Example of enabling dynamic debug to see pr_debug() logs for a module:
-		- echo "module <module_name> +p" > /sys/kernel/debug/dynamic_debug/control
 
-8) Enable event-tracing: https://docs.kernel.org/trace/events.html
-	* Example of enabling tracing for context-switch scheduling events:
-		- echo 0 > /sys/kernel/debug/tracing/tracing_on		# disable tracing
-		- echo > /sys/kernel/debug/tracing/trace		# flush previous traces
-		- echo 1 > /sys/kernel/debug/tracing/events/sched/sched_switch/enable	# enable context-switch event traces
-		- echo 1 > /sys/kernel/debug/tracing/tracing_on		# enable tracing
-		- Trace logs can be found at: /sys/kernel/debug/tracing/per_cpu/cpu<n>/trace
+## Kernel Command-Line Parameters
 
-9) Check for kernel memory-access violations:
-	a) kmemleak: https://docs.kernel.org/dev-tools/kmemleak.html
-	b) KASAN: https://docs.kernel.org/dev-tools/kasan.html
+1. Can be reviewed in `/proc/cmdline` for the current environment.
+2. `CONFIG_CMDLINE` will reflect defconfig-specified parameters.
+3. Should be possible to modify at run-time via bootloader shell.
 
-10) Use sysrq: https://docs.kernel.org/admin-guide/sysrq.html
-	* Example of causing a kernel panic via sysrq:
-		- echo c > /proc/sysrq-trigger
 
-11) Enable lock-validation via lockdep: https://docs.kernel.org/locking/lockdep-design.html
-	* Can be enabled in defconfig under "Hacking Options":
-		a) Detect Hard and Soft Lockups
-		b) Detect Hung Tasks
-		c) RT Mutex debugging, deadlock detection
-		d) Spinlock and rw-lock debugging: basic checks
-		e) Mutex debugging: basic checks
-		f) Lock debugging: detect incorrect freeing of live locks
-		g) Lock debugging: prove locking correctness
-		h) Lock usage statistics
+## Dmesg & Syslog
 
-12) Use kdump to analyze the system memory dump: https://docs.kernel.org/admin-guide/kdump/kdump.html
-	a) In addition to the defconfig options stated in the link above, ensure that these options are also enabled:
-		- CONFIG_SYSFS (crash and system kernels)
-		- CONFIG_PROC_KCORE (system kernel)
+1. Kernel message buffer can be viewed with the `dmesg` utility. See
+[dmesg(1) - Linux man page](https://linux.die.net/man/1/dmesg).
+2. Syslog location varies depending on the installation.
+
+
+## Basic System Information
+
+1. CPU information: `/proc/cpuinfo`
+2. Memory information: `/proc/meminfo`
+3. Interrupt status:
+    - `/proc/interrupts`
+    - `/proc/softirqs`
+4. Kernel taint status: `/proc/sys/kernel/tainted`
+
+
+## Boot Firmware Information
+
+Check settings for relevant boot firmware (BIOS, UEFI, U-Boot, etc).
+
+
+## perf
+
+Use perf for performance profiling. It can analyze both user and kernel space code.
+
+
+## Dynamic Debug
+
+Enable dynamic debug, see [Dynamic debug - The Linux Kernel documentation](https://docs.kernel.org/admin-guide/dynamic-debug-howto.html).
+E.g. To see pr_debug() logs for a kernel module: `echo "module <module_name> +p" > /sys/kernel/debug/dynamic_debug/control`
+
+
+## Event-Tracing
+
+Enable event-tracing, see [Event Tracing - The Linux Kernel documentation](https://docs.kernel.org/trace/events.html).
+E.g. Trace context-switch scheduling events as shown below.
+
+```console
+echo 0 > /sys/kernel/debug/tracing/tracing_on                          # disable tracing
+echo > /sys/kernel/debug/tracing/trace                                 # flush previous traces
+echo 1 > /sys/kernel/debug/tracing/events/sched/sched_switch/enable    # enable context-switch event traces
+echo 1 > /sys/kernel/debug/tracing/tracing_on                          # enable tracing
+# trace logs can be found at: /sys/kernel/debug/tracing/per_cpu/cpu<n>/trace
+```
+
+
+## Memory-Profiling
+
+1. To use kmemleak, see [Kernel Memory Leak Detector - The Linux Kernel documentation](https://docs.kernel.org/dev-tools/kmemleak.html).
+2. To use KASAN, see [Kernel Address Sanitizer (KASAN) - The Linux Kernel documentation](https://docs.kernel.org/dev-tools/kasan.html).
+
+
+## SysRq
+
+Use sysrq, as explained in [Linux Magic System Request Key Hack - The Linux Kernel documentation](https://docs.kernel.org/admin-guide/sysrq.html).
+E.g. Trigger kernel panic: `echo c > /proc/sysrq-trigger`
+
+
+## Lockdep
+
+Enable lock-validation via lockdep. See [Runtime locking correctness validator - The Linux Kernel documentation](https://docs.kernel.org/locking/lockdep-design.html). `Hacking Options` in the defconfig lists lockdep settings.
+
+
+## kdump
+
+If available, use kdump to troubleshoot kernel panics by analyzing the system memory dump.
+See [Documentation for Kdump - The kexec-based Crash Dumping Solution](https://docs.kernel.org/admin-guide/kdump/kdump.html).
+In addition to the stated defconfig options, ensure that `CONFIG_PROC_KCORE` is also enabled.
