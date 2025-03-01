@@ -70,6 +70,7 @@ E.g. To see pr_debug() logs for a kernel module: `echo "module <module_name> +p"
 ## Event-Tracing
 
 Enable event-tracing, see [Event Tracing - The Linux Kernel documentation](https://docs.kernel.org/trace/events.html).
+
 E.g. Trace context-switch scheduling events as shown below.
 
 ```console
@@ -77,8 +78,9 @@ echo 0 > /sys/kernel/debug/tracing/tracing_on                          # disable
 echo > /sys/kernel/debug/tracing/trace                                 # flush previous traces
 echo 1 > /sys/kernel/debug/tracing/events/sched/sched_switch/enable    # enable context-switch event traces
 echo 1 > /sys/kernel/debug/tracing/tracing_on                          # enable tracing
-# trace logs can be found at: /sys/kernel/debug/tracing/per_cpu/cpu<n>/trace
 ```
+
+Trace logs can be found at: `/sys/kernel/debug/tracing/per_cpu/cpu<n>/trace`
 
 
 ## Memory-Profiling
