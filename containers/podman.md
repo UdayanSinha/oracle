@@ -1,4 +1,4 @@
-# Podman Setup For Ubuntu & Fedora
+# Podman Setup
 
 
 ## Notes
