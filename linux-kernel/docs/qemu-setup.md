@@ -27,8 +27,9 @@ See [The Linux Kernel Archives](https://kernel.org).
 ### Select a defconfig and use it to build the kernel
 
 ```console
-make x86_64_defconfig    # using default x86_64 as an example
-make menuconfig          # to make changes to selected defconfig
+make x86_64_defconfig        # using default x86_64 as an example
+make ARCH=arm64 defconfig    # using default ARM64 as an example
+make menuconfig              # to make changes to selected defconfig
 make
 ```
 
@@ -38,23 +39,30 @@ make
 ### Create a QEMU disk image and run QEMU with compiled kernel
 
 ```console
-export KERN=/path/to/bzImage
-export KERN_PARAMS="root=/dev/sda rw console=ttyS0"
+export KERN=/path/to/kernel/image    # bzImage, Image, etc
 export IMG=/path/to/disk.img
-export MNT=/mnt/qemufs                                                      # create directory if it does not already exist
+export MNT=/mnt/qemufs    # create directory if it does not already exist
 qemu-img create ${IMG} 8G
 mkfs.ext4 ${IMG}
 sudo mount -o loop ${IMG} ${MNT}
-sudo debootstrap --merged-usr stable ${MNT} http://deb.debian.org/debian    # see https://linux.die.net/man/8/debootstrap
+sudo debootstrap --merged-usr stable ${MNT} http://deb.debian.org/debian
 sudo chroot ${MNT} apt clean
 sudo chroot ${MNT} /usr/bin/passwd
 sudo umount ${MNT}
-CPU="host"
+CPU="max"    # if KVM is available, "host" can also be used
 RAM="256M"
 SMP=2
 
-sudo qemu-system-x86_64 -enable-kvm -cpu ${CPU} -smp ${SMP} -m ${RAM} \
--nographic -machine q35 -kernel ${KERN} -hda ${IMG} -append ${KERN_PARAMS}
+# x86_64 (if KVM is available, add -enable-kvm):
+sudo qemu-system-x86_64 -cpu ${CPU} -smp ${SMP} -m ${RAM} \
+-nographic -machine q35 -kernel ${KERN} -hda ${IMG} \
+-append "root=/dev/sda rw console=ttyS0"
+
+# ARM64 (if KVM is available, add -enable-kvm):
+sudo qemu-system-arm64 -cpu ${CPU} -smp ${SMP} -m ${RAM} -nographic -machine virt \
+-kernel ${KERN} -append "root=/dev/vda rw console=ttyAMA0" \
+-drive if=none,file=${IMG},format=raw,id=hd0 \
+-device virtio-blk-device,drive=hd0
 ```
 
 ### Setup network interfaces
@@ -63,14 +71,24 @@ sudo qemu-system-x86_64 -enable-kvm -cpu ${CPU} -smp ${SMP} -m ${RAM} \
 2. Run QEMU (host port 5555 forwarded to target port 22 for SSH access).
 
     ```console
+    # x86_64:
     sudo qemu-system-x86_64 -enable-kvm -cpu ${CPU} -smp ${SMP} -m ${RAM} \
-    -nographic -machine q35 -kernel ${KERN} -hda ${IMG} -append ${KERN_PARAMS} \
+    -nographic -machine q35 -kernel ${KERN} -hda ${IMG} \
+    -append "root=/dev/sda rw console=ttyS0" \
+    --device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5555-:22
+
+    # ARM64:
+    sudo qemu-system-arm64 -cpu ${CPU} -smp ${SMP} -m ${RAM} -nographic -machine virt \
+    -kernel ${KERN} -append "root=/dev/vda rw console=ttyAMA0" \
+    -drive if=none,file=${IMG},format=raw,id=hd0 \
+    -device virtio-blk-device,drive=hd0 \
     --device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5555-:22
     ```
 
 3. Network interfaces may need to be set up manually on the QEMU target.
 
     ```console
+    # check network interface name, example assumes enp0s2
     ip link set enp0s2 up
     dhclient enp0s2
     ip link set enp0s2 promisc on

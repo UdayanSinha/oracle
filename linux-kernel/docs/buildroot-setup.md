@@ -18,8 +18,13 @@
     - Select a defconfig and use it to build the image.
 
         ```console
-        make qemu_x86_64_defconfig    # using QEMU x86_64 defconfig as an example
-        make menuconfig               # to make changes to selected defconfig
+        # x86_64:
+        make qemu_x86_64_defconfig
+
+        # ARM64:
+        make qemu_aarch64_virt_defconfig
+
+        make menuconfig
         make
         ```
 
