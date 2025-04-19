@@ -5,3 +5,5 @@
 *.ko
 *.d
 *.mod*
+*.DS_Store
+
