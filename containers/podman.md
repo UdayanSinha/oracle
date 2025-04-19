@@ -47,7 +47,7 @@ sudo dnf install podman    # Fedora
 ### Build the container image
 
 ```console
-podman build --tag ubuntu:<image-name> -f /path/to/Dockerfile
+podman build --tag alpine:<image-name> -f /path/to/Dockerfile
 ```
 
 ### Run the image in a container
