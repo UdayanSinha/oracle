@@ -44,7 +44,10 @@
 ## Basic System Information
 
 1. CPU information: `/proc/cpuinfo`
-2. Memory information: `/proc/meminfo`
+2. Memory information:
+    - `/proc/meminfo`
+    - `/proc/buddyinfo`
+    - `/proc/slabinfo`
 3. Interrupt status:
     - `/proc/interrupts`
     - `/proc/softirqs`
