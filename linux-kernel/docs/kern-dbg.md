@@ -48,6 +48,8 @@
     - `/proc/meminfo`
     - `/proc/buddyinfo`
     - `/proc/slabinfo`
+    - `free`
+    - RSS/PSS information for processes
 3. Interrupt status:
     - `/proc/interrupts`
     - `/proc/softirqs`
