@@ -14,6 +14,7 @@
 ```console
 git config --global user.email example@email.com
 git config --global user.name "John Doe"
+git config --global core.editor "nano"    # pick any editor of choice
 ```
 
 Also generate and add SSH keys into Git server.
