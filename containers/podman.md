@@ -84,11 +84,18 @@ podman container prune -f
 podman images
 ```
 
-### Run a command on a running container instance
+### Execute a command on a running container instance
 
 ```console
 podman exec -it <container-id> <command>
 podman exec -it c253d46d79f1 /bin/sh    # example of invoking a shell on a running container
+```
+
+### Attach to a running container instance
+
+```console
+podman attach <container-id>
+podman attach c253d46d79f1    # example of attaching to a running container
 ```
 
 ### Save a container image locally
