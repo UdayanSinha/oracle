@@ -42,12 +42,13 @@ make
 export KERN=/path/to/kernel/image    # bzImage, Image, etc
 export IMG=/path/to/disk.img
 export MNT=/mnt/qemufs    # create directory if it does not already exist
-qemu-img create ${IMG} 8G
+dd if=/dev/zero of=${IMG} bs=4096 count=2097152    # 8GiB
 mkfs.ext4 ${IMG}
 sudo mount -o loop ${IMG} ${MNT}
 sudo debootstrap --merged-usr stable ${MNT} http://deb.debian.org/debian
-sudo chroot ${MNT} apt clean
 sudo chroot ${MNT} /usr/bin/passwd
+sudo chroot ${MNT} apt install dhcpcd5
+sudo chroot ${MNT} apt clean
 sudo umount ${MNT}
 CPU="max"    # if KVM is available, "host" can also be used
 RAM="256M"
@@ -90,6 +91,6 @@ sudo qemu-system-arm64 -cpu ${CPU} -smp ${SMP} -m ${RAM} -nographic -machine vir
     ```console
     # check network interface name, example assumes enp0s2
     ip link set enp0s2 up
-    dhclient enp0s2
+    dhcpcd enp0s2
     ip link set enp0s2 promisc on
     ```

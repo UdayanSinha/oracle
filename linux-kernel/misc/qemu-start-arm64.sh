@@ -13,15 +13,16 @@
 # QEMU_MAX_INSTANCE = Max. number of allowed QEMU instances.
 
 QEMU_SIM_DIR=/tmp/qemu
-QEMU_UTIL_DIR=/home/${USER}/Workspace/linux-kernel/qemu-utils
+QEMU_UTIL_DIR=/home/${USER}/Workspace/kernel/qemu-utils
 QEMU_ROOTFS=${QEMU_UTIL_DIR}/disk.img
-QEMU_KERN=${QEMU_UTIL_DIR}/Image
+QEMU_KERN=${QEMU_UTIL_DIR}/Image.gz
 QEMU_MAX_INSTANCE=4
 QEMU_INSTANCE=0
 QEMU_CPU="max"
 QEMU_NUM_CPU=2
 QEMU_RAM="256M"
-QEMU_SSH_PORT=5555
+QEMU_SSH_PORT_BASE=5554
+QEMU_SSH_PORT=${QEMU_SSH_PORT_BASE}
 
 if [[ ${1} = "sync" ]]
 then
@@ -34,7 +35,7 @@ then
 		-drive if=none,file=${QEMU_ROOTFS},format=raw,id=hd0 \
 		-device virtio-blk-device,drive=hd0 \
 		--device e1000,netdev=net0 \
-		-netdev user,id=net0,hostfwd=tcp::${QEMU_SSH_PORT}-:22
+		-netdev user,id=net0,hostfwd=tcp::${QEMU_SSH_PORT_BASE}-:22
 else
 	# assign an instance number for the QEMU instance
 	for (( i=1; i<=${QEMU_MAX_INSTANCE}; i++ ))
@@ -45,6 +46,7 @@ else
 		else
 			echo "Creating QEMU instance ${i}: ${QEMU_SIM_DIR}/${i}"
 			QEMU_INSTANCE=${i}
+			QEMU_SSH_PORT=$((QEMU_SSH_PORT_BASE + i))
 			break
 		fi
 	done
@@ -61,12 +63,12 @@ else
 		echo " "
 	else
 		mkdir -p ${QEMU_SIM_DIR}/${QEMU_INSTANCE}
-		cp ${QEMU_KERN} ${QEMU_SIM_DIR}/${QEMU_INSTANCE}/Image
+		cp ${QEMU_KERN} ${QEMU_SIM_DIR}/${QEMU_INSTANCE}/Image.gz
 		cp ${QEMU_ROOTFS} ${QEMU_SIM_DIR}/${QEMU_INSTANCE}/disk.img
 
 		sudo qemu-system-arm64 -nographic -machine virt \
 			-cpu ${QEMU_CPU} -smp ${QEMU_NUM_CPU} -m ${QEMU_RAM} \
-			-kernel ${QEMU_SIM_DIR}/${QEMU_INSTANCE}/Image \
+			-kernel ${QEMU_SIM_DIR}/${QEMU_INSTANCE}/Image.gz \
 			-append "root=/dev/vda rw console=ttyAMA0" \
 			-drive if=none,file=${QEMU_SIM_DIR}/${QEMU_INSTANCE}/disk.img,format=raw,id=hd0 \
 			-device virtio-blk-device,drive=hd0 \
