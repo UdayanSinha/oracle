@@ -3,8 +3,7 @@
 
 ## Notes
 
-- Tested on Legion Pro 7i 16IRX8H with Fedora Workstation 40 KDE.
-- Battery Charging Limiter on Legion Pro 7i 16IRX8H: `/sys/bus/platform/drivers/ideapad_acpi/VPC2004:00/conservation_mode`
+- Tested on an `x86_64` PC with Fedora Workstation 43 KDE.
 - See [Fedora Quick Docs](https://docs.fedoraproject.org/en-US/quick-docs).
 
 
@@ -31,9 +30,8 @@ sudo dnf upgrade
 ## Install General-Use Packages
 
 ```console
-sudo dnf groupinstall "Development Tools"
-sudo dnf groupinstall "Development Libraries"
-sudo dnf groupinstall "C Development Tools and Libraries"
+sudo dnf group install development-tools
+sudo dnf group install c-development
 sudo dnf install htop
 sudo dnf install dracut-config-rescue
 sudo dnf install efivar
@@ -41,11 +39,15 @@ sudo dnf install acpitool
 sudo dnf install vlc
 sudo dnf install java
 sudo dnf install google-chrome-stable
-sudo dnf groupinstall Multimedia
+sudo dnf install gparted
 sudo dnf install blender
 sudo dnf install gimp
 sudo dnf install yacreader
 sudo dnf install transmission
+sudo dnf install curl
+sudo dnf install cabextract
+sudo dnf install xorg-x11-font-utils
+sudo dnf install fontconfig
 ```
 
 Also install/configure the following applications:
@@ -54,13 +56,7 @@ Also install/configure the following applications:
 4. Setup WhatsApp Web.
 5. Setup Libreoffice to be compatible with Microsoft Office to the extent possible.
 See [Make LIBREOFFICE more compatible with MICROSOFT OFFICE & 365 - YouTube](https://youtu.be/G0che2Az9hw?si=srUlNr3YHD33ByAd).
-To install MS fonts:
-
-    ```console
-    sudo dnf install curl cabextract xorg-x11-font-utils fontconfig
-    wget https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm
-    sudo dnf install /path/to/msttcore-fonts-installer-2.6-1.noarch.rpm
-    ```
+6. Copy Microsoft Office fonts (`.ttf` files) to `~/.local/share/fonts/msfonts` (create directory if needed).
 
 Remove unnecessary apps that came installed by default. Also perform a sanity test
 of the HW platform if needed, and configure system settings.
@@ -147,6 +143,8 @@ For details, see [HowTo/Nvidia - RPM Fusion](https://rpmfusion.org/Howto/NVIDIA)
 ## Set Up The Gaming Environment
 
 ```console
+sudo dnf install mangohud
+sudo dnf install goverlay
 sudo dnf install steam
 sudo dnf install lutris    # setup any remaining app stores
 ```
