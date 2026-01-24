@@ -3,7 +3,7 @@
 
 ## Notes
 
-- Tested on Ubuntu 24.04 LTS.
+- Tested on Ubuntu 24.04 LTS, Feodra 43.
 
 
 ## References
@@ -14,7 +14,8 @@
 ## Setup
 
 ```console
-sudo apt install plantuml
+sudo apt install plantuml    # Ubuntu
+sudo dnf install plantuml    # Fedora
 ```
 
 

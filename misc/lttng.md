@@ -3,7 +3,7 @@
 
 ## Notes
 
-- Tested on Ubuntu 24.04 LTS.
+- Tested on Ubuntu 24.04 LTS, Fedora 43.
 - Tested using LTTng 2.13.
 
 
@@ -17,10 +17,16 @@
 1. Install necessary packages.
 
     ```console
+    # Ubuntu
     sudo apt install lttng-tools    # user-space app & library tracing, CLI
     sudo apt install lttng-modules-dkms    # only if kernel tracing is required, may need additional setup if using SecureBoot
     sudo apt install liblttng-ust-dev    # library for using LTTng in user-space apps/libs
     sudo apt install babeltrace2    # For trace output viewing
+
+    # Fedora
+    sudo dnf install lttng-tools    # user-space app & library tracing, CLI
+    sudo apt install lttng-ust-devel    # library for using LTTng in user-space apps/libs
+    # See LTTng Documentation for installing kernel-tracing module
     ```
 
 2. LTTng runs a session daemon (recommended to be started at system start), which will manage recording sessions.

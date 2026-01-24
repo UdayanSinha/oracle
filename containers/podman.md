@@ -3,7 +3,7 @@
 
 ## Notes
 
-- Tested on Ubuntu 24.04 LTS, Fedora 41.
+- Tested on Ubuntu 24.04 LTS, Fedora 43.
 - crun was used as the underlying OCI run-time with podman (default).
 
 

@@ -3,7 +3,7 @@
 
 ## Notes
 
-- Tested on Ubuntu 24.04 LTS.
+- Tested on Ubuntu 24.04 LTS, Fedora 43.
 - Tested using K3s.
 
 
