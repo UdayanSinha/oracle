@@ -3,15 +3,14 @@
 
 ## Notes
 
-- Ubuntu 24.04 LTS with Yocto **Scarthgap**.
+- Tested on Ubuntu 24.04 LTS with Yocto **Scarthgap**.
 - For details, see [Welcome to the Yocto Project Documentation - The Yocto Project](https://docs.yoctoproject.org).
-    - For Yocto concepts, see [Yocto Project Overview and Concepts Manual - The Yocto Project](https://docs.yoctoproject.org/overview-manual/index.html).
-    - For Yocto build environment setup, see [Setting up to use the Yocto Project - The Yocto Project](https://docs.yoctoproject.org/dev-manual/start.html).
-    -  Use the OE Layer Index to find existing layers. See [OpenEmbedded Layer Index](https://layers.openembedded.org/layerindex/branch/master/layers).
-    - For an explanation of Yocto variables see:
+    - Yocto concepts: [Yocto Project Overview and Concepts Manual - The Yocto Project](https://docs.yoctoproject.org/overview-manual/index.html).
+    - Yocto build environment setup: [Setting up to use the Yocto Project - The Yocto Project](https://docs.yoctoproject.org/dev-manual/start.html).
+    -  OE Layer Index to find existing layers: [OpenEmbedded Layer Index](https://layers.openembedded.org/layerindex/branch/master/layers).
+    - Yocto variables:
         - [Variables Glossary - The Yocto Project](https://docs.yoctoproject.org/ref-manual/variables.html).
         - [Variable Context - The Yocto Project](https://docs.yoctoproject.org/ref-manual/varlocality.html).
-    - For an explanation of the default image build options provided by Poky, see [Images - The Yocto Project](https://docs.yoctoproject.org/ref-manual/images.html).
 - Poky is Yocto's reference distribution config., and that is used for examples.
 
 
@@ -30,7 +29,7 @@
 
     ```console
     # can vary depending on the Yocto distro
-    # this will put us under the build directory
+    # this will put us under the project build directory
     source oe-init-build-env
     ```
 
@@ -38,7 +37,8 @@
 ## Build Configuration
 
 Configure `conf/local.conf` and/or `conf/bblayers.conf` in the build directory if needed.
-Yocto variable for build directory: `TOPDIR`
+Yocto variable for project build directory: `TOPDIR`
+
 1. Important variables to modify under `conf/local.conf` (specified for `CONF_VERSION` = 2):
     - `MACHINE` : Build target platform.
     - `DL_DIR` : Downloaded sources are stored at this path.
@@ -47,7 +47,6 @@ Yocto variable for build directory: `TOPDIR`
     - `DISTRO` : Distribution setting.
     - `PACKAGE_CLASSES` : Packaging format (RPM, DEB, etc) to use for built packages.
         - The rootfs will ultimately be generated from these packagaes.
-    - `EXTRA_IMAGE_FEATURES` : Extra packages to add into the target image.
     - `USER_CLASSES` : Enable additional features during build.
         - E.g. `buildstats` can be used to collect statistics about each Yocto build task, for a given recipe. See: `${TMPDIR}/buildstats`
     - `PATCHRESOLVE` : Handle conflict according to specified action when patch step fails.
@@ -58,29 +57,90 @@ Yocto variable for build directory: `TOPDIR`
 2. Important variables to modify under `conf/bblayers.conf` :
     - `BBLAYERS` : Layers used in current image build.
 
+Note that the above 2 files affect local builds only, generally for every image that is built.
 
-# Image Build
 
-Build a Yocto image using BitBake: `bitbake <image-name>`
-- The built image is present at `${TMPDIR}/deploy/images`.
-- For non-QEMU targets, the image will (always?) be a `.wic` file.
+## Image Build
+
+As Yocto builds can be storage-intensive, it is highly recommended to add this line in `conf/local.conf`: `INHERIT += "rm_work"`
+<br>For details, see [Conserving Disk Space - The Yocto Project](https://docs.yoctoproject.org/dev/dev-manual/disk-space.html).
+
+Build a Yocto image using BitBake: `bitbake <image-name>`. The built image is present at `${TMPDIR}/deploy/images`.
+
+For details of default image build options provided by Poky, see [Images - The Yocto Project](https://docs.yoctoproject.org/ref-manual/images.html). E.g. for building and running an image for QEMU:
 
 ```console
-bitbake core-image-minimal    # minimal QEMU image in Poky
-runqemu nographic slirp       # to run the image with QEMU
+bitbake core-image-full-cmdline
+runqemu nographic slirp
 ```
 
-
-# Layers & Recipes
-
-1. Build a Yocto recipe using BitBake: `bitbake <recipe-name>`
-
-2. To list all layers: `bitbake-layers show-layers`
-
-3. To list all recipes: `bitbake-layers show-recipes`
+To remove all previous builds: `bitbake -c cleanall world`
 
 
-# SDK
+## Image Customization
+
+For details, see [Customizing Images - The Yocto Project](https://docs.yoctoproject.org/dev-manual/customizing-images.html).
+
+### Using `conf/local.conf`
+
+1. `EXTRA_IMAGE_FEATURES` : This enables multiple packages or configurations to be add into the image.
+    - E.g. `EXTRA_IMAGE_FEATURES += "tools-sdk"` will enable debug tools (like GDB and strace) to be built into the image.
+    - See [Image Features - The Yocto Project](https://docs.yoctoproject.org/ref-manual/features.html#image-features). for a complete list of allowed image features in Poky.
+
+2. `IMAGE_INSTALL` with `:append`: Add a specified package into the image:
+    - Note that the space is needed before `<package-name>`.
+    - Add a package for all locally-built images: `IMAGE_INSTALL:append = " <package-name>"`.
+        - E.g. `IMAGE_INSTALL:append = " git"`
+    - Add a package for specified locally-built images: `IMAGE_INSTALL:append:<image-name> = " <package-name>"`.
+        - E.g. `IMAGE_INSTALL:append:core-image-full-cmdline = " git"`
+
+
+## Layers
+
+1. To list all layers added to build config.: `bitbake-layers show-layers`
+    - Priority values control which layer takes precedence if there are recipe files with the same name in multiple layers.
+    - Higher number => higher priority.
+    - The priority can be specified manually for a layer, or generated by the build system by default.
+    - See [Prioritizing Your Layer - The Yocto Project](https://docs.yoctoproject.org/dev/dev-manual/layers.html#prioritizing-your-layer).
+
+2. Create a new layer: `bitbake-layers create-layer /path/to/meta-<layer-name>`
+    - Layers are named `meta-<layer-name>` by convention, although the `meta-` prefix is not mandatory.
+    - Layers are typically created in the top-level Yocto directory.
+    - Priority is set within `/path/to/meta-<layer-name>/conf/layer.conf` using `BBFILE_PRIORITY_<layer-name>` variable.
+
+3. Add an existing layer in the build config. (will update `BBLAYERS` in `conf/bblayers.conf`): `bitbake-layers add-layer /path/to/meta-<layer-name>`
+
+4. Remove a layer from the build config. (will update `BBLAYERS` in `conf/bblayers.conf`): `bitbake-layers remove-layer layer`
+    - Top-level layer (e.g. `meta` in Poky) should not be removed.
+    - If that is done, it will have to be added back by manually editing `conf/bblayers.conf`.
+
+
+## Recipes
+
+1. To list all recipes (along with corresponding version and layer): `bitbake-layers show-recipes`
+    - Layer must be present in the build config.
+    - To list/check for a specific recipe: `bitbake-layers show-recipes <recipe/package-name>`
+
+2. Recipe files are usually named: `<PN>_<PV>_<PR>.bb` OR `<PN>_<PV>_<PR>.bbappend`
+    - E.g. `example_6.6_1.0`
+    - `PN` : Package Name.
+    - `PV` : Package Version.
+    - `PR` : Package Revision.
+    - It is possible to skip `PV` and `PR` in the file naming, in which case Yocto will assign default values to them internally.
+    - The values (applies to all Yocto variables) can be grepped by running Bitbake with `-e` : `bitbake -e <recipe-name> | grep ^<variable name>=`
+        - E.g. `bitbake -e example | grep ^PN=`
+
+3. Other key variables related to Yocto build of a recipe:
+    - `WORKDIR` : Build directory used for a recipe.
+    - `S` : Recipe source code is unpacked here.
+    - `D` : Compiled recipe binaries are stored here by the `do_install()` task.
+    - `B` : Intermediate build objects of the recipe are placed here during the build process.
+
+4. Build a Yocto recipe using BitBake (layer must be present in the build config.): `bitbake <recipe-name>`
+    - To remove build of a recipe (e.g. to do a clean build): `bitbake -c cleanall <recipe-name>`
+
+
+## SDK
 
 1. Application development with devtool (eSDK):
     - Setup a recipe to be develop for: `devtool modify <recipe-name> /path/to/copy/recipe/source/into`
