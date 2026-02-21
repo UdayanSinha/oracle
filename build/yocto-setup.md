@@ -92,8 +92,6 @@ For details, see [Customizing Images - The Yocto Project](https://docs.yoctoproj
     - Note that the space is needed before `<package-name>`.
     - Add a package for all locally-built images: `IMAGE_INSTALL:append = " <package-name>"`.
         - E.g. `IMAGE_INSTALL:append = " git"`
-    - Add a package for specified locally-built images: `IMAGE_INSTALL:append:<image-name> = " <package-name>"`.
-        - E.g. `IMAGE_INSTALL:append:core-image-full-cmdline = " git"`
 
 
 ## Layers
@@ -120,7 +118,7 @@ For details, see [Customizing Images - The Yocto Project](https://docs.yoctoproj
 
 1. Recipes are put in directories under the root directory of the corresponding layer i.e. a layer may have one or more recipes.
     - Recipe directories are conventionally named `recipe-<recipe-dirname>`.
-    - A recipe directory will itself contain several recipes (described by recipe files) in sub-directories.
+    - A recipe directory may itself contain several recipes (described by recipe files) in sub-directories.
 
 2. Recipe files are usually named: `<PN>_<PV>_<PR>.bb` OR `<PN>_<PV>_<PR>.bbappend`
     - E.g. `example_6.6_1.0`
@@ -142,6 +140,9 @@ For details, see [Customizing Images - The Yocto Project](https://docs.yoctoproj
     - `S` : Recipe source code is unpacked here.
     - `D` : Compiled recipe binaries are stored here by the `do_install()` task.
     - `B` : Intermediate build objects of the recipe are placed here during the build process.
+    - `RDEPENDS` : Manage runtime dependencies for the packages.
+    - `RPROVIDES` : Manage package aliases.
+    - `RCONFLICTS` : Specify runtime conflicts between packages.
 
 5. Build a Yocto recipe using BitBake (layer must be present in the build config.): `bitbake <recipe-name>`
     - To remove build of a recipe (e.g. to do a clean build): `bitbake -c cleanall <recipe-name>`
@@ -156,6 +157,7 @@ For details, see [Customizing Images - The Yocto Project](https://docs.yoctoproj
     - `do_fetch()` : Fetches the source code into `DL_DIR`.
     - `do_unpack()` : Unpacks the source code into the recipe `S`.
     - `do_patch()` : Applies available patch files to the source code.
+        - For creating patch-files, see [devtool](#devtool).
     - `do_configure()` : Runs available configuration steps to the source code prior to build.
     - `do_compile` : Runs compilation steps on the source code.
     - `do_install` : Copies built binaries from the compilation directory to `D`.
@@ -168,15 +170,25 @@ For details, see [Customizing Images - The Yocto Project](https://docs.yoctoproj
 4. To list all tasks for a given recipe: `bitbake -c listtasks <recipe-name>`
 
 
-## SDK
+## devtool
 
-1. Application development with devtool (eSDK):
-    - Setup a recipe to be develop for: `devtool modify <recipe-name> /path/to/copy/recipe/source/into`
-    - Yocto will now fetch, extract and patch the recipe at the above-mentioned path, and build it from there.
-    - E.g. for using devtool with Linux kernel: `devtool modify linux-yocto /path/to/copy/kernel/source/into`
-    - To build the recipe with devtool: `devtool build <recipe-name>`
+1. Setup a recipe to be develop for: `devtool modify <recipe-name> /path/to/copy/recipe/source/into`
+2. Yocto will now fetch, extract and patch the recipe at the above-mentioned path, and build it from there.
+3. E.g. for using devtool with Linux kernel: `devtool modify linux-yocto /path/to/copy/kernel/source/into`
+4. To build the recipe with devtool: `devtool build <recipe-name>`
+5. Find a recipe file: `devtool find-recipe <recipe-name>`
+6. Patching workflow:
+    ```console
+    devtool modify <recipe-name> /path/to/copy/recipe/source/into
 
-2. Application development with standard SDK:
-    - Prepare the SDK: `bitbake <image-name> -c populate_sdk`
-    - Install the SDK (provide install path when prompted): `${TMPDIR}/deploy/sdk/<sdk-install-script>`
-    - Setup the SDK build environment by sourcing it's setup script (check inside the install path), and use it.
+    # modify files in devtool source directory and make a git commit out of it
+
+    devtool update-recipe <recipe-name>    # create patch and update recipe
+    devtool reset <recipe-name>
+    ```
+
+## Standard SDK
+
+1. Prepare the SDK: `bitbake <image-name> -c populate_sdk`
+2. Install the SDK (provide install path when prompted): `${TMPDIR}/deploy/sdk/<sdk-install-script>`
+3. Setup the SDK build environment by sourcing it's setup script (check inside the install path), and use it.
