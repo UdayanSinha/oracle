@@ -32,7 +32,13 @@ python do_display_banner() {
 SRC_URI = "file://hello-world.c"
 S = "${WORKDIR}/build"
 
-# Specify package aliases
+# Specify build-time package dependencies for the target package
+DEPENDS = "hello-world-lib"
+
+# Specify runtime dependencies for the target package
+RDEPENDS:${PN} = "hello-world-lib"
+
+# Specify package aliases to resolve runtime dependencies elsewhere
 RPROVIDES:${PN} = "hello-world-c"
 
 # Specify runtime package conflicts
@@ -47,7 +53,7 @@ do_configure(){
 
 do_compile() {
     # using default compiler and flags provided by the build system
-    ${CC} ${CFLAGS} ${LDFLAGS} -o hello-world ${WORKDIR}/hello-world.c
+    ${CC} ${CFLAGS} ${LDFLAGS} -o hello-world ${WORKDIR}/hello-world.c -L${STAGING_LIBDIR} -lexample
 }
 
 do_install() {

@@ -93,6 +93,10 @@ For details, see [Customizing Images - The Yocto Project](https://docs.yoctoproj
     - Add a package for all locally-built images: `IMAGE_INSTALL:append = " <package-name>"`.
         - E.g. `IMAGE_INSTALL:append = " git"`
 
+3. `PREFERRED_PROVIDERS` : Specify which recipe to pick, if there are multiple recipes providing the same package.
+
+4. `PREFERRED_VERSION` : Specify which recipe version to pick, if there are multiple versions of the same recipe available.
+
 
 ## Layers
 
@@ -140,8 +144,10 @@ For details, see [Customizing Images - The Yocto Project](https://docs.yoctoproj
     - `S` : Recipe source code is unpacked here.
     - `D` : Compiled recipe binaries are stored here by the `do_install()` task.
     - `B` : Intermediate build objects of the recipe are placed here during the build process.
-    - `RDEPENDS` : Manage runtime dependencies for the packages.
-    - `RPROVIDES` : Manage package aliases.
+    - `DEPENDS` : Manage build-time dependencies for the package.
+    - `PROVIDES` : Manage package aliases for resolving build-time dependencies.
+    - `RDEPENDS` : Manage runtime dependencies for the package.
+    - `RPROVIDES` : Manage package aliases for resolving runtime dependencies.
     - `RCONFLICTS` : Specify runtime conflicts between packages.
 
 5. Build a Yocto recipe using BitBake (layer must be present in the build config.): `bitbake <recipe-name>`

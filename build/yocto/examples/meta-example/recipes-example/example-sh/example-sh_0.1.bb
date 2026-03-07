@@ -18,7 +18,7 @@ S = "${WORKDIR}"
 # Specify runtime dependencies for the target package
 RDEPENDS:${PN} = "bash"
 
-# Specify package aliases
+# Specify package aliases to resolve runtime dependencies elsewhere
 RPROVIDES:${PN} = "hello-world-sh"
 
 do_install() {
