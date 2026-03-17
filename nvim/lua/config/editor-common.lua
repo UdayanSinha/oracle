@@ -10,29 +10,60 @@ vim.opt.wrap            = false       -- disable line wrapping
 vim.opt.signcolumn      = "yes:1"     -- show sign column
 vim.opt.scrolloff       = 8           -- minimum lines to keep above & below cursor
 vim.opt.inccommand      = "nosplit"   -- shows the effects of a command incrementally in the buffer
+vim.opt.guicursor       = "i:block"   -- block cursor in insert mode
 vim.cmd.filetype("plugin indent on")  -- filetype detection, plugins, and indentation
 
 -- ------------------------------------------------------------------
 -- Undo setup
 -- ------------------------------------------------------------------
-vim.opt.undodir  = os.getenv('HOME') .. '/.vim/undodir' -- directory for undo files
-vim.opt.undofile = true                                 -- persistent undo
+vim.opt.undodir  = os.getenv('HOME') .. '/.nvim/undodir' -- directory for undo files
+vim.opt.undofile = true                                  -- persistent undo
 
 -- ------------------------------------------------------------------
--- Render all whitespace characters
+-- Whitespace handling
 -- ------------------------------------------------------------------
-vim.opt.list        = true            -- enable rendering of whitespace
+-- enable rendering of whitespace
+vim.opt.list        = true
 vim.opt.listchars = {
-	space   = "·",   -- show a visible symbol for normal spaces
-	tab     = "→ ",  -- show a tab as “→ ” (you can change the symbol)
-	trail   = "·",   -- show trailing spaces
-	nbsp    = "␣",   -- non‑breaking spaces
-	eol     = "↵",   -- show end‑of‑line marker
-	extends = "❯",   -- show when a line is too long
-	precedes= "❮",   -- show when a line starts before the viewport
+	space   = "·",       -- normal spaces
+	tab     = "→ ",      -- tabs
+	trail   = "·",       -- trailing spaces
+	eol     = "↵",       -- end‑of‑line (CR) marker
 }
-vim.opt.showbreak = "↪ "              -- optional: visual marker for wrapped lines
 
 -- Highlight trailing spaces in red
 vim.cmd('match ErrorMsg "\\s\\+$"')   -- highlights any trailing whitespace
+
+-- Remove trailing whitespaces
+vim.api.nvim_create_autocmd('FileType', {
+  group = vim.api.nvim_create_augroup('trim_whitespaces', { clear = true }),
+  desc = 'Trim trailing white spaces',
+  pattern = '*',
+  callback = function()
+    vim.api.nvim_create_autocmd('BufWritePre', {
+      pattern = '<buffer>',
+      -- Trim trailing whitespaces
+      callback = function()
+        -- Save cursor position to restore later
+        local curpos = vim.api.nvim_win_get_cursor(0)
+        -- Search and replace trailing whitespaces
+        vim.cmd([[keeppatterns %s/\s\+$//e]])
+        vim.api.nvim_win_set_cursor(0, curpos)
+      end,
+    })
+  end,
+})
+
+-- Ensure a single newline at end of file
+vim.api.nvim_create_autocmd('BufWritePre', {
+	group = vim.api.nvim_create_augroup('UserOnSave', {}),
+	pattern = '*',
+	callback = function()
+		local n_lines = vim.api.nvim_buf_line_count(0)
+		local last_nonblank = vim.fn.prevnonblank(n_lines)
+		if last_nonblank <= n_lines then vim.api.nvim_buf_set_lines(0,
+			last_nonblank, n_lines, true, { '' })
+		end
+	end,
+})
 
