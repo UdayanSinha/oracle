@@ -10,8 +10,6 @@ FUNC_SRC := example-func.c
 MAIN_OBJ := main.o
 FUNC_OBJ := example-func.o
 
-TARGET := example-make
-
 all: ${TARGET}
 
 ${TARGET}: ${MAIN_OBJ} ${FUNC_OBJ}

@@ -22,13 +22,17 @@ S = "${WORKDIR}"
 # Specify package aliases to resolve runtime dependencies elsewhere
 RPROVIDES:${PN} = "hello-world-make"
 
+# equivalent to passing command-line args to make
+EXTRA_OEMAKE:append = "TARGET=${PN} DESTDIR=${D} BINDIR=${bindir}"
+
 do_compile() {
+    # make
     oe_runmake
 }
 
 do_install() {
-    oe_runmake install DESTDIR=${D} BINDIR=${bindir}
+    # make install
+    oe_runmake install
 }
 
 addtask display_banner before do_build
-

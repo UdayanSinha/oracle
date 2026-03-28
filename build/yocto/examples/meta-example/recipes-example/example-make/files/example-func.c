@@ -6,4 +6,3 @@ void example_print(void)
 {
 	printf(EXAMPLE_STR);
 }
-
