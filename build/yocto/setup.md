@@ -99,6 +99,8 @@ For details, see [Customizing Images - The Yocto Project](https://docs.yoctoproj
 
 4. `PREFERRED_VERSION` : Specify which recipe version to pick, if there are multiple versions of the same recipe available.
 
+5. `BBMASK` : Specify recipes and recipe append files to be prevented from BitBake processing.
+
 
 ## Layers
 
