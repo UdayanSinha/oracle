@@ -129,7 +129,7 @@ For details, see [Customizing Images - The Yocto Project](https://docs.yoctoproj
     - Recipe directories are conventionally named `recipe-<recipe-dirname>`.
     - A recipe directory may itself contain several recipes (described by recipe files) in sub-directories.
 
-2. Recipe files are usually named: `<PN>_<PV>_<PR>.bb` OR `<PN>_<PV>_<PR>.bbappend`
+2. Recipe files are usually named: `<PN>_<PV>_<PR>.bb`
     - E.g. `example_6.6_1.0`
     - `PN` : Package Name.
         - Used as `<recipe-name>` in examples here.
@@ -157,6 +157,13 @@ For details, see [Customizing Images - The Yocto Project](https://docs.yoctoproj
 
 5. Build a Yocto recipe using BitBake (layer must be present in the build config.): `bitbake <recipe-name>`
     - To remove build of a recipe (e.g. to do a clean build): `bitbake -c cleanall <recipe-name>`
+
+6. Customize recipes with `.bbappend` file:
+    - See [Appending Other Layers Metadata With Your Layer - The Yocto Project](https://docs.yoctoproject.org/dev/dev-manual/layers.html#appending-other-layers-metadata-with-your-layer).
+    - Named in the same way as the recipe file being appended to, except with a `.bbappend` extension.
+    - Generally this could mean that the append is applied to a specific recipe version/revision, unless the file name is tweaked.
+        - If recipe is named `example_6.6.bb`, `example_%.bbappend` will be applied to all `PV` values for the recipe.
+    - Use `FILESEXTRAPATHS` in the `.bbappend` file to allow finding new files being added by the changes.
 
 
 ## Tasks
