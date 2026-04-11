@@ -59,6 +59,7 @@ Yocto variable for project build directory: `TOPDIR`
     - `BBLAYERS` : Layers used in current image build.
 
 Note that the above 2 files affect local builds only, generally for every image that is built.
+If there is a need for the settings to persist, some of them are possible to use elsewhere.
 
 
 ## Image Build
@@ -86,6 +87,8 @@ For details, see [Customizing Images - The Yocto Project](https://docs.yoctoproj
 
 ### Using `conf/local.conf`
 
+Note that some of the below-mentioned variables may be used elsewhere, if there is a need for them to persist.
+
 1. `EXTRA_IMAGE_FEATURES` : This enables multiple packages or configurations to be add into the image.
     - E.g. `EXTRA_IMAGE_FEATURES += "tools-sdk"` will enable debug tools (like GDB and strace) to be built into the image.
     - See [Image Features - The Yocto Project](https://docs.yoctoproject.org/ref-manual/features.html#image-features) for a complete list of allowed image features in Poky.
@@ -100,6 +103,10 @@ For details, see [Customizing Images - The Yocto Project](https://docs.yoctoproj
 4. `PREFERRED_VERSION` : Specify which recipe version to pick, if there are multiple versions of the same recipe available.
 
 5. `BBMASK` : Specify recipes and recipe append files to be prevented from BitBake processing.
+
+6. To customize the init manager, see: [Selecting an Init Manager - The Yocto Project](https://docs.yoctoproject.org/dev/dev-manual/init-manager.html).
+
+7. To customize the device manager, see: [Selecting a Device Manager - The Yocto Project](https://docs.yoctoproject.org/dev/dev-manual/device-manager.html).
 
 
 ## Layers
