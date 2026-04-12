@@ -14,7 +14,10 @@
 ```console
 git config --global user.email example@email.com
 git config --global user.name "John Doe"
-git config --global core.editor "nano"    # pick any editor of choice
+git config --global core.editor "nvim"     # pick any editor of choice
+git config --global diff.tool "nvimdiff"   # pick any difftool of choice
+git config --global merge.tool "nvimdiff"  # pick any mergetool of choice
+git config --global --add difftool.prompt false
 ```
 
 Also generate and add SSH keys into Git server.
