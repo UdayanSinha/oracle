@@ -31,14 +31,39 @@ sudo apt install gparted
 sudo apt install vlc
 sudo apt install blender
 sudo apt install gimp
+sudo apt install neovim
+sudo apt install ripgrep
+sudo apt install fzf
+sudo apt install bat
+sudo apt install tmux
 ```
 
 Also install/configure the following applications:
 1. Install Google Chrome from official website.
 2. Install 1Password from official website (also available as a snap).
-3. Install Visual Studio Code from official website (also available as a snap).
-4. Setup WhatsApp Web.
-5. Setup Libreoffice to be compatible with Microsoft Office to the extent possible.
+3. Setup neovim (set `EDITOR=nvim` in environment).
+4. Setup tmux.
+5. Setup fzf.
+
+    ```console
+    # fzf setup
+    eval "$(fzf --bash)"    # see https://github.com/junegunn/fzf
+
+    fzf_ff() {
+      fzf \
+        --preview="batcat --color=always {}"
+    }
+
+    fzf_fg() {
+      fzf \
+        --ansi --phony --query "${1:-.}" \
+        --bind "change:reload:rg --line-number --no-heading --color=always {q} || true" \
+        --delimiter : \
+        --preview "batcat --style=numbers --color=always {1} --highlight-line {2}"
+    }
+    ```
+6. Setup WhatsApp Web.
+7. Setup Libreoffice to be compatible with Microsoft Office to the extent possible.
 See [Make LIBREOFFICE more compatible with MICROSOFT OFFICE & 365 - YouTube](https://youtu.be/G0che2Az9hw?si=srUlNr3YHD33ByAd).
 
 Remove unnecessary apps that came installed by default. Also perform a sanity test
@@ -79,7 +104,7 @@ of the HW platform if needed, and configure system settings.
 3. **Containers:** oracle/containers.
 4. **Arduino CLI:** See [Arduino CLI](https://arduino.github.io/arduino-cli/latest).
 5. **Zephyr:** See [Getting Started Guide - Zephyr](https://docs.zephyrproject.org/latest/develop/getting_started/index.html).
-6. **Optional:** Install LLM chatbot(s). See [ollama/ollama - GitHub](https://github.com/ollama/ollama).
+6. **Optional:** Install LLM chatbot(s).
 7. Any remaining professional applications.
 
 
