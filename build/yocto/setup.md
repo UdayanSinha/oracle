@@ -172,6 +172,8 @@ Note that some of the below-mentioned variables may be used elsewhere, if there 
         - If recipe is named `example_6.6.bb`, `example_%.bbappend` will be applied to all `PV` values for the recipe.
     - Use `FILESEXTRAPATHS` in the `.bbappend` file to allow finding new files being added by the changes.
 
+7. To support systemd service setup for a recipe, see [systemd Class - The Yocto Project](https://docs.yoctoproject.org/dev/ref-manual/classes.html#systemd).
+
 
 ## Tasks
 
