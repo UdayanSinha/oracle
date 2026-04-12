@@ -48,15 +48,40 @@ sudo dnf install curl
 sudo dnf install cabextract
 sudo dnf install xorg-x11-font-utils
 sudo dnf install fontconfig
+sudo dnf install neovim
+sudo dnf install ripgrep
+sudo dnf install fzf
+sudo dnf install bat
+sudo dnf install tmux
 ```
 
 Also install/configure the following applications:
 1. Install 1Password from official website (also available as a snap).
-3. Install Visual Studio Code from official website (also available as a snap).
-4. Setup WhatsApp Web.
-5. Setup Libreoffice to be compatible with Microsoft Office to the extent possible.
+2. Setup neovim (set `EDITOR=nvim` in environment).
+3. Setup tmux.
+4. Setup fzf.
+
+    ```console
+    # fzf setup
+    eval "$(fzf --bash)"    # see https://github.com/junegunn/fzf
+
+    fzf-ff() {
+      fzf \
+        --preview="bat --color=always {}"
+    }
+
+    fzf-fg() {
+      fzf \
+        --ansi --phony --query "${1:-.}" \
+        --bind "change:reload:rg --line-number --no-heading --color=always {q} || true" \
+        --delimiter : \
+        --preview "bat --style=numbers --color=always {1} --highlight-line {2}"
+    }
+    ```
+5. Setup WhatsApp Web.
+6. Setup Libreoffice to be compatible with Microsoft Office to the extent possible.
 See [Make LIBREOFFICE more compatible with MICROSOFT OFFICE & 365 - YouTube](https://youtu.be/G0che2Az9hw?si=srUlNr3YHD33ByAd).
-6. Copy Microsoft Office fonts (`.ttf` files) to `~/.local/share/fonts/msfonts` (create directory if needed).
+7. Copy Microsoft Office fonts (`.ttf` files) to `~/.local/share/fonts/msfonts` (create directory if needed).
 
 Remove unnecessary apps that came installed by default. Also perform a sanity test
 of the HW platform if needed, and configure system settings.
@@ -136,7 +161,7 @@ For details, see [HowTo/Nvidia - RPM Fusion](https://rpmfusion.org/Howto/NVIDIA)
 3. **Containers:** oracle/containers.
 4. **Arduino CLI:** See [Arduino CLI](https://arduino.github.io/arduino-cli/latest).
 5. **Zephyr:** See [Getting Started Guide - Zephyr](https://docs.zephyrproject.org/latest/develop/getting_started/index.html).
-6. **Optional:** Install LLM chatbot(s). See [ollama/ollama - GitHub](https://github.com/ollama/ollama).
+6. **Optional:** Install LLM chatbot(s).
 7. Any remaining professional applications.
 
 

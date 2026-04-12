@@ -49,12 +49,12 @@ Also install/configure the following applications:
     # fzf setup
     eval "$(fzf --bash)"    # see https://github.com/junegunn/fzf
 
-    fzf_ff() {
+    fzf-ff() {
       fzf \
         --preview="batcat --color=always {}"
     }
 
-    fzf_fg() {
+    fzf-fg() {
       fzf \
         --ansi --phony --query "${1:-.}" \
         --bind "change:reload:rg --line-number --no-heading --color=always {q} || true" \
