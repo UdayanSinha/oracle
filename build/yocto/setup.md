@@ -172,7 +172,16 @@ Note that some of the below-mentioned variables may be used elsewhere, if there 
         - If recipe is named `example_6.6.bb`, `example_%.bbappend` will be applied to all `PV` values for the recipe.
     - Use `FILESEXTRAPATHS` in the `.bbappend` file to allow finding new files being added by the changes.
 
-7. To support systemd service setup for a recipe, see [systemd Class - The Yocto Project](https://docs.yoctoproject.org/dev/ref-manual/classes.html#systemd).
+7. Use development shell (devshell) to aid in recipe debugging, if needed:
+    - Allows access to Bitbake task execution environment for manual operations e.g. manually running `configure` or `make`.
+    - See [Using a Development Shell - The Yocto Project](https://docs.yoctoproject.org/dev/dev-manual/development-shell.html#using-a-development-shell).
+    - While Bitbake will auto-detect a suitable terminal program for the shell, `OE_TERMINAL` can be set in `conf/local.conf` to explicitly specify a program.
+    - If running on a remote system via SSH, recommend having tmux/screen installed in that system.
+    - There may be issues to start devshell if recipe is already built i.e. it may be required to do `bitbake -c <cleanall,cleansstate> <recipe-name>`
+    - E.g. To use devshell for Linux kernel config. via menuconfig: `bitbake -c menuconfig linux-yocto`
+        - Config. will not be saved into the recipe automatically. To do so, see [Creating a defconfig - The Yocto Project](https://docs.yoctoproject.org/dev/kernel-dev/common.html#creating-a-defconfig-file).
+
+8. To support systemd service setup for a recipe, see [systemd Class - The Yocto Project](https://docs.yoctoproject.org/dev/ref-manual/classes.html#systemd).
 
 
 ## Tasks
