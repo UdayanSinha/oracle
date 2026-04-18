@@ -4,7 +4,7 @@
 ## Notes
 
 - Tested on Ubuntu 24.04 LTS with Yocto **Scarthgap**.
-- For details, see [Welcome to the Yocto Project Documentation - The Yocto Project](https://docs.yoctoproject.org).
+- See [Welcome to the Yocto Project Documentation - The Yocto Project](https://docs.yoctoproject.org).
     - Yocto concepts: [Yocto Project Overview and Concepts Manual - The Yocto Project](https://docs.yoctoproject.org/overview-manual/index.html).
     - Yocto build environment setup: [Setting up to use the Yocto Project - The Yocto Project](https://docs.yoctoproject.org/dev-manual/start.html).
     -  OE Layer Index to find existing layers: [OpenEmbedded Layer Index](https://layers.openembedded.org/layerindex/branch/master/layers).
@@ -65,7 +65,7 @@ If there is a need for the settings to persist, some of them are possible to use
 ## Image Build
 
 As Yocto builds can be storage-intensive, it is highly recommended to add this line in `conf/local.conf`: `INHERIT += "rm_work"`
-<br>For details, see [Conserving Disk Space - The Yocto Project](https://docs.yoctoproject.org/dev/dev-manual/disk-space.html).
+<br>See [Conserving Disk Space - The Yocto Project](https://docs.yoctoproject.org/dev/dev-manual/disk-space.html).
 
 Build a Yocto image using BitBake: `bitbake <image-name>`. The built image is present at `${TMPDIR}/deploy/images`.
 
@@ -83,7 +83,7 @@ To remove all previous builds: `bitbake -c cleanall world`
 
 ## Image Customization
 
-For details, see [Customizing Images - The Yocto Project](https://docs.yoctoproject.org/dev-manual/customizing-images.html).
+See [Customizing Images - The Yocto Project](https://docs.yoctoproject.org/dev-manual/customizing-images.html).
 
 ### Using `conf/local.conf`
 
@@ -172,14 +172,12 @@ Note that some of the below-mentioned variables may be used elsewhere, if there 
         - If recipe is named `example_6.6.bb`, `example_%.bbappend` will be applied to all `PV` values for the recipe.
     - Use `FILESEXTRAPATHS` in the `.bbappend` file to allow finding new files being added by the changes.
 
-7. Use development shell (devshell) to aid in recipe debugging, if needed:
+7. Use development shell (devshell) to aid in recipe debugging, if needed: `bitbake -c devshell <recipe-name>`
     - Allows access to Bitbake task execution environment for manual operations e.g. manually running `configure` or `make`.
-    - See [Using a Development Shell - The Yocto Project](https://docs.yoctoproject.org/dev/dev-manual/development-shell.html#using-a-development-shell).
     - While Bitbake will auto-detect a suitable terminal program for the shell, `OE_TERMINAL` can be set in `conf/local.conf` to explicitly specify a program.
     - If running on a remote system via SSH, recommend having tmux/screen installed in that system.
     - There may be issues to start devshell if recipe is already built i.e. it may be required to do `bitbake -c <cleanall,cleansstate> <recipe-name>`
-    - E.g. To use devshell for Linux kernel config. via menuconfig: `bitbake -c menuconfig linux-yocto`
-        - Config. will not be saved into the recipe automatically. To do so, see [Creating a defconfig - The Yocto Project](https://docs.yoctoproject.org/dev/kernel-dev/common.html#creating-a-defconfig-file).
+    - See [Using a Development Shell - The Yocto Project](https://docs.yoctoproject.org/dev/dev-manual/development-shell.html#using-a-development-shell).
 
 8. To support systemd service setup for a recipe, see [systemd Class - The Yocto Project](https://docs.yoctoproject.org/dev/ref-manual/classes.html#systemd).
 
@@ -223,8 +221,30 @@ Note that some of the below-mentioned variables may be used elsewhere, if there 
     devtool reset <recipe-name>
     ```
 
+
 ## Standard SDK
 
 1. Prepare the SDK: `bitbake <image-name> -c populate_sdk`
 2. Install the SDK (provide install path when prompted): `${TMPDIR}/deploy/sdk/<sdk-install-script>`
 3. Setup the SDK build environment by sourcing it's setup script (check inside the install path), and use it.
+
+
+## Linux Kernel Development
+
+- Use devshell for tweaking Linux kernel config. via `menuconfig` task: `bitbake -c menuconfig linux-yocto`
+- The kernel will now be built with the changes made via the `menuconfig` task.
+- The above-mentioned approach may be used to build locally, but it will not be saved into the recipe automatically. There are 2 ways to do that:
+    - Defconfig:
+        - Tweak kernel config. via `menuconfig` task.
+        - Save entire config. via `savedefconfig` task: `bitbake -c savedefconfig linux-yocto`
+        - Use config. by appending to `linux-yocto` recipe.
+        - See [Creating a defconfig - The Yocto Project](https://docs.yoctoproject.org/dev/kernel-dev/common.html#creating-a-defconfig-file).
+    - Config. fragments:
+        - Tweak kernel config. via `menuconfig` task.
+        - Use `diffconfig` task to create fragment: `bitbake -c diffconfig linux-yocto`
+        - Use fragment by appending to `linux-yocto` recipe.
+        - See [Creating configuration fragments- The Yocto Project](https://docs.yoctoproject.org/dev/kernel-dev/common.html#creating-configuration-fragments).
+    - Both of the above-mentioned methods can be used together, if needed.
+        - Bitbake applies config. fragments after applying defconfig.
+- To incorporate out-of-tree (OOT) kernel modules in recipes, use `meta-skeleton/recipes-kernel/hello-mod` as the template.
+    - See [Incorporating OOT modules - The Yocto Project](https://docs.yoctoproject.org/dev/kernel-dev/common.html#incorporating-out-of-tree-modules).
