@@ -44,6 +44,9 @@ RPROVIDES:${PN} = "hello-world-c"
 # Specify runtime package conflicts
 RCONFLICTS:${PN} = "git"
 
+# inherit a class
+inherit task-info-nested
+
 # Yocto tasks from this point
 # Typically do_fetch() and do_patch() are not explicitly needed
 # as they will be handled by the build system based on the SRC_URI.

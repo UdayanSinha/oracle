@@ -11,7 +11,8 @@
     - Yocto variables:
         - [Variables Glossary - The Yocto Project](https://docs.yoctoproject.org/ref-manual/variables.html).
         - [Variable Context - The Yocto Project](https://docs.yoctoproject.org/ref-manual/varlocality.html).
-    - Syntax: [Syntax and Operators - Bitbake dev documentation](https://docs.yoctoproject.org/bitbake/2.2/bitbake-user-manual/bitbake-user-manual-metadata.html)
+    - Syntax: [Syntax and Operators - Bitbake Documentation](https://docs.yoctoproject.org/bitbake/2.2/bitbake-user-manual/bitbake-user-manual-metadata.html)
+    - Debugging guidelines: [Debugging Tools & Techniques - The Yocto Project](https://docs.yoctoproject.org/dev/dev-manual/debugging.html#debugging-tools-and-techniques).
 - Poky is Yocto's reference distribution config., and that is used for examples.
 
 
@@ -59,7 +60,7 @@ Yocto variable for project build directory: `TOPDIR`
     - `BBLAYERS` : Layers used in current image build.
 
 Note that the above 2 files affect local builds only, generally for every image that is built.
-If there is a need for the settings to persist, some of them are possible to use elsewhere.
+If there is a need for the settings to persist, some of them are possible to use in `.conf` files of layers.
 
 
 ## Image Build
@@ -87,7 +88,7 @@ See [Customizing Images - The Yocto Project](https://docs.yoctoproject.org/dev-m
 
 ### Using `conf/local.conf`
 
-Note that some of the below-mentioned variables may be used elsewhere, if there is a need for them to persist.
+Note that some of the below-mentioned variables may be used in `.conf` files of layers, if there is a need for them to persist.
 
 1. `EXTRA_IMAGE_FEATURES` : This enables multiple packages or configurations to be add into the image.
     - E.g. `EXTRA_IMAGE_FEATURES += "tools-sdk"` will enable debug tools (like GDB and strace) to be built into the image.
@@ -204,6 +205,19 @@ Note that some of the below-mentioned variables may be used elsewhere, if there 
 4. To list all tasks for a given recipe: `bitbake -c listtasks <recipe-name>`
 
 
+## Classes
+
+1. Provides a mechanism for re-using functions among recipe files.
+    - E.g. Classes for handling different build systems (make, autotools, etc).
+2. Implemented in `.bbclass` files and put under `meta-<layer-name>/classes`.
+3. Need to be inherited by the recipe via use of `inherit <class-name>` prior to use.
+    - In most cases, this is sufficient to begin using features of the class.
+4. Classes themselves may also inherit from other classes.
+5. Via use of `INHERIT`, classes may be inherited in `.conf` files of layers (persistent) and `build/conf/local.conf` (local builds) too.
+    - E.g. `INHERIT += "rm_work"`
+6. See [Classes - The Yocto Project](https://docs.yoctoproject.org/dev/ref-manual/classes.html#classes).
+
+
 ## devtool
 
 1. Setup a recipe to be develop for: `devtool modify <recipe-name> /path/to/copy/recipe/source/into`
@@ -231,9 +245,9 @@ Note that some of the below-mentioned variables may be used elsewhere, if there 
 
 ## Linux Kernel Development
 
-- Use devshell for tweaking Linux kernel config. via `menuconfig` task: `bitbake -c menuconfig linux-yocto`
-- The kernel will now be built with the changes made via the `menuconfig` task.
-- The above-mentioned approach may be used to build locally, but it will not be saved into the recipe automatically. There are 2 ways to do that:
+1. Use devshell for tweaking Linux kernel config. via `menuconfig` task: `bitbake -c menuconfig linux-yocto`
+2. The kernel will now be built with the changes made via the `menuconfig` task.
+3. The above-mentioned approach may be used to build locally, but it will not be saved into the recipe automatically. There are 2 ways to do that:
     - Defconfig:
         - Tweak kernel config. via `menuconfig` task.
         - Save entire config. via `savedefconfig` task: `bitbake -c savedefconfig linux-yocto`
@@ -246,5 +260,5 @@ Note that some of the below-mentioned variables may be used elsewhere, if there 
         - See [Creating configuration fragments- The Yocto Project](https://docs.yoctoproject.org/dev/kernel-dev/common.html#creating-configuration-fragments).
     - Both of the above-mentioned methods can be used together, if needed.
         - Bitbake applies config. fragments after applying defconfig.
-- To incorporate out-of-tree (OOT) kernel modules in recipes, use `meta-skeleton/recipes-kernel/hello-mod` as the template.
+4. To incorporate out-of-tree (OOT) kernel modules in recipes, use `meta-skeleton/recipes-kernel/hello-mod` as the template.
     - See [Incorporating OOT modules - The Yocto Project](https://docs.yoctoproject.org/dev/kernel-dev/common.html#incorporating-out-of-tree-modules).
