@@ -180,8 +180,6 @@ Note that some of the below-mentioned variables may be used in `.conf` files of 
     - There may be issues to start devshell if recipe is already built i.e. it may be required to do `bitbake -c <cleanall,cleansstate> <recipe-name>`
     - See [Using a Development Shell - The Yocto Project](https://docs.yoctoproject.org/dev/dev-manual/development-shell.html#using-a-development-shell).
 
-8. To support systemd service setup for a recipe, see [systemd Class - The Yocto Project](https://docs.yoctoproject.org/dev/ref-manual/classes.html#systemd).
-
 
 ## Tasks
 
@@ -262,3 +260,8 @@ Note that some of the below-mentioned variables may be used in `.conf` files of 
         - Bitbake applies config. fragments after applying defconfig.
 4. To incorporate out-of-tree (OOT) kernel modules in recipes, use `meta-skeleton/recipes-kernel/hello-mod` as the template.
     - See [Incorporating OOT modules - The Yocto Project](https://docs.yoctoproject.org/dev/kernel-dev/common.html#incorporating-out-of-tree-modules).
+
+
+## Systemd Service Development
+
+1. To support systemd services for a recipe, see [systemd Class - The Yocto Project](https://docs.yoctoproject.org/dev/ref-manual/classes.html#systemd).
