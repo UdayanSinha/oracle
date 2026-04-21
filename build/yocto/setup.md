@@ -218,20 +218,30 @@ Note that some of the below-mentioned variables may be used in `.conf` files of 
 
 ## devtool
 
-1. Setup a recipe to be develop for: `devtool modify <recipe-name> /path/to/copy/recipe/source/into`
-2. Yocto will now fetch, extract and patch the recipe at the above-mentioned path, and build it from there.
-3. E.g. for using devtool with Linux kernel: `devtool modify linux-yocto /path/to/copy/kernel/source/into`
-4. To build the recipe with devtool: `devtool build <recipe-name>`
-5. Find a recipe file: `devtool find-recipe <recipe-name>`
-6. Patching workflow:
+1. devtool has its own workspace layer where recipes need to be imported to, and changes need to be exported from (to the usual layers).
+    - The layer is automatically added to `conf/bblayers.conf` so it can be used for image builds.
+2. To create a new recipe in workspace: `devtool add <recipe-name> <src-info>`
+    - E.g. `devtool add crun-example https://github.com/containers/crun.git --srcbranch=main`
+    - If `--srcbranch` is not used for git sources, devtool will default to `master` (and fail if there is no `master` branch).
+    - Generally devtool will try to detect the build system (make, autotools, etc) and prepare a boilerplate recipe file accordingly.
+3. To add a newly created workspace recipe to layer: `devtool finish <recipe-name> /path/to/meta-<layer-name>`
+4. Setup an existing recipe to be develop for: `devtool modify <recipe-name>`
+    - Yocto will now fetch, extract and patch the recipe at the above-mentioned path, and build it from there.
+5. To build the recipe with devtool: `devtool build <recipe-name>`
+6. Find a recipe file (both in and outside devtool workspace layer): `devtool find-recipe <recipe-name>`
+7. To delete recipe files (will not remove source code) from workspace: `devtool reset <recipe-name>`
+8. Patching workflow with devtool:
+
     ```console
-    devtool modify <recipe-name> /path/to/copy/recipe/source/into
+    devtool modify <recipe-name>
 
     # modify files in devtool source directory and make a git commit out of it
 
-    devtool update-recipe <recipe-name>    # create patch and update recipe
+    devtool update-recipe <recipe-name>    # create patch files and update recipe
     devtool reset <recipe-name>
     ```
+
+9. See [devtool - The Yocto Project](https://docs.yoctoproject.org/dev/ref-manual/devtool-reference.html).
 
 
 ## Standard SDK
