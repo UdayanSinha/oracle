@@ -224,23 +224,31 @@ Note that some of the below-mentioned variables may be used in `.conf` files of 
     - E.g. `devtool add crun-example https://github.com/containers/crun.git --srcbranch=main`
     - If `--srcbranch` is not used for git sources, devtool will default to `master` (and fail if there is no `master` branch).
     - Generally devtool will try to detect the build system (make, autotools, etc) and prepare a boilerplate recipe file accordingly.
-3. To add a newly created workspace recipe to layer: `devtool finish <recipe-name> /path/to/meta-<layer-name>`
-4. Setup an existing recipe to be develop for: `devtool modify <recipe-name>`
+3. Setup an existing recipe modify source for: `devtool modify <recipe-name>`
     - Yocto will now fetch, extract and patch the recipe at the above-mentioned path, and build it from there.
-5. To build the recipe with devtool: `devtool build <recipe-name>`
-6. Find a recipe file (both in and outside devtool workspace layer): `devtool find-recipe <recipe-name>`
+4. To build the recipe with devtool: `devtool build <recipe-name>`
+5. To export recipe to a layer (i.e. a layer in `BBLAYERS` other than workspace layer): `devtool finish <recipe-name> /path/to/meta-<layer-name>`
+    - If the recipe does not exist in any layer (`devtool add ...`), the recipe will be created in specified layer.
+    - If the recipe exists in a layer (`devtool modify ...`):
+        - If it is not the specified layer, the changes will be appended in specified layer (`.bbappend`).
+        - If it is the specified layer, the recipe will be updated.
+        - A typical patching workflow would look like this:
+
+            ```console
+            devtool modify <recipe-name>
+
+            # modify files in devtool source directory and make a git commit out of it
+
+            devtool finish <recipe-name> /path/to/meta-<layer-name>
+            ```
+
+6. Find a recipe file (searches in all layers specified by `BBLAYERS`): `devtool find-recipe <recipe-name>`
 7. To delete recipe files (will not remove source code) from workspace: `devtool reset <recipe-name>`
-8. Patching workflow with devtool:
-
-    ```console
-    devtool modify <recipe-name>
-
-    # modify files in devtool source directory and make a git commit out of it
-
-    devtool update-recipe <recipe-name>    # create patch files and update recipe
-    devtool reset <recipe-name>
-    ```
-
+8. devtool facilitates development testing of the recipe by deploying/un-deploying files to target via SSH:
+    - The files that are deployed are the same ones that are installed in `do_install` task.
+    - Runtime dependencies of the recipe must already be present on target.
+    - Deploy to target: `devtool deploy-target <recipe-name> <user>@<hostname>`
+    - Un-deploy from target: `devtool undeploy-target <recipe-name> <user>@<hostname>`
 9. See [devtool - The Yocto Project](https://docs.yoctoproject.org/dev/ref-manual/devtool-reference.html).
 
 
