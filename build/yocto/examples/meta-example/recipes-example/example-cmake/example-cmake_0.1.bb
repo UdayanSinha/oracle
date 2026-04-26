@@ -8,7 +8,7 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384
 python do_display_banner() {
     bb.plain("***********************************************");
     bb.plain("*                                             *");
-    bb.plain("*  Example recipe with cmake-based C Program   *");
+    bb.plain("*  Example recipe with cmake-based C Program  *");
     bb.plain("*                                             *");
     bb.plain("***********************************************");
 }
