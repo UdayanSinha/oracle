@@ -56,6 +56,7 @@ Yocto variable for project build directory: `TOPDIR`
     - `BB_DISKMON_DIRS` : Specifies safety margin for storage space monitoring during build.
     - `CONF_VERSION` : Version of this file's format.
         - Incremented each time the file format changes incompatibly.
+
 2. Important variables to modify under `build/conf/bblayers.conf` :
     - `BBLAYERS` : Layers used in current image build.
 
@@ -63,7 +64,31 @@ Note that the above 2 files affect local builds only, generally for every image 
 If there is a need for the settings to persist, some of them are possible to use in `.conf` files of layers.
 
 
-## Image Build
+## Distro
+
+1. Used to define high-level policies for one or more image builds.
+
+2. Relation between distro and images is similar to other Linux distros.
+    - E.g. Ubuntu is a distro which provides images for different HW targets or use-cases.
+
+3. Policies that may be defined by a distro include specific features to be used, compiler flags, package format, etc.
+    - Specific features may translate into package requirements on an image.
+    - E.g. choice of init system, X/Wayland support, etc.
+
+4. See [Create Own Distro - The Yocto Project](https://docs.yoctoproject.org/dev/dev-manual/custom-distribution.html).
+
+
+## Image
+
+1. Used to build the final deployable artifact (rootfs or disk image).
+
+2. Specified as a `.bb` file and is effectively the root in the recipe dependency graph.
+
+3. Should consume packages from other recipes only, not produce its own.
+
+4. See [Images - The Yocto Project](https://docs.yoctoproject.org/dev/ref-manual/images.html).
+
+### Image Build
 
 As Yocto builds can be storage-intensive, it is highly recommended to add this line in `build/conf/local.conf`: `INHERIT += "rm_work"`
 <br>See [Conserving Disk Space - The Yocto Project](https://docs.yoctoproject.org/dev/dev-manual/disk-space.html).
@@ -81,12 +106,11 @@ runqemu nographic slirp
 
 To remove all previous builds: `bitbake -c cleanall world`
 
-
-## Image Customization
+### Image Customization
 
 See [Customizing Images - The Yocto Project](https://docs.yoctoproject.org/dev-manual/customizing-images.html).
 
-### Using `build/conf/local.conf`
+#### Using `build/conf/local.conf`
 
 Note that some of the below-mentioned variables may be used in `.conf` files of layers, if there is a need for them to persist.
 
@@ -207,12 +231,17 @@ Note that some of the below-mentioned variables may be used in `.conf` files of 
 
 1. Provides a mechanism for re-using functions among recipe files.
     - E.g. Classes for handling different build systems (make, autotools, etc).
+
 2. Implemented in `.bbclass` files and put under `meta-<layer-name>/classes`.
+
 3. Need to be inherited by the recipe via use of `inherit <class-name>` prior to use.
     - In most cases, this is sufficient to begin using features of the class.
+
 4. Classes themselves may also inherit from other classes.
+
 5. Via use of `INHERIT`, classes may be inherited in `.conf` files of layers (persistent) and `build/conf/local.conf` (local builds) too.
     - E.g. `INHERIT += "rm_work"`
+
 6. See [Classes - The Yocto Project](https://docs.yoctoproject.org/dev/ref-manual/classes.html#classes).
 
 
@@ -220,13 +249,17 @@ Note that some of the below-mentioned variables may be used in `.conf` files of 
 
 1. devtool has its own workspace layer where recipes need to be imported to, and changes need to be exported from (to the usual layers).
     - The layer is automatically added to `build/conf/bblayers.conf` so it can be used for image builds.
+
 2. To create a new recipe in workspace: `devtool add <recipe-name> <src-info>`
     - E.g. `devtool add crun-example https://github.com/containers/crun.git --srcbranch=main`
     - If `--srcbranch` is not used for git sources, devtool will default to `master` (and fail if there is no `master` branch).
     - Generally devtool will try to detect the build system (make, autotools, etc) and prepare a boilerplate recipe file accordingly.
+
 3. Setup an existing recipe modify source for: `devtool modify <recipe-name>`
     - Yocto will now fetch, extract and patch the recipe at the above-mentioned path, and build it from there.
+
 4. To build the recipe with devtool: `devtool build <recipe-name>`
+
 5. To export recipe to a layer (i.e. a layer in `BBLAYERS` other than workspace layer): `devtool finish <recipe-name> /path/to/meta-<layer-name>`
     - If the recipe does not exist in any layer (`devtool add ...`), the recipe will be created in specified layer.
     - If the recipe exists in a layer (`devtool modify ...`):
@@ -243,19 +276,24 @@ Note that some of the below-mentioned variables may be used in `.conf` files of 
             ```
 
 6. Find a recipe file (searches in all layers specified by `BBLAYERS`): `devtool find-recipe <recipe-name>`
+
 7. To delete recipe files (will not remove source code) from workspace: `devtool reset <recipe-name>`
+
 8. devtool facilitates development testing of the recipe by deploying/un-deploying files to target via SSH:
     - The files that are deployed are the same ones that are installed in `do_install` task.
     - Runtime dependencies of the recipe must already be present on target.
     - Deploy to target: `devtool deploy-target <recipe-name> <user>@<hostname>`
     - Un-deploy from target: `devtool undeploy-target <recipe-name> <user>@<hostname>`
+
 9. See [devtool - The Yocto Project](https://docs.yoctoproject.org/dev/ref-manual/devtool-reference.html).
 
 
 ## Standard SDK
 
 1. Prepare the SDK: `bitbake <image-name> -c populate_sdk`
+
 2. Install the SDK (provide install path when prompted): `${TMPDIR}/deploy/sdk/<sdk-install-script>`
+
 3. Setup the SDK build environment by sourcing it's setup script (check inside the install path), and use it.
 
 
@@ -264,8 +302,11 @@ Note that some of the below-mentioned variables may be used in `.conf` files of 
 Allows inspection of built packages. Useful commands include:
 
 1. List packages: `oe-pkgdata-util list-pkgs`
+
 2. List package files: `oe-pkgdata-util list-pkg-files <package-name>`
+
 3. Find recipe corresponding to a package: `oe-pkgdata-util lookup-recipe <package-name>`
+
 4. Get package information: `oe-pkgdata-util package-info <package-name>`
 
 See [Package Information - The Yocto Project](https://docs.yoctoproject.org/dev/dev-manual/debugging.html#viewing-package-information-with-oe-pkgdata-util).
@@ -274,7 +315,9 @@ See [Package Information - The Yocto Project](https://docs.yoctoproject.org/dev/
 ## Linux Kernel Development
 
 1. Use devshell for tweaking Linux kernel config. via `menuconfig` task: `bitbake -c menuconfig linux-yocto`
+
 2. The kernel will now be built with the changes made via the `menuconfig` task.
+
 3. The above-mentioned approach may be used to build locally, but it will not be saved into the recipe automatically. There are 2 ways to do that:
     - Defconfig:
         - Tweak kernel config. via `menuconfig` task.
@@ -288,6 +331,7 @@ See [Package Information - The Yocto Project](https://docs.yoctoproject.org/dev/
         - See [Creating configuration fragments- The Yocto Project](https://docs.yoctoproject.org/dev/kernel-dev/common.html#creating-configuration-fragments).
     - Both of the above-mentioned methods can be used together, if needed.
         - Bitbake applies config. fragments after applying defconfig.
+
 4. To incorporate out-of-tree (OOT) kernel modules in recipes, use `meta-skeleton/recipes-kernel/hello-mod` as the template.
     - See [Incorporating OOT modules - The Yocto Project](https://docs.yoctoproject.org/dev/kernel-dev/common.html#incorporating-out-of-tree-modules).
 
@@ -304,6 +348,7 @@ There are 2 ways to add users and groups:
 1. `useradd` class:
     - Added as a recipe that needs to be included in the image.
     - See [useradd Class - The Yocto Project](https://docs.yoctoproject.org/3.4.1/ref-manual/classes.html?highlight=useradd#useradd-bbclass);
+
 2. `extrausers` class:
     - Added in `.conf` files like `build/conf/local.conf`.
     - E.g. shows how to add a new user and a password to root user via `build/conf/local.conf` :
