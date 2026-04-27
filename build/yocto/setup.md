@@ -369,7 +369,7 @@ There are 2 ways to add users and groups:
         EXTRA_USERS_PARAMS = "\
             useradd -p '${TESTERPASSWD}' tester; \
             usermod -p '${ROOTPASSWD}' root; \
-        "
+                             "
         ```
 
     - See [extrausers Class - The Yocto Project](https://docs.yoctoproject.org/3.4.1/ref-manual/classes.html?highlight=useradd#extrausers-bbclass).
