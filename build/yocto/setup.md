@@ -109,10 +109,7 @@ To remove all previous builds: `bitbake -c cleanall world`
 ### Image Customization
 
 See [Customizing Images - The Yocto Project](https://docs.yoctoproject.org/dev-manual/customizing-images.html).
-
-#### Using `build/conf/local.conf`
-
-Note that some of the below-mentioned variables may be used in `.conf` files of layers, if there is a need for them to persist.
+Generally, the variables explained below apply to one or more of files like `build/conf/local.conf` (local builds), distro `.conf` files or image recipes.
 
 1. `EXTRA_IMAGE_FEATURES` : This enables multiple packages or configurations to be add into the image.
     - E.g. `EXTRA_IMAGE_FEATURES += "tools-sdk"` will enable debug tools (like GDB and strace) to be built into the image.
@@ -350,8 +347,8 @@ There are 2 ways to add users and groups:
     - See [useradd Class - The Yocto Project](https://docs.yoctoproject.org/3.4.1/ref-manual/classes.html?highlight=useradd#useradd-bbclass);
 
 2. `extrausers` class:
-    - Added in `.conf` files like `build/conf/local.conf`.
-    - E.g. shows how to add a new user and a password to root user via `build/conf/local.conf` :
+    - Added in `.conf` files like `build/conf/local.conf` or distro `.conf` files.
+    - E.g. shows how to add a new user and a password to root user:
 
         ```
         # debug-tweaks will prevent setting of root password if used in
