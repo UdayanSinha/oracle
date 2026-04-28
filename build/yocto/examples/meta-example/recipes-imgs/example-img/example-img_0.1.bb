@@ -30,6 +30,8 @@ IMAGE_INSTALL = "\
     hello-world-sysd-service \
     kernel-module-hello_world \
     example-useradd \
+    example-pkgsplit \
+    example-pkgsplit-extra \
     "
 
 addtask display_banner before do_build

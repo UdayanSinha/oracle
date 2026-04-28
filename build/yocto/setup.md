@@ -43,6 +43,9 @@ Yocto variable for project build directory: `TOPDIR`
 
 1. Important variables to modify under `build/conf/local.conf` (specified for `CONF_VERSION` = 2):
     - `MACHINE` : Build target platform.
+        - `meta-<layer-name>/conf/machine` contains `.conf` files which define a machine in Yocto.
+        - The filename without the `.conf` extension is set to this variable.
+        - For adding a new machine, see [Add New Machine - The Yocto Project](https://docs.yoctoproject.org/dev/dev-manual/new-machine.html).
     - `DL_DIR` : Downloaded sources are stored at this path.
     - `SSTATE_DIR` : Build cache (to accelerate future builds) is stored at this path.
     - `TMPDIR` : Build workspace. Final image builds are also place here.
@@ -200,6 +203,14 @@ Generally, the variables explained below apply to one or more of files like `bui
     - If running on a remote system via SSH, recommend having tmux/screen installed in that system.
     - There may be issues to start devshell if recipe is already built i.e. it may be required to do `bitbake -c <cleanall,cleansstate> <recipe-name>`
     - See [Using a Development Shell - The Yocto Project](https://docs.yoctoproject.org/dev/dev-manual/development-shell.html#using-a-development-shell).
+
+8. Use `PREMIRRORS` to override (or specify alternative) paths to fetch source code.
+    - Can be specified in layer `.conf` file or `build/conf/local.conf`.
+
+9. Bitbake will by default create a predefined set of packages for a given recipe.
+    - E.g. `${PN}`, `${PN}-doc`, `${PN}-dev`, etc.
+    - Additional packages can be created if needed (package splitting).
+    - See [Package Splitting - The Yocto Project](https://docs.yoctoproject.org/dev/overview-manual/concepts.html#package-splitting).
 
 
 ## Tasks
