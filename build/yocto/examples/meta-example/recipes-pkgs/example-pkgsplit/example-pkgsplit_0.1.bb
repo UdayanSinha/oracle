@@ -27,6 +27,11 @@ S = "${WORKDIR}"
 
 inherit autotools
 
+# PACKAGECONFIG can be used to manage dependencies and configure options
+# for each package if needed. For dependencies, this can have the benefit of
+# not applying the dependency on the overall recipe itself.
+# See: https://docs.yoctoproject.org/dev/ref-manual/variables.html#term-PACKAGECONFIG
+
 # define additional package
 PACKAGES =+ "${PN}-extra"
 
