@@ -1,40 +1,45 @@
-# QEMU Setup For Kernel Development
+# Kernel Development Environment Setup
 
 
 ## Notes
 
 - Tested on Ubuntu 24.04 LTS, Fedora Workstation 40 KDE.
-- For details, see [qemu.org](https://www.qemu.org).
+- For details on QEMU, see [qemu.org](https://www.qemu.org).
 
 
-## Setup
+## Setup Kernel Development Environment
+
+### Install dependencies needed to compile kernel builds.
+
+See [Minimal requirements to compile the Kernel](https://docs.kernel.org/process/changes.html).
+
+### Install miscellaneous tools.
+
+```console
+sudo apt install indent sparse stress    # Ubuntu
+sudo dnf install indent sparse stress    # Fedora
+```
+
+### Download and build the kernel. Suggested defconfig options show below.
+
+```console
+make x86_64_defconfig        # using default x86_64 as an example
+make ARCH=arm64 defconfig    # using default ARM64 as an example
+# Modify defconfig further if needed, and compile
+```
+
+- To list available defconfigs: `make ARCH=x86 help | grep defconfig`
+- To load a specific defconfig via menuconfig: `export KBUILD_CONFIG=/path/to/file.config`
+
+
+## Setup QEMU
 
 ### Install QEMU and its dependencies
 
 ```console
 sudo apt install qemu-system qemu-kvm libvirt-daemon libvirt-clients bridge-utils virt-manager debootstrap    # Ubuntu
-sudo dnf install qemu qemu-kvm libvirt-daemon libvirt-client bridge-utils virt-manager debootstrap            # Fedora
+sudo dnf install qemu qemu-kvm libvirt-daemon libvirt-client bridge-utils virt-manager debootstrap    # Fedora
 ```
-
-### Install necessary dependencies for compiling the kernel
-
-See [Minimal requirements to compile the Kernel](https://docs.kernel.org/process/changes.html).
-
-### Download the kernel source code
-
-See [The Linux Kernel Archives](https://kernel.org).
-
-### Select a defconfig and use it to build the kernel
-
-```console
-make x86_64_defconfig        # using default x86_64 as an example
-make ARCH=arm64 defconfig    # using default ARM64 as an example
-make menuconfig              # to make changes to selected defconfig
-make
-```
-
-- To list available defconfigs: `make ARCH=x86 help | grep defconfig`
-- To load a specific defconfig via menuconfig: `export KBUILD_CONFIG=/path/to/file.config`
 
 ### Create a QEMU disk image and run QEMU with compiled kernel
 

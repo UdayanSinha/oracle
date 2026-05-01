@@ -36,8 +36,7 @@
 
 ## Dmesg & Syslog
 
-1. Kernel message buffer can be viewed with the `dmesg` utility. See
-[dmesg(1) - Linux man page](https://linux.die.net/man/1/dmesg).
+1. Kernel message buffer can be viewed with the `dmesg` utility. See [dmesg(1) - Linux man page](https://linux.die.net/man/1/dmesg).
 2. Syslog location varies depending on the installation.
 
 
@@ -54,6 +53,7 @@
     - `/proc/interrupts`
     - `/proc/softirqs`
 4. Kernel taint status: `/proc/sys/kernel/tainted`
+5. Kernel symbol table: `/proc/kallsyms`
 
 
 ## Boot Firmware Information
@@ -64,6 +64,11 @@ Check settings for relevant boot firmware (BIOS, UEFI, U-Boot, etc).
 ## perf
 
 Use perf for performance profiling. It can analyze both user and kernel space code.
+
+
+## stress-ng
+
+Use stress-ng for stress tests.
 
 
 ## Dynamic Debug
