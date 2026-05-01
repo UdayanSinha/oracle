@@ -56,6 +56,8 @@ make -C /path/to/kernel-tree M=/path/to/oot-module
     - Symbol use by a module is resolved when it is loaded. This may introduce load dependencies across modules.
     - All exported symbols are present in `/proc/kallsyms` .
 
+7. Use module utilies like `modprobe` , `insmod` , `lsmod` and `rmmod` to manage module use.
+
 
 ## Coding Conventions
 
