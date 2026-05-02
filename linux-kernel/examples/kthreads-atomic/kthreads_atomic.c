@@ -11,6 +11,7 @@
 #include <linux/jiffies.h>	/* jiffies and utils */
 #include <linux/types.h>	/* data types */
 #include <linux/atomic.h>	/* atomic-type APIs */
+#include <asm/bitops.h>		/* atomic bit operations */
 
 #define KT0_NAME	"kt-example-0"
 #define KT1_NAME	"kt-example-1"
@@ -19,10 +20,14 @@
 
 static struct task_struct *kt[2] = {NULL};
 static atomic_t atomic_var = ATOMIC_INIT(0);	/* writer = kt0, reader = kt1 */
+static unsigned long atomic_bitop_var = 0;
+static int bit_pos = 8;
 
-int kt0_func(void *data)
+static int kt0_func(void *data)
 {
 	unsigned long delay = msecs_to_jiffies(1000);
+	unsigned int toggle = 0;
+
 	pr_info("[%s] Starting up...\n", KT0_NAME);
 
 	while (!kthread_should_stop()) {
@@ -35,13 +40,23 @@ int kt0_func(void *data)
 		pr_debug("[%s] Atomic variable write: %d\n",
 				KT0_NAME, atomic_read(&atomic_var));
 
+		/* atomic bit operation */
+		if (toggle)
+			set_bit(bit_pos, &atomic_bitop_var);
+		else
+			clear_bit(bit_pos, &atomic_bitop_var);
+
+		pr_debug("[%s] Atomic bit write on position %d\n",
+				KT0_NAME, bit_pos);
+
+		toggle = ~toggle;
 		schedule_timeout_interruptible(delay);
 	}
 
 	return 0;
 }
 
-int kt1_func(void *data)
+static int kt1_func(void *data)
 {
 	unsigned long delay = msecs_to_jiffies(750);
 	pr_info("[%s] Starting up...\n", KT1_NAME);
@@ -50,6 +65,12 @@ int kt1_func(void *data)
 		/* read atomic variable */
 		pr_debug("[%s] Atomic variable read: %d\n",
 				KT1_NAME, atomic_read(&atomic_var));
+
+		/* atomic bit operation */
+		if (test_bit(bit_pos, &atomic_bitop_var))
+			pr_debug("[%s] Bit is set at: %d\n", KT1_NAME, bit_pos);
+		else
+			pr_debug("[%s] Bit is clear at: %d\n", KT1_NAME, bit_pos);
 
 		schedule_timeout_interruptible(delay);
 	}
@@ -107,3 +128,4 @@ module_exit(kthreads_atomic_exit);
 
 MODULE_AUTHOR("Udayan Prabir Sinha");
 MODULE_LICENSE("Dual MIT/GPL");
+MODULE_DESCRIPTION("Atomic variable + Atomic bit ops example with kthreads");

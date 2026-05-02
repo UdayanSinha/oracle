@@ -23,7 +23,7 @@ static struct task_struct *kt[2] = {NULL};
 static atomic_t atomic_var = ATOMIC_INIT(0);	/* writer = kt0, reader = kt1 */
 static wait_queue_head_t wq;	/* see DECLARE_WAIT_QUEUE_HEAD() as well */
 
-int kt0_func(void *data)
+static int kt0_func(void *data)
 {
 	unsigned long delay = msecs_to_jiffies(100);
 	pr_info("[%s] Starting up...\n", KT0_NAME);
@@ -47,7 +47,7 @@ int kt0_func(void *data)
 	return 0;
 }
 
-int kt1_func(void *data)
+static int kt1_func(void *data)
 {
 	int ret = 0;
 	pr_info("[%s] Starting up...\n", KT1_NAME);
@@ -123,3 +123,4 @@ module_exit(kthreads_waitqueue_exit);
 
 MODULE_AUTHOR("Udayan Prabir Sinha");
 MODULE_LICENSE("Dual MIT/GPL");
+MODULE_DESCRIPTION("Waitqueue example with kthreads");

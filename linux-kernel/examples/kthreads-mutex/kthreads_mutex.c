@@ -16,15 +16,16 @@
 #define KT0_NAME	"kt-example-0"
 #define KT1_NAME	"kt-example-1"
 #define KT2_NAME	"kt-example-2"
+#define KT3_NAME	"kt-example-3"
 
 #define SHARED_INIT	2
 #define SHARED_LIMIT	100
 
-static struct task_struct *kt[3] = {NULL};
+static struct task_struct *kt[4] = {NULL};
 static struct mutex lock;		/* see DEFINE_MUTEX() as well */
 static u64 shared = SHARED_INIT;	/* shared-access resource */
 
-int kt0_func(void *data)
+static int kt0_func(void *data)
 {
 	unsigned long delay = msecs_to_jiffies(1000);
 	pr_info("[%s] Starting up...\n", KT0_NAME);
@@ -48,7 +49,7 @@ int kt0_func(void *data)
 	return 0;
 }
 
-int kt1_func(void *data)
+static int kt1_func(void *data)
 {
 	unsigned long delay = msecs_to_jiffies(750);
 	pr_info("[%s] Starting up...\n", KT1_NAME);
@@ -71,7 +72,7 @@ int kt1_func(void *data)
 	return 0;
 }
 
-int kt2_func(void *data)
+static int kt2_func(void *data)
 {
 	unsigned long delay = msecs_to_jiffies(250);
 	int ret = 0;
@@ -91,6 +92,34 @@ int kt2_func(void *data)
 		} else if (ret == -EINTR) {	/* IRQ received */
 			pr_warn("[%s] Mutex lock wait interrupted\n",
 					KT2_NAME);
+		}
+
+		schedule_timeout_interruptible(delay);
+	}
+
+	return 0;
+}
+
+static int kt3_func(void *data)
+{
+	unsigned long delay = msecs_to_jiffies(250);
+	int ret = 0;
+	pr_info("[%s] Starting up...\n", KT3_NAME);
+
+	while (!kthread_should_stop()) {
+		/* access shared resource */
+		ret = mutex_lock_killable(&lock);
+		if (!ret) {	/* lock acquired */
+			if (shared >= SHARED_LIMIT) {
+				shared = SHARED_INIT;
+				pr_debug("[%s] Shared resource value reset: "
+					"0x%llu\n", KT3_NAME, shared);
+			}
+
+			mutex_unlock(&lock);
+		} else if (ret == -EINTR) {	/* IRQ received */
+			pr_warn("[%s] Mutex lock wait interrupted\n",
+					KT3_NAME);
 		}
 
 		schedule_timeout_interruptible(delay);
@@ -126,6 +155,13 @@ static int __init kthreads_mutex_init(void)
 		goto err;
 	}
 
+	kt[3] = kthread_run(kt3_func, NULL, KT3_NAME);
+	if (IS_ERR_OR_NULL(kt[3])) {
+		ret = PTR_ERR(kt[3]);
+		pr_err("kthread_run() failed for %s, %d\n", KT3_NAME, ret);
+		goto err;
+	}
+
 	return 0;
 
 err:
@@ -137,6 +173,9 @@ err:
 
 	if (!IS_ERR_OR_NULL(kt[2]))
 		(void) kthread_stop(kt[2]);
+
+	if (!IS_ERR_OR_NULL(kt[3]))
+		(void) kthread_stop(kt[3]);
 
 	return ret;
 }
@@ -157,6 +196,10 @@ static void __exit kthreads_mutex_exit(void)
 	if (ret)
 		pr_err("kthread_stop() failed for %s, %d\n", KT2_NAME, ret);
 
+	ret = kthread_stop(kt[3]);
+	if (ret)
+		pr_err("kthread_stop() failed for %s, %d\n", KT3_NAME, ret);
+
 	return;
 }
 
@@ -165,3 +208,4 @@ module_exit(kthreads_mutex_exit);
 
 MODULE_AUTHOR("Udayan Prabir Sinha");
 MODULE_LICENSE("Dual MIT/GPL");
+MODULE_DESCRIPTION("Mutex example with kthreads");
