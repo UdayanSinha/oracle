@@ -47,6 +47,7 @@
     - `/proc/meminfo`
     - `/proc/buddyinfo`
     - `/proc/slabinfo`
+    - `/proc/zoneinfo`
     - `free`
     - RSS/PSS information for processes
 3. Interrupt status:
