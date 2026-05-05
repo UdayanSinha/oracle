@@ -76,7 +76,7 @@
 5. User-space parameters (e.g. system call arguments) should not be trusted by default.
     - User-space pointers may be invalid, or the pages may have been swapped.
     - Use `copy_to_user()` and `copy_from_user()` instead.
-    - Kernel never swaps out its own pages and always allocates its memory with urgency.
+    - Kernel never swaps out its own pages and always allocates its memory with urgency (i.e. no demand/lazy paging).
     - Page faults will result in panic, except in few places like the `copy_*()` functions show above, which will result in demand-paging of those pages.
 6. Do not assume page size, address lengths, etc.
     - Instead use general variable types and definitions that kernel provides.
@@ -87,7 +87,7 @@
 
 ## Tasks
 
-1. ID jargon:
+1. ID jargon is specified below.
 
     | User-space | Kernel-space |
     | ---------- | ------------ |
@@ -97,8 +97,8 @@
 2. Kernel does not make a distinction between processes and it's threads.
     - Everything is a task with an associated `struct task_struct`.
 3. Kernel can execute in 2 contexts:
-    - Atomic/interrupt context: Cannot block/sleep.
-    - Process context: Executing on behalf of a user-space process. Can block/sleep.
+    - Atomic/interrupt context: Cannot sleep.
+    - Process context: Executing on behalf of a user-space process. Can sleep.
 4. Execution transferred from user-space to kernel-space via system calls (implemented with synchronous IRQs i.e. exceptions) or asynchronous IRQs (HW).
 5. Nested-handling of IRQs is not considered as "sleep" for a pre-empted IRQ.
 6. Kernel may be configured to be preemptible or non-preemptible.
@@ -114,14 +114,14 @@
 
 There are several methods available for synchronization.
 The choice depends on context (process/atomic) of use, number and nature of operations and expected resource contention.
-Following table lists key mechanisms available in kernel, in approximate order of increasing overhead:
+Following table lists key mechanisms available in kernel, in approximate order of increasing overhead.
 
 | Method | Notes |
 | ---------- | ------------ |
 | Atomic operations | Self-explanatory. Also includes bit operations. Never sleeps i.e. can be used in any context. |
 | Spinlocks | Self-explanatory. Will block, but never sleep i.e. can be used in any context. |
 | Rwlocks | Spinlocks with reader/writer lock variants. Prone to cause writer starvation if there are many readers. Same context constraints as spinlock. |
-| Seqlocks | Spinlocks that are optimized to prevent writer starvation. Same context constraints as spinlock |
+| Seqlocks | Spinlocks that are optimized to prevent writer starvation. Same context constraints as spinlock. |
 | Mutexes | Self-explanatory. Will sleep i.e. can be used in process context only. Owner of the mutex is the task in whos context the mutex was taken. |
 | Completion functions | Ideal for high resource contention cases. Will sleeps i.e. process context only. |
 | Read-Copy-Update (RCU) | Similar use cases as that of seqlocks. Can be used in any context (unless sleepable variant is used). |
@@ -142,11 +142,9 @@ There is a `preempt_enable_no_resched()` to avoid that.
 Always select the simplest possible synchronization primitive.
 
 
-## Virtual Memory Management
+## Memory Addressing
 
 Presence of an MMU is one the minimum requirements to run Linux.
-
-### Address Space
 
 1. User-space tasks always execute in virtual address space.
 2. The virtual address space for each task would be something like this.
@@ -166,7 +164,6 @@ Presence of an MMU is one the minimum requirements to run Linux.
     - Kernel addresses are a linear map: Virtual Address = Physical Address + Address Space Boundary Offset
         - The mapping of kernel addresses is shared/global, i.e. the same mapping applies for all tasks.
     - The address space boundary offset is very high for 64-bit systems, making the effective user address space be unlimited.
-
 3. Kernel-space tasks (like kthread) have a similar address map model, but the user address range may be empty/unused.
 4. Systems may divide kernel addressable memory into "high" and "low" (typical in 32-bit systems):
     - Low memory is permanently mapped in kernel address space.
@@ -176,19 +173,20 @@ Presence of an MMU is one the minimum requirements to run Linux.
     - 64-bit systems do not contain a high memory, as the address space is large enough.
 5. Linux divides memory into zones, which is used by memory management functions to decide how to allocate memory.
 
-    | Zone | Meaning | 32-Bit Address Range | 64-Bit Address Range
+    | Zone | Meaning | 32-Bit Address Range | 64-Bit Address Range |
     | ----------- | ----------- | ----------- | ----------- |
     | DMA | DMA for ISAs with 24-bit address limitations. | 0 - 16MB | 0 - 16MB |
-    | DMA32 | DMA for ISAs with 32-bit address limitations. | 16MB - 4GB | 16MB - 4GB
+    | DMA32 | DMA for ISAs with 32-bit address limitations. | 16MB - 4GB | 16MB - 4GB |
     | Normal | Low memory. | 16MB - 896MB | 4GB - Remaining RAM |
-    | High | High memory | 896MB - Remaining RAM | - |
+    | High | High memory. | 896MB - Remaining RAM | - |
+
+    - `/proc/zoneinfo` will show status page usage per zone.
 
 Note that the address ranges differ by architecture, the numbers shown above apply to x86.
-
 6. Linux can be considered to be always NUMA-aware.
     - Non-NUMA systems can just be considered to be a single NUMA node.
     - Kernel view of the NUMA topology is exposed here: `/sys/devices/system/cpu/cpu<n>/topology`
-
+    - See [CPU Topology - The Linux Kernel Documentation](https://docs.kernel.org/admin-guide/cputopology.html).
 7. Virtual memory is divided into fixed-sized segments called pages (typical size is 4kB).
     - Access rights and other flags w.r.t memory is typically specified at page-level, not address-level.
     - `PAGE_SIZE` defines the size of a page in kernel code (should NEVER be assumed).
@@ -196,7 +194,7 @@ Note that the address ranges differ by architecture, the numbers shown above app
     - A page may reside in a page frame, storage, device, etc.
     - Page tables (typically 3, 4 or 5 levels) used to map virtual to physical addresses.
     - Each task has its own page table.
-    - E.g. A 5-level page table is shown below:
+    - E.g. A 5-level page table is shown below.
 
         ```
         Example for a 57-bit total addressable space:
@@ -225,21 +223,72 @@ Note that the address ranges differ by architecture, the numbers shown above app
                                                                |---> Physical Address
         ```
 
-8. Flags specified on page level determined aspects like access control i.e. these are not specified on individual addresses.
-    - Common page flags are shown below.
-
-        | Page Flags | Purpose |
-        | ---------- | ------------ |
-        | Present | Indicates if page (or page table) is in main memory. Used to control swapping. |
-        | Accessed | Indicates if page is accessed by the OS. |
-        | Dirty | Only applies to page table entries Indicates if the page has been updated. |
-        | RW | Access right (read/write) for page (or page table). |
-        | User/Superuser | Privilege level needed to access page (or page table). |
-        | PCD | Controls caching behavior of pages. Linux always enables page caching |
-        | PWD | Controls page update policy (write-back/write-through). Linux always sets write-back. |
-        | Page Size | Only applies to page directory entries to indicate size of page containing the address. |
-
+    - 3-level page tables lack P4D and PUD.
+    - 4-level page tables lack P4D.
+8. Flags specified on page level determine aspects like dirty state (page updated but not written to storage),
+update policies (write-back/write-through), etc i.e. these are not specified on individual addresses.
+    - `enum pageflags` defines page flags used by Linux.
 9. Each page frame has a `struct page` associated with it.
     - `pfn_to_page()` and `page_to_pfn()` can be used to map page frames to `struct page` and vice versa.
-    - `enum pageflags` defines page flags used by Linux.
     - `virt_to_page` can be used to map a kernel virtual address to a `struct page` .
+
+
+## Memory Management
+
+Kernel stack size is limited (order of kBs), unlike the stack size in user-space (order of MBs).
+Several mechanisms exist for allocating memory dynamically, as described below.
+
+Note that for user-space allocations, kernel may assign pages to the task address space w/o page frames being actually assigned.
+Page frames will be assigned when the memory is actually attempted to be used (demand-paging).
+For kernel-space allocations, page frames are always assigned when the memory was requested.
+
+### Page Allocator
+
+1. Physically contiguous memory allocated in multiple of pages.
+2. Interfaces (multiple pages specified in order of 2):
+    - Allocate (pointer to 1st page returned):  `__get_free_page()`, `__get_free_pages()`
+    - Free: `free_page()`, `free_pages()`
+3. May result in allocation being done from high memory. Use following interfaces to map them into kernel virtual address space:
+    - `kmap()` (may sleep), `kmap_atomic()` (will not sleep)
+    - `kunmap()` (may sleep), `kunmap_atomic()` (will not sleep)
+    - The above functions are safe to use on low memory allocations too (no effect).
+4. Buddy system used to prevent memory fragmentation due to frequent page allocation and freeing:
+    - Fragmentation cannot be solved with MMU:
+        - Frequent page table updates would be needed (overhead).
+        - DMA bypasses memory paging.
+    - Multiple blocks of physically contigous pages maintained per zone.
+    - Pages per-block are in increasing order of 2 (may be multiple blocks per order).
+        - E.g. Blocks may have quantity of pages like so: 1, 2, 4, 8, 16, 32, ...
+    - When pages are requested, kernel tries to fulfill the request (also in order of 2) from a block of that size.
+    - If the block of that size is not available, it will move to the block in the next order.
+        - This continues until a block is found which can satisfy the request.
+        - The block may then be split into smaller blocks if needed.
+    - When freeing memory, attempt is made to merge eligible (buddies) blocks into larger blocks.
+    - `/proc/buddyinfo` will show number of free blocks per order.
+5. User-space allocations (e.g. `malloc()`)  also go through page allocation.
+    - Will result in pages being allocated to the process address space.
+    - User-space libraries like libc will have their own allocator.
+    - This will then break pages upto into smaller segments to allocate the requested memory sizes.
+    - If more memory is needed, it will use `brk()` or `mmap()` to request the kernel.
+
+### Slab Allocator
+
+1. For efficient handling of memory requests which are not a multiple of page size, or for frequent/repeated allocations.
+2. Blocks of memory (caches) assigned via the page allocator.
+    - Divided internally into physically contiguous memory segments (slabs).
+    - Slabs may not be physically contiguous between each other.
+    - Slabs are sized in number of pages.
+3. Requested memory (object) assigned from one of the slabs.
+4. Freed memory goes back to the slab (i.e. does not result in a page free necessarily).
+5. Only used for kernel-space allocations.
+6. `/proc/slabinfo` shows current slab status. `vmstat -m` is also another option.
+8. Additional caches can be added if needed, see `struct kmem_cache` and its interfaces.
+9. `kmalloc()` and its variants use caches underneath to provide a physically contiguous memory segment of requested size.
+
+### vmalloc()
+
+1. Provided memory may not be physically contiguous.
+2. Unsuitable for DMA, as page tables are not involved.
+3. Useful for very large allocations (in theory, up to full size of physical memory), where memory may be access seldom.
+4. `/proc/vmallocinfo` shows current `vmalloc()` allocations.
+5. May sleep during allocation.

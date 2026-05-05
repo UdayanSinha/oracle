@@ -59,7 +59,7 @@ static void log_task_list(void)
 	}
 }
 
-static void list_and_heap_usage(void)
+static void list_usage(void)
 {
 	struct test_struct *it = NULL;
 	struct test_struct *tmp = NULL;
@@ -97,11 +97,6 @@ static void list_and_heap_usage(void)
 		kfree(it);
 }
 
-static void log_page_statistics(void)
-{
-	pr_info("Number of page frames provided: %lu\n", get_num_physpages());
-}
-
 static int __init hello_world_init(void)
 {
 	pr_info("Hello from a humble Linux Kernel Module!\n");
@@ -109,8 +104,7 @@ static int __init hello_world_init(void)
 	log_sysinfo();
 	log_current_task();
 	log_task_list();
-	list_and_heap_usage();
-	log_page_statistics();
+	list_usage();
 	return 0;
 }
 
