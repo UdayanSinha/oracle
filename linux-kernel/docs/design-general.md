@@ -85,6 +85,72 @@
 8. See [Working with Kernel development](https://docs.kernel.org/process/index.html).
 
 
+## Boot Flow
+
+```
++----------------------+
+|   Power On / Reset   |
++----------------------+
+  |---> +----------------------+
+        |       Firmware       |
+        |                      |    (can be several firmware steps/stages)
+        | - Init hardware      |
+        | - Find boot device   |
+        | - Load bootloader    |
+        +----------------------+
+          |---> +----------------------+
+                |      Bootloader      |
+                |                      |    (can be several bootloaders steps/stages)
+                | - Load kernel        |
+                | - Load initramfs     |
+                | - Pass boot args     |
+                +----------------------+
+                  |---> +----------------------+
+                        |        Kernel        |
+                        |                      |
+                        | - CPU/MMU setup      |
+                        | - Memory setup       |
+                        | - Scheduler setup    |
+                        | - Interrupt setup    |
+                        | - Drivers setup      |
+                        | - Virtual FS setup   |
+                        +----------------------+
+                          |---> +----------------------+
+                                |   Mount initramfs    |
+                                |      (optional)      |
+                                |                      |
+                                | - Prepare to mount   |
+                                |   rootfs             |
+                                +----------------------+
+                                  |---> +----------------------+
+                                        |    Mount rootfs      |
+                                        +----------------------+
+                                          |---> +----------------------+
+                                                |      Start PID 1     |
+                                                |                      |
+                                                | - Setup user-space   |
+                                                +----------------------+
+```
+
+
+## System Calls
+
+1. Provides mechanism for user-space to invoke the kernel to get work done.
+    - The work may be HW access or services provided by kernel infrastructure.
+
+2. `syscall()` is interface for user-space to make system-calls.
+    - Normally wrapped by library functions. E.g. `open()` .
+    - A user-space program may not necessarily know when a system call could result from a library function call.
+    - See [syscall(2) - man](https://man7.org/linux/man-pages/man2/syscall.2.html).
+
+3. System calls are typically implemented via exceptions (synchronous IRQs), but this is architecture-specific.
+    - System calls available for a platform may also be architecture-specific.
+
+4. In kernel, a new system is typically defined via the `SYSCALL_DEFINE<n>()` macro.
+    - `n` is the number of arguments to the system call.
+    - There may be other variations of this macro, e.g. `COMPAT_SYSCALL_DEFINE<n>()` .
+
+
 ## Tasks
 
 1. ID jargon is specified below.
@@ -180,17 +246,18 @@ Presence of an MMU is one the minimum requirements to run Linux.
     | Normal | Low memory. | 16MB - 896MB | 4GB - Remaining RAM |
     | High | High memory. | 896MB - Remaining RAM | - |
 
-    - `/proc/zoneinfo` will show status page usage per zone.
-
-Note that the address ranges differ by architecture, the numbers shown above apply to x86.
+    - `/proc/zoneinfo` will show status of page usage per zone.
+    - Note that the address ranges differ by architecture, the numbers shown above apply to x86.
 6. Linux can be considered to be always NUMA-aware.
     - Non-NUMA systems can just be considered to be a single NUMA node.
     - Kernel view of the NUMA topology is exposed here: `/sys/devices/system/cpu/cpu<n>/topology`
     - See [CPU Topology - The Linux Kernel Documentation](https://docs.kernel.org/admin-guide/cputopology.html).
 7. Virtual memory is divided into fixed-sized segments called pages (typical size is 4kB).
-    - Access rights and other flags w.r.t memory is typically specified at page-level, not address-level.
+    - Flags w.r.t memory is typically specified at page-level, not address-level.
+        - Flags determine aspects like dirty state (page updated but not written to storage), update policies (write-back/write-through), etc.
+        - `enum pageflags` defines page flags used by Linux.
     - `PAGE_SIZE` defines the size of a page in kernel code (should NEVER be assumed).
-    - A page frame (physical page) is a fixed-size segment of physical memory.
+    - A page frame (physical memory page) is a fixed-size segment of physical memory.
     - A page may reside in a page frame, storage, device, etc.
     - Page tables (typically 3, 4 or 5 levels) used to map virtual to physical addresses.
     - Each task has its own page table.
@@ -225,10 +292,7 @@ Note that the address ranges differ by architecture, the numbers shown above app
 
     - 3-level page tables lack P4D and PUD.
     - 4-level page tables lack P4D.
-8. Flags specified on page level determine aspects like dirty state (page updated but not written to storage),
-update policies (write-back/write-through), etc i.e. these are not specified on individual addresses.
-    - `enum pageflags` defines page flags used by Linux.
-9. Each page frame has a `struct page` associated with it.
+8. Each page frame has a `struct page` associated with it.
     - `pfn_to_page()` and `page_to_pfn()` can be used to map page frames to `struct page` and vice versa.
     - `virt_to_page` can be used to map a kernel virtual address to a `struct page` .
 
@@ -256,7 +320,7 @@ For kernel-space allocations, page frames are always assigned when the memory wa
     - Fragmentation cannot be solved with MMU:
         - Frequent page table updates would be needed (overhead).
         - DMA bypasses memory paging.
-    - Multiple blocks of physically contigous pages maintained per zone.
+    - Multiple blocks of physically contiguous pages maintained per zone.
     - Pages per-block are in increasing order of 2 (may be multiple blocks per order).
         - E.g. Blocks may have quantity of pages like so: 1, 2, 4, 8, 16, 32, ...
     - When pages are requested, kernel tries to fulfill the request (also in order of 2) from a block of that size.
@@ -269,7 +333,7 @@ For kernel-space allocations, page frames are always assigned when the memory wa
     - Will result in pages being allocated to the process address space.
     - User-space libraries like libc will have their own allocator.
     - This will then break pages upto into smaller segments to allocate the requested memory sizes.
-    - If more memory is needed, it will use `brk()` or `mmap()` to request the kernel.
+    - If more memory is needed, it will use `brk()` or `mmap()` to request from the kernel.
 
 ### Slab Allocator
 
@@ -281,14 +345,16 @@ For kernel-space allocations, page frames are always assigned when the memory wa
 3. Requested memory (object) assigned from one of the slabs.
 4. Freed memory goes back to the slab (i.e. does not result in a page free necessarily).
 5. Only used for kernel-space allocations.
-6. `/proc/slabinfo` shows current slab status. `vmstat -m` is also another option.
+6. `/proc/slabinfo` shows current slab status.
+    - `vmstat -m` is also another option.
 8. Additional caches can be added if needed, see `struct kmem_cache` and its interfaces.
-9. `kmalloc()` and its variants use caches underneath to provide a physically contiguous memory segment of requested size.
+9. `kmalloc()` and its variants use caches underneath to provide a physically contiguous memory segment (object) of requested size.
 
 ### vmalloc()
 
 1. Provided memory may not be physically contiguous.
-2. Unsuitable for DMA, as page tables are not involved.
-3. Useful for very large allocations (in theory, up to full size of physical memory), where memory may be access seldom.
-4. `/proc/vmallocinfo` shows current `vmalloc()` allocations.
-5. May sleep during allocation.
+2. Goes via page allocator (i.e. not slab allocator) for the assigned memory.
+3. Unsuitable for DMA, as page tables are not involved.
+4. Useful for very large allocations (in theory, up to full size of physical memory), where memory may be access seldom.
+5. `/proc/vmallocinfo` shows current `vmalloc()` allocations.
+6. May sleep during allocation.
