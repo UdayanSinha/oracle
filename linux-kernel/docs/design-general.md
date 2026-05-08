@@ -5,6 +5,7 @@
 
 1. [The Linux Kernel Documentation](https://docs.kernel.org)
 2. [Linux source code - Bootlin Elixir Cross Referencer](https://elixir.bootlin.com/linux/latest/source)
+    - v6.18.X used as baseline.
 
 
 ## Config. + Build
@@ -137,16 +138,13 @@
 
 1. Provides mechanism for user-space to invoke the kernel to get work done.
     - The work may be HW access or services provided by kernel infrastructure.
-
 2. `syscall()` is interface for user-space to make system-calls.
     - Normally wrapped by library functions. E.g. `open()` .
     - A user-space program may not necessarily know when a system call could result from a library function call.
     - See [syscall(2) - man](https://man7.org/linux/man-pages/man2/syscall.2.html).
-
 3. System calls are typically implemented via exceptions (synchronous IRQs), but this is architecture-specific.
     - System calls available for a platform may also be architecture-specific.
-
-4. In kernel, a new system is typically defined via the `SYSCALL_DEFINE<n>()` macro.
+4. In kernel, a new system call is typically defined via the `SYSCALL_DEFINE<n>()` macro.
     - `n` is the number of arguments to the system call.
     - There may be other variations of this macro, e.g. `COMPAT_SYSCALL_DEFINE<n>()` .
 
@@ -160,20 +158,53 @@
     | Process ID (PID) | Thread Group ID (TGID) |
     | Thread ID (TID) | Process ID (PID) |
 
-2. Kernel does not make a distinction between processes and it's threads.
-    - Everything is a task with an associated `struct task_struct`.
+2. Kernel does not make a distinction between processes and it's threads, or even kthreads.
+    - Everything is a task with an associated `struct task_struct` with different settings.
+    - The underlying system call to spawn processes and threads is the same as well (`clone()`). See [clone(2) - man](https://man7.org/linux/man-pages/man2/clone.2.html).
 3. Kernel can execute in 2 contexts:
     - Atomic/interrupt context: Cannot sleep.
     - Process context: Executing on behalf of a user-space process. Can sleep.
-4. Execution transferred from user-space to kernel-space via system calls (implemented with synchronous IRQs i.e. exceptions) or asynchronous IRQs (HW).
+4. Execution transferred from user-space to kernel-space via system calls (exceptions) or asynchronous IRQs (HW).
 5. Nested-handling of IRQs is not considered as "sleep" for a pre-empted IRQ.
-6. Kernel may be configured to be preemptible or non-preemptible.
+6. Kernel may be configured to have its own code be preemptible or non-preemptible.
     - All kernel code must be written with this in mind.
     - All kernel code must be fully-reentrant to allow safe execution in multi-core systems.
     - Code running in user-space is always preemptible.
 7. Using `PREEMPT_RT` will alter scheduling behavior.
     - E.g.  IRQ handlers may become threaded and spin-locks may become preemptible.
 8. `current` points to currently running task on the CPU.
+
+### Symmetric Multi-Processing (SMP) & Task Isolation
+
+1. All CPUs are considered to have equal access to memory and I/O.
+2. Kernel generally tries to keep tasks on the same CPU to avoid migration overhead.
+3. A task can be assigned an affinity to inform kernel **what CPUs it is allowed to be scheduled on**.
+    - Affinity is typically specified as a bit mask of CPUs.
+    - Can be done via `taskset` over command-line. See [taskset(1) - man](https://man7.org/linux/man-pages/man1/taskset.1.html).
+    - Can be done via `sched_setaffinity()` in user-space code. See [sched_setaffinity(2) - man](https://man7.org/linux/man-pages/man2/sched_setaffinity.2.html).
+    - CPU currently being used for execution can also be checked in code.
+        - User-space code: See [sched_getcpu(3) - man](https://man7.org/linux/man-pages/man3/sched_getcpu.3.html).
+        - Kernel-space code: See `smp_processor_id()` .
+4. Affinity can also be applied to IRQs, to direct execution of their handler on specific CPUs.
+    - Can be done via `/proc/irq/<irq-num>/smp_affinity` .
+    - Requires support in HW.
+    - Note that a system may also be running a user-space daemon to balance IRQ handling load.
+5. Kernel code (e.g drivers) can also recommend affinity behavior via `irq_set_affinity_and_hint()` and `irq_update_affinity_hint()` .
+    - Not used very often, a user-space solution is preferred for this.
+6. Cpuset cgroup controller can be used to inform kernel **what tasks are allowed to be scheduled on the specified CPUs**.
+    - Provides exclusivity.
+    - Can be used to implement *task pinning* when combined with affinity settings.
+    - CPUs for task pinning = `affinity-mask & cpuset-mask`
+        - Note that if no CPUs are found common, the task will be unpinned/floating.
+7. Kernel also provides tickless scheduling to further isolate workloads on specific CPUs.
+    - See [NO_HZ - The Linux Kernel Documentation](https://docs.kernel.org/timers/no_hz.html).
+8. Following guide shows how to combine all of the above-mentioned concepts:
+    - [CPU Isolation by SUSE Labs #1](https://www.suse.com/c/cpu-isolation-introduction-part-1/).
+    - [CPU Isolation by SUSE Labs #2](https://www.suse.com/c/cpu-isolation-full-dynticks-part2/).
+    - [CPU Isolation by SUSE Labs #3](https://www.suse.com/c/cpu-isolation-nohz_full-part-3/).
+    - [CPU Isolation by SUSE Labs #4](https://www.suse.com/c/cpu-isolation-housekeeping-and-tradeoffs-part-4/).
+    - [CPU Isolation by SUSE Labs #5](https://www.suse.com/c/cpu-isolation-practical-example-part-5/).
+9. Kernel also provides the means to define per-CPU variables (e.g. `DEFINE_PER_CPU()`).
 
 
 ## Synchronization Methods
@@ -205,6 +236,7 @@ In that case, `preempt_enable()` should also be called a corresponding number of
 Note that `preempt_enable()` is a scheduling point i.e. it may lead to a context switch when preemption actually gets re-enabled.
 There is a `preempt_enable_no_resched()` to avoid that.
 
+Note that taking a spinlock may disable preemption.
 Always select the simplest possible synchronization primitive.
 
 
