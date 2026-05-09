@@ -155,8 +155,8 @@
 
     | User-space | Kernel-space |
     | ---------- | ------------ |
-    | Process ID (PID) | Thread Group ID (TGID) |
-    | Thread ID (TID) | Process ID (PID) |
+    | Process ID (PID, `getpid()`) | Thread Group ID (TGID) |
+    | Thread ID (TID), `gettid()` | Process ID (PID) |
 
 2. Kernel does not make a distinction between processes and it's threads, or even kthreads.
     - Everything is a task with an associated `struct task_struct` with different settings.
@@ -173,6 +173,29 @@
 7. Using `PREEMPT_RT` will alter scheduling behavior.
     - E.g.  IRQ handlers may become threaded and spin-locks may become preemptible.
 8. `current` points to currently running task on the CPU.
+9. Maximum number of allowed tasks: `/proc/sys/kernel/threads-max`
+10. Maximum allowed PID value: `/proc/sys/kernel/pid_max`
+11. Common task states in `task_struct` include the following.
+
+    | State | Purpose |
+    | ---------- | ------------ |
+    | `TASK_RUNNING` | Running, or waiting to be scheduled, on a CPU. |
+    | `TASK_INTERRUPTIBLE` | Sleeping conditionally, i.e. can be woken up on signals (i.e. become `TASK_RUNNING`). |
+    | `TASK_UNINTERRUPTIBLE` | Sleeping unconditionally, i.e. cannot be woken up on signals. |
+    | `TASK_STOPPED` | Stopped due to `SIGSTOP` , `SIGTSTP` , `SIGTTIN` , `SIGTTOU` . |
+    | `TASK_TRACED` | Under tracing (`ptrace()`). |
+    | `TASK_DEAD` | Exited. |
+
+12. For user-space processes (i.e. not threads), the child processes must have their exit code read by the parent process via `wait()` .
+    - Until then, the `task_struct` for the child process will not be cleaned up (zombie).
+    - Parent process is notified of child process exits based on the requested signal in `clone()` (`fork()` sets `SIGCHLD`).
+    - If a parent process terminates itself, the child processes will generally be reparented to the init process, unless a grandparent process has set the subreaper attribute.
+        - See [PR_SET_CHILD_SUBREAPER(2const) - man](https://man7.org/linux/man-pages/man2/PR_SET_CHILD_SUBREAPER.2const.html).
+    - A process can exit either by calling `exit()` , return-from-main(), due to signals or an unrecoverable CPU exception.
+13. It is possible to run user-space processes from the kernel-space, but highly discouraged.
+    - See `call_usermodehelper()` .
+    - A valid use is `request_module` that is used for `modprobe`.
+14. kthreads should not be created in atomic context as the creation code can sleep.
 
 ### Symmetric Multi-Processing (SMP) & Task Isolation
 
@@ -337,6 +360,16 @@ Several mechanisms exist for allocating memory dynamically, as described below.
 Note that for user-space allocations, kernel may assign pages to the task address space w/o page frames being actually assigned.
 Page frames will be assigned when the memory is actually attempted to be used (demand-paging).
 For kernel-space allocations, page frames are always assigned when the memory was requested.
+
+Depending on purpose of allocation and the context (atomic/process) the appropriate flags must be passed when requesting memory.
+These also guide the kernel in assigning memory from an appropriate source. Common flags are shown below.
+
+    | State | Purpose |
+    | ---------- | ------------ |
+    | `GFP_KERNEL` | Most common approach. May sleep if memory is not available. |
+    | `GFP_ATOMIC` | Sleeping is not allowed. If memory is not available, allocation will be aborted. |
+    | `GFP_USER` | For allocating memory to user-space that needs to be accessible from kernel-space. May sleep if memory is not available. |
+    | `GFP_TRANSHUGE` | Transparent Huge Page (THP) allocations. May sleep if memory is not available. |
 
 ### Page Allocator
 
