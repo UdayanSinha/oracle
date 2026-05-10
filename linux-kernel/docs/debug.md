@@ -5,6 +5,7 @@
 
 1. [The Linux Kernel Documentation](https://docs.kernel.org)
 2. [Linux source code - Bootlin Elixir Cross Referencer](https://elixir.bootlin.com/linux/latest/source)
+    - v6.18.X used as baseline.
 
 
 ## Defconfig Options
@@ -36,7 +37,7 @@
 
 ## Dmesg & Syslog
 
-1. Kernel message buffer can be viewed with the `dmesg` utility. See [dmesg(1) - Linux man page](https://linux.die.net/man/1/dmesg).
+1. Kernel message buffer can be viewed with the `dmesg` utility. See [dmesg(1) - man](https://linux.die.net/man/1/dmesg).
 2. Syslog location varies depending on the installation.
 
 
@@ -56,6 +57,8 @@
     - `/proc/softirqs`
 4. Kernel taint status: `/proc/sys/kernel/tainted`
 5. Kernel symbol table: `/proc/kallsyms`
+6. Kernel parameters: `sysctl -a`
+    - See [sysctl(8) - man](https://linux.die.net/man/8/sysctl).
 
 
 ## Boot Firmware Information
@@ -63,14 +66,38 @@
 Check settings for relevant boot firmware (BIOS, UEFI, U-Boot, etc).
 
 
+## Tracing In Code
+
+Other than `printk()`, OOPS messages are also a useful source of debug info.
+See `WARN()` , `BUG()` and its variants.
+Note that `WARN()` and its variants will result in an OOPS message w/o further action.
+`BUG()` and its variants will result in an OOPS message and may kill the user-space process (process context).
+`/proc/sys/kernel/panic_on_oops` or `CONFIG_PANIC_ON_OOPS` will affect behavior of `BUG()` .
+It is also possible to call `panic()` , which will result in an OOPS message and cause a crash.
+
+
+## strace
+
+Use strace for system call usage profiling in user-space programs.
+See [strace(1) - man](https://linux.die.net/man/1/strace).
+
+
 ## perf
 
-Use perf for performance profiling. It can analyze both user and kernel space code.
+Use perf for performance and latency profiling.
+It can analyze both user-space and kernel-space code.
+
+
+## powertop
+
+Use powertop for power consumption profiling.
+See [powertop(8) - man](https://linux.die.net/man/8/powertop).
 
 
 ## stress-ng
 
 Use stress-ng for stress tests.
+See [stress(1) - man](https://linux.die.net/man/1/stress).
 
 
 ## Dynamic Debug
@@ -79,7 +106,7 @@ Enable dynamic debug, see [Dynamic debug - The Linux Kernel documentation](https
 E.g. To see pr_debug() logs for a kernel module: `echo "module <module_name> +p" > /sys/kernel/debug/dynamic_debug/control`
 
 
-## Event-Tracing
+## Event-Tracing (ftrace)
 
 Enable event-tracing, see [Event Tracing - The Linux Kernel documentation](https://docs.kernel.org/trace/events.html).
 
@@ -109,11 +136,11 @@ E.g. Trigger kernel panic: `echo c > /proc/sysrq-trigger`
 
 ## Lockdep
 
-Enable lock-validation via lockdep. See [Runtime locking correctness validator - The Linux Kernel documentation](https://docs.kernel.org/locking/lockdep-design.html). `Hacking Options` in the defconfig lists lockdep settings.
+Enable lock-validation via lockdep. See [Runtime locking correctness validator - The Linux Kernel documentation](https://docs.kernel.org/locking/lockdep-design.html).
+`Hacking Options` in the defconfig lists lockdep settings.
 
 
 ## kdump
 
 If available, use kdump to troubleshoot kernel panics by analyzing the system memory dump.
 See [Documentation for Kdump - The kexec-based Crash Dumping Solution](https://docs.kernel.org/admin-guide/kdump/kdump.html).
-In addition to the stated defconfig options, ensure that `CONFIG_PROC_KCORE` is also enabled.

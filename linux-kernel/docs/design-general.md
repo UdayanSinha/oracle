@@ -63,9 +63,9 @@
         indent /path/to/file -linux
         ```
 
-    - See [indent(1) - man](https://man7.org/linux/man-pages/man1/indent.1.html).
+    - See [indent(1) - man](https://linux.die.net/man/1/indent).
 3. Use `sparse` for code static analysis (other tools may also be applicable).
-    - See [sparse(1) - man](https://man7.org/linux/man-pages/man1/sparse.1.html).
+    - See [sparse(1) - man](https://linux.die.net/man/1/sparse).
     - Invoke during compilation of the kernel.
 
         ```console
@@ -141,7 +141,7 @@
 2. `syscall()` is interface for user-space to make system-calls.
     - Normally wrapped by library functions. E.g. `open()` .
     - A user-space program may not necessarily know when a system call could result from a library function call.
-    - See [syscall(2) - man](https://man7.org/linux/man-pages/man2/syscall.2.html).
+    - See [syscall(2) - man](https://linux.die.net/man/2/syscall).
 3. System calls are typically implemented via exceptions (synchronous IRQs), but this is architecture-specific.
     - System calls available for a platform may also be architecture-specific.
 4. In kernel, a new system call is typically defined via the `SYSCALL_DEFINE<n>()` macro.
@@ -160,7 +160,7 @@
 
 2. Kernel does not make a distinction between processes and it's threads, or even kthreads.
     - Everything is a task with an associated `struct task_struct` with different settings.
-    - The underlying system call to spawn processes and threads is the same as well (`clone()`). See [clone(2) - man](https://man7.org/linux/man-pages/man2/clone.2.html).
+    - The underlying system call to spawn processes and threads is the same as well (`clone()`). See [clone(2) - man](https://linux.die.net/man/2/clone).
 3. Kernel can execute in 2 contexts:
     - Atomic/interrupt context: Cannot sleep.
     - Process context: Executing on behalf of a user-space process. Can sleep.
@@ -190,7 +190,7 @@
     - Until then, the `task_struct` for the child process will not be cleaned up (zombie).
     - Parent process is notified of child process exits based on the requested signal in `clone()` (`fork()` sets `SIGCHLD`).
     - If a parent process terminates itself, the child processes will generally be reparented to the init process, unless a grandparent process has set the subreaper attribute.
-        - See [PR_SET_CHILD_SUBREAPER(2const) - man](https://man7.org/linux/man-pages/man2/PR_SET_CHILD_SUBREAPER.2const.html).
+        - See [prctl(2) - man](https://linux.die.net/man/2/prctl).
     - A process can exit either by calling `exit()` , return-from-main(), due to signals or an unrecoverable CPU exception.
 13. It is possible to run user-space processes from the kernel-space, but highly discouraged.
     - See `call_usermodehelper()` .
@@ -203,10 +203,10 @@
 2. Kernel generally tries to keep tasks on the same CPU to avoid migration overhead.
 3. A task can be assigned an affinity to inform kernel **what CPUs it is allowed to be scheduled on**.
     - Affinity is typically specified as a bit mask of CPUs.
-    - Can be done via `taskset` over command-line. See [taskset(1) - man](https://man7.org/linux/man-pages/man1/taskset.1.html).
-    - Can be done via `sched_setaffinity()` in user-space code. See [sched_setaffinity(2) - man](https://man7.org/linux/man-pages/man2/sched_setaffinity.2.html).
+    - Can be done via `taskset` over command-line. See [taskset(1) - man](https://linux.die.net/man/1/taskset).
+    - Can be done via `sched_setaffinity()` in user-space code. See [sched_setaffinity(2) - man](https://linux.die.net/man/2/sched_setaffinity).
     - CPU currently being used for execution can also be checked in code.
-        - User-space code: See [sched_getcpu(3) - man](https://man7.org/linux/man-pages/man3/sched_getcpu.3.html).
+        - User-space code: See [sched_getcpu(3) - man](https://linux.die.net/man/3/sched_getcpu).
         - Kernel-space code: See `smp_processor_id()` .
 4. Affinity can also be applied to IRQs, to direct execution of their handler on specific CPUs.
     - Can be done via `/proc/irq/<irq-num>/smp_affinity` .
