@@ -364,12 +364,12 @@ For kernel-space allocations, page frames are always assigned when the memory wa
 Depending on purpose of allocation and the context (atomic/process) the appropriate flags must be passed when requesting memory.
 These also guide the kernel in assigning memory from an appropriate source. Common flags are shown below.
 
-    | State | Purpose |
-    | ---------- | ------------ |
-    | `GFP_KERNEL` | Most common approach. May sleep if memory is not available. |
-    | `GFP_ATOMIC` | Sleeping is not allowed. If memory is not available, allocation will be aborted. |
-    | `GFP_USER` | For allocating memory to user-space that needs to be accessible from kernel-space. May sleep if memory is not available. |
-    | `GFP_TRANSHUGE` | Transparent Huge Page (THP) allocations. May sleep if memory is not available. |
+| State | Purpose |
+| ---------- | ------------ |
+| `GFP_KERNEL` | Most common approach. May sleep if memory is not available. |
+| `GFP_ATOMIC` | Sleeping is not allowed. If memory is not available, allocation will be aborted. |
+| `GFP_USER` | For allocating memory to user-space that needs to be accessible from kernel-space. May sleep if memory is not available. |
+| `GFP_TRANSHUGE` | Transparent Huge Page (THP) allocations. May sleep if memory is not available. |
 
 ### Page Allocator
 
