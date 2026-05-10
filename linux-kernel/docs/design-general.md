@@ -155,7 +155,7 @@
 
     | User-space | Kernel-space |
     | ---------- | ------------ |
-    | Process ID (PID, `getpid()`) | Thread Group ID (TGID) |
+    | Process ID (PID, `getpid()` | Thread Group ID (TGID) |
     | Thread ID (TID), `gettid()` | Process ID (PID) |
 
 2. Kernel does not make a distinction between processes and it's threads, or even kthreads.
@@ -186,16 +186,18 @@
     | `TASK_TRACED` | Under tracing (`ptrace()`). |
     | `TASK_DEAD` | Exited. |
 
-12. For user-space processes (i.e. not threads), the child processes must have their exit code read by the parent process via `wait()` .
+12. kthreads should not be created in atomic context as the creation code can sleep.
+
+### User-Space Process Termination Handling
+
+1. Child processes must have their exit code read by the parent process via `wait()` .
     - Until then, the `task_struct` for the child process will not be cleaned up (zombie).
-    - Parent process is notified of child process exits based on the requested signal in `clone()` (`fork()` sets `SIGCHLD`).
-    - If a parent process terminates itself, the child processes will generally be reparented to the init process, unless a grandparent process has set the subreaper attribute.
-        - See [prctl(2) - man](https://linux.die.net/man/2/prctl).
-    - A process can exit either by calling `exit()` , return-from-main(), due to signals or an unrecoverable CPU exception.
-13. It is possible to run user-space processes from the kernel-space, but highly discouraged.
-    - See `call_usermodehelper()` .
-    - A valid use is `request_module` that is used for `modprobe`.
-14. kthreads should not be created in atomic context as the creation code can sleep.
+2. Parent process is notified of child process exits based on the requested signal in `clone()` (`fork()` sets `SIGCHLD`).
+3. If a parent process terminates itself, the child processes will generally be reparented to the init process, unless a grandparent process has set the subreaper attribute.
+    - See [prctl(2) - man](https://linux.die.net/man/2/prctl).
+4. A process can exit either by calling `exit()` , return-from-main(), due to signals or an unrecoverable CPU exception.
+5. For user-space threads, no signal is generated.
+    - It may still be possible to monitor thread exits, e.g. `pthread_join()` .
 
 ### Symmetric Multi-Processing (SMP) & Task Isolation
 
@@ -228,6 +230,29 @@
     - [CPU Isolation by SUSE Labs #4](https://www.suse.com/c/cpu-isolation-housekeeping-and-tradeoffs-part-4/).
     - [CPU Isolation by SUSE Labs #5](https://www.suse.com/c/cpu-isolation-practical-example-part-5/).
 9. Kernel also provides the means to define per-CPU variables (e.g. `DEFINE_PER_CPU()`).
+
+### Scheduling Policies For User-Space Tasks
+
+1. Tasks are categorized into policies, which in-turn determine priority and scheduling behavior.
+    - `task_struct` for that task will keep track of this.
+2. Common policies are mentioned below.
+    - `SCHED_OTHER` : Default policy.
+        - Tasks are assigned a time-slice and the scheduler will rotate among them.
+        - Dynamic priority (nice) can be used to affect time slice length. See [setpriority(2) - man](https://linux.die.net/man/2/setpriority).
+    -  `SCHED_FIFO` : Soft RT policy.
+        - Uses static priority which is higher than dynamic priorities of `SCHED_OTHER` .
+        - A running task will continue running (as long as its runnable) if no runnable task exists with higher-priority.
+        - A running task will continue running (as long as its runnable) even if there are runnable tasks with same priority.
+    - `SCHED_RR` : Soft RT policy.
+        - Same as `SCHED_FIFO` except that the scheduler will rotate among `SCHED_RR` tasks of same priority.
+        - Will not preempt a running `SCHED_FIFO` task of same priority.
+3. To configure these policies, see [sched_setscheduler(2) - man](https://linux.die.net/man/2/sched_setscheduler).
+
+### Running User-Space Tasks From Kernel-Space
+
+1. It is possible to run user-space processes from the kernel-space, but highly discouraged.
+2. A valid use for this is `modprobe`.
+3. Kernel provides `call_usermodehelper()` to do this, if needed.
 
 
 ## Synchronization Methods
