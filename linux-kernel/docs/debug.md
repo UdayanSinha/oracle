@@ -59,6 +59,7 @@
 5. Kernel symbol table: `/proc/kallsyms`
 6. Kernel parameters: `sysctl -a`
     - See [sysctl(8) - man](https://linux.die.net/man/8/sysctl).
+7. Support filesystems: `/proc/filesystems`
 
 
 ## Boot Firmware Information

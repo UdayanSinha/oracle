@@ -448,3 +448,29 @@ These also guide the kernel in assigning memory from an appropriate source. Comm
 4. Useful for very large allocations (in theory, up to full size of physical memory), where memory may be access seldom.
 5. `/proc/vmallocinfo` shows current `vmalloc()` allocations.
 6. May sleep during allocation.
+
+### Huge Pages
+
+1. Larger than standard pages.
+2. Used for memory-intensive applications.
+    - To reduce page table size that would be needed for the memory (beneficial when there are many processes accessing that memory).
+    - To reduce MMU pressure due to frequent address translation.
+3. Traditional way of using huge pages requires that the pages be made available in the system first (e.g. during system initialization).
+    - `echo <num-huge-pages> > /proc/sys/vm/nr_hugepages`
+    - After that, there are 3 ways to use the huge pages.
+        - Mount a `hugetlbfs` filesystem: `mount -t hugetlbfs none /path/to/mount/at -o size=<size-of-mount>`
+            - Application can `mmap()` a file on the filesystem and use the huge pages.
+            - Regular read/write access will not work.
+        - Use the huge pages as System V shared memory. See [shmget(2) - man](https://linux.die.net/man/2/shmget).
+            - May require changes to shared memory settings.
+                - `/proc/sys/kernel/shmmax`
+                - `/proc/sys/kernel/shmall`
+                - `/proc/sys/kernel/shmmni`
+        - Use libhugetlbfs. See [libhugetlbfs(7) - man](https://linux.die.net/man/7/libhugetlbfs).
+4. Transparent Huge Pages makes it possible for applications to use huge pages on demand, w/o the administrative setup that is required otherwise.
+    - Can be configured in 2 ways.
+        - `CONFIG_TRANSPARENT_HUGEPAGE_ALWAYS` : Kernel will automatically assign huge pages for an application.
+        - `CONFIG_TRANSPARENT_HUGEPAGE_MADVISE` : Kernel will assign huge pages if application requests it via `madvise()` .
+            - See [madvise(2) - man](https://linux.die.net/man/2/madvise).
+    - Note that transparent huge page support may also enable memory compaction (defragmentation support in kernel).
+    - See [Transparent Huge Pages - The Linux Kernel Documentation](https://docs.kernel.org/admin-guide/mm/transhuge.html).
