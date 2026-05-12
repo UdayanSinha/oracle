@@ -175,7 +175,7 @@
 8. `current` points to currently running task on the CPU.
 9. Maximum number of allowed tasks: `/proc/sys/kernel/threads-max`
 10. Maximum allowed PID value: `/proc/sys/kernel/pid_max`
-11. Common task states in `task_struct` include the following.
+11. Common task states in `struct task_struct` include the following.
 
     | State | Purpose |
     | ---------- | ------------ |
@@ -191,7 +191,7 @@
 ### User-Space Process Termination Handling
 
 1. Child processes must have their exit code read by the parent process via `wait()` .
-    - Until then, the `task_struct` for the child process will not be cleaned up (zombie).
+    - Until then, the `struct task_struct` for the child process will not be cleaned up (zombie).
 2. Parent process is notified of child process exits based on the requested signal in `clone()` (`fork()` sets `SIGCHLD`).
 3. If a parent process terminates itself, the child processes will generally be reparented to the init process, unless a grandparent process has set the subreaper attribute.
     - See [prctl(2) - man](https://linux.die.net/man/2/prctl).
@@ -230,12 +230,15 @@
     - [CPU Isolation by SUSE Labs #4](https://www.suse.com/c/cpu-isolation-housekeeping-and-tradeoffs-part-4/).
     - [CPU Isolation by SUSE Labs #5](https://www.suse.com/c/cpu-isolation-practical-example-part-5/).
 9. Kernel also provides the means to define per-CPU variables (e.g. `DEFINE_PER_CPU()`).
+10. Besides affinities, Linux also has the process limit mechanism (rlimit) and additional cgroup features for process resource management.
+    - See [cgroup v2 - The Linux Kernel Documentation](https://docs.kernel.org/admin-guide/cgroup-v2.html).
+    - See [setrlimit(2) - man](https://linux.die.net/man/2/setrlimit).
 
 ### Scheduling Policies For User-Space Tasks
 
 1. Tasks are categorized into policies, which in-turn determine priority and scheduling behavior.
-    - `task_struct` for that task will keep track of this.
-2. Common policies are mentioned below.
+    - `struct task_struct` for that task will keep track of this.
+2. Common policies are mentioned below:
     - `SCHED_OTHER` : Default policy.
         - Tasks are assigned a time-slice and the scheduler will rotate among them.
         - Dynamic priority (nice) can be used to affect time slice length. See [setpriority(2) - man](https://linux.die.net/man/2/setpriority).
@@ -332,7 +335,12 @@ Presence of an MMU is one the minimum requirements to run Linux.
     - Non-NUMA systems can just be considered to be a single NUMA node.
     - Kernel view of the NUMA topology is exposed here: `/sys/devices/system/cpu/cpu<n>/topology`
     - See [CPU Topology - The Linux Kernel Documentation](https://docs.kernel.org/admin-guide/cputopology.html).
-7. Virtual memory is divided into fixed-sized segments called pages (typical size is 4kB).
+7. The virtual address space of a task consists of one or more memory regions.
+    - Each region consists of virtually addressed fixed-sized segments called pages (typical size is 4kB).
+        - Tasks may share memory regions (e.g. for user-space threads).
+        - Memory regions in a task's address space can be viewed here: `/proc/<PID>/maps`
+    - Virtual addresses may always be contiguous in this address space.
+    - The physical addresses are only contiguous within a memory region.
     - Flags w.r.t memory is typically specified at page-level, not address-level.
         - Flags determine aspects like dirty state (page updated but not written to storage), update policies (write-back/write-through), etc.
         - `enum pageflags` defines page flags used by Linux.
@@ -340,8 +348,9 @@ Presence of an MMU is one the minimum requirements to run Linux.
     - A page frame (physical memory page) is a fixed-size segment of physical memory.
     - A page may reside in a page frame, storage, device, etc.
     - Page tables (typically 3, 4 or 5 levels) used to map virtual to physical addresses.
-    - Each task has its own page table.
-    - E.g. A 5-level page table is shown below.
+    - Each task has its own page table to translate for its address space.
+        - Loaded into MMU during context switch.
+    - E.g. A 5-level page table is shown below:
 
         ```
         Example for a 57-bit total addressable space:
@@ -375,16 +384,29 @@ Presence of an MMU is one the minimum requirements to run Linux.
 8. Each page frame has a `struct page` associated with it.
     - `pfn_to_page()` and `page_to_pfn()` can be used to map page frames to `struct page` and vice versa.
     - `virt_to_page` can be used to map a kernel virtual address to a `struct page` .
+9. Each memory region has a `struct vm_area_struct` associated with it.
+    - For memory regions shared between user-space processes, they will still have their own copies of `struct vm_area_struct` for a given memory region.
+    - For memory regions shared between user-space threads, they may share the same `struct vm_area_struct` for a given memory region.
+10. The address space of a task has a `struct mm_struct` associated with it.
+
+### Page Fault Handling
+
+1. For user-space allocations, kernel may assign pages to the task address space w/o page frames being actually assigned.
+2. Page frames will be assigned when the memory is actually attempted to be used and may be swapped out.
+3. When a user-space process attempts to access memory, the address is checked by the kernel:
+    - If address is valid (access is allowed):
+        - If page frames were assigned and pages were not swapped out, the access will be allowed (no page fault).
+        - If page frames were not assigned, page fault handling will assign page frames and allow access.
+        - If page frames were assigned but pages are swapped out, page fault handling will bring those pages back into memory.
+    - If address is invalid (access not allowed, or not yet assigned in address space), page fault handling will result in `SIGSEGV` being sent back to the process.
+4. For kernel-space allocations, page frames are always assigned when the memory was requested, and never swapped out.
+    - Hence why page faults in kernel-space will generally cause a panic.
 
 
 ## Memory Management
 
 Kernel stack size is limited (order of kBs), unlike the stack size in user-space (order of MBs).
 Several mechanisms exist for allocating memory dynamically, as described below.
-
-Note that for user-space allocations, kernel may assign pages to the task address space w/o page frames being actually assigned.
-Page frames will be assigned when the memory is actually attempted to be used (demand-paging).
-For kernel-space allocations, page frames are always assigned when the memory was requested.
 
 Depending on purpose of allocation and the context (atomic/process) the appropriate flags must be passed when requesting memory.
 These also guide the kernel in assigning memory from an appropriate source. Common flags are shown below.
@@ -457,7 +479,7 @@ These also guide the kernel in assigning memory from an appropriate source. Comm
     - To reduce MMU pressure due to frequent address translation.
 3. Traditional way of using huge pages requires that the pages be made available in the system first (e.g. during system initialization).
     - `echo <num-huge-pages> > /proc/sys/vm/nr_hugepages`
-    - After that, there are 3 ways to use the huge pages.
+    - After that, there are 3 ways to use the huge pages:
         - Mount a `hugetlbfs` filesystem: `mount -t hugetlbfs none /path/to/mount/at -o size=<size-of-mount>`
             - Application can `mmap()` a file on the filesystem and use the huge pages.
             - Regular read/write access will not work.
@@ -468,9 +490,15 @@ These also guide the kernel in assigning memory from an appropriate source. Comm
                 - `/proc/sys/kernel/shmmni`
         - Use libhugetlbfs. See [libhugetlbfs(7) - man](https://linux.die.net/man/7/libhugetlbfs).
 4. Transparent Huge Pages makes it possible for applications to use huge pages on demand, w/o the administrative setup that is required otherwise.
-    - Can be configured in 2 ways.
+    - Can be configured in 2 ways:
         - `CONFIG_TRANSPARENT_HUGEPAGE_ALWAYS` : Kernel will automatically assign huge pages for an application.
         - `CONFIG_TRANSPARENT_HUGEPAGE_MADVISE` : Kernel will assign huge pages if application requests it via `madvise()` .
             - See [madvise(2) - man](https://linux.die.net/man/2/madvise).
     - Note that transparent huge page support may also enable memory compaction (defragmentation support in kernel).
     - See [Transparent Huge Pages - The Linux Kernel Documentation](https://docs.kernel.org/admin-guide/mm/transhuge.html).
+
+### User-Space Page Locking
+
+1. Prevents pages of a user-space task from being swapped out.
+    - Limit set by process limits (rlimit) mechanism.
+2. See [mlock(2) - man](https://linux.die.net/man/2/mlock).
