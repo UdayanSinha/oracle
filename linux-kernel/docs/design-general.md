@@ -339,6 +339,7 @@ Presence of an MMU is one the minimum requirements to run Linux.
     - Each region consists of virtually addressed fixed-sized segments called pages (typical size is 4kB).
         - Tasks may share memory regions (e.g. for user-space threads).
         - Memory regions in a task's address space can be viewed here: `/proc/<PID>/maps`
+            - Detailed statistics for each region can be viewed here: `/proc/<PID>/smaps`
     - Virtual addresses may always be contiguous in this address space.
     - The physical addresses are only contiguous within a memory region.
     - Flags w.r.t memory is typically specified at page-level, not address-level.
@@ -480,11 +481,12 @@ These also guide the kernel in assigning memory from an appropriate source. Comm
 3. Traditional way of using huge pages requires that the pages be made available in the system first (e.g. during system initialization).
     - `echo <num-huge-pages> > /proc/sys/vm/nr_hugepages`
     - After that, there are 3 ways to use the huge pages:
-        - Mount a `hugetlbfs` filesystem: `mount -t hugetlbfs none /path/to/mount/at -o size=<size-of-mount>`
-            - Application can `mmap()` a file on the filesystem and use the huge pages.
+        - Use the huge pages via `mmap()` .
             - Regular read/write access will not work.
+            - If file-backed huge pages are needed (i.e. not using `MAP_ANONYMOUS`), a `hugetlbfs` mount is also required: `mount -t hugetlbfs none /path/to/mount/at -o size=<size-of-mount>`
         - Use the huge pages as System V shared memory. See [shmget(2) - man](https://linux.die.net/man/2/shmget).
             - May require changes to shared memory settings.
+                - `/proc/sys/vm/hugetlb_shm_group`
                 - `/proc/sys/kernel/shmmax`
                 - `/proc/sys/kernel/shmall`
                 - `/proc/sys/kernel/shmmni`

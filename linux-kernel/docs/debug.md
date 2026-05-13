@@ -59,7 +59,7 @@
 5. Kernel symbol table: `/proc/kallsyms`
 6. Kernel parameters: `sysctl -a`
     - See [sysctl(8) - man](https://linux.die.net/man/8/sysctl).
-7. Support filesystems: `/proc/filesystems`
+7. Supported filesystems: `/proc/filesystems`
 
 
 ## Boot Firmware Information
@@ -99,6 +99,13 @@ See [powertop(8) - man](https://linux.die.net/man/8/powertop).
 
 Use stress-ng for stress tests.
 See [stress(1) - man](https://linux.die.net/man/1/stress).
+
+
+## Process Address Space
+
+Mapping information of a process address space can be viewed here:
+- List of regions: `/proc/<PID>/maps`
+- Memory usage statistics for each region: `/proc/<PID>/smaps`
 
 
 ## Dynamic Debug
