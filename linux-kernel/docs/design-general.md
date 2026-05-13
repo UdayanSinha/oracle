@@ -494,7 +494,8 @@ These also guide the kernel in assigning memory from an appropriate source. Comm
     - After that, there are 3 ways to use the huge pages:
         - Use the huge pages via `mmap()` .
             - Regular read/write access will not work.
-            - If file-backed huge pages are needed (i.e. not using `MAP_ANONYMOUS`), a `hugetlbfs` mount is also required: `mount -t hugetlbfs none /path/to/mount/at -o size=<size-of-mount>`
+            - If file-backed huge pages are needed (i.e. not using `MAP_ANONYMOUS`), a `hugetlbfs` mount is also required.
+                - Can be done like so: `mount -t hugetlbfs none /path/to/mount/at -o size=<size-of-mount>`
         - Use the huge pages as System V shared memory. See [shmget(2) - man](https://man7.org/linux/man-pages/man2/shmget.2.html).
             - May require changes to shared memory settings.
                 - `/proc/sys/vm/hugetlb_shm_group`
