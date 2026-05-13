@@ -37,7 +37,7 @@
 
 ## Dmesg & Syslog
 
-1. Kernel message buffer can be viewed with the `dmesg` utility. See [dmesg(1) - man](https://linux.die.net/man/1/dmesg).
+1. Kernel message buffer can be viewed with the `dmesg` utility. See [dmesg(1) - man](https://man7.org/linux/man-pages/man1/dmesg.1.html).
 2. Syslog location varies depending on the installation.
 
 
@@ -58,7 +58,7 @@
 4. Kernel taint status: `/proc/sys/kernel/tainted`
 5. Kernel symbol table: `/proc/kallsyms`
 6. Kernel parameters: `sysctl -a`
-    - See [sysctl(8) - man](https://linux.die.net/man/8/sysctl).
+    - See [sysctl(8) - man](https://man7.org/linux/man-pages/man8/sysctl.8.html).
 7. Supported filesystems: `/proc/filesystems`
 
 
@@ -80,7 +80,7 @@ It is also possible to call `panic()` , which will result in an OOPS message and
 ## strace
 
 Use strace for system call usage profiling in user-space programs.
-See [strace(1) - man](https://linux.die.net/man/1/strace).
+See [strace(1) - man](https://man7.org/linux/man-pages/man1/strace.1.html).
 
 
 ## perf
@@ -92,13 +92,11 @@ It can analyze both user-space and kernel-space code.
 ## powertop
 
 Use powertop for power consumption profiling.
-See [powertop(8) - man](https://linux.die.net/man/8/powertop).
 
 
 ## stress-ng
 
 Use stress-ng for stress tests.
-See [stress(1) - man](https://linux.die.net/man/1/stress).
 
 
 ## Process Address Space

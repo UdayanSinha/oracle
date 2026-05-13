@@ -63,9 +63,9 @@
         indent /path/to/file -linux
         ```
 
-    - See [indent(1) - man](https://linux.die.net/man/1/indent).
+    - See [indent(1) - man](https://man7.org/linux/man-pages/man1/indent.1.html).
 3. Use `sparse` for code static analysis (other tools may also be applicable).
-    - See [sparse(1) - man](https://linux.die.net/man/1/sparse).
+    - See [sparse(1) - man](https://man7.org/linux/man-pages/man1/sparse.1.html).
     - Invoke during compilation of the kernel.
 
         ```console
@@ -141,7 +141,7 @@
 2. `syscall()` is interface for user-space to make system-calls.
     - Normally wrapped by library functions. E.g. `open()` .
     - A user-space program may not necessarily know when a system call could result from a library function call.
-    - See [syscall(2) - man](https://linux.die.net/man/2/syscall).
+    - See [syscall(2) - man](https://man7.org/linux/man-pages/man2/syscall.2.html).
 3. System calls are typically implemented via exceptions (synchronous IRQs), but this is architecture-specific.
     - System calls available for a platform may also be architecture-specific.
 4. In kernel, a new system call is typically defined via the `SYSCALL_DEFINE<n>()` macro.
@@ -160,7 +160,7 @@
 
 2. Kernel does not make a distinction between processes and it's threads, or even kthreads.
     - Everything is a task with an associated `struct task_struct` with different settings.
-    - The underlying system call to spawn processes and threads is the same as well (`clone()`). See [clone(2) - man](https://linux.die.net/man/2/clone).
+    - The underlying system call to spawn processes and threads is the same as well (`clone()`). See [clone(2) - man](https://man7.org/linux/man-pages/man2/clone.2.html).
 3. Kernel can execute in 2 contexts:
     - Atomic/interrupt context: Cannot sleep.
     - Process context: Executing on behalf of a user-space process. Can sleep.
@@ -194,7 +194,7 @@
     - Until then, the `struct task_struct` for the child process will not be cleaned up (zombie).
 2. Parent process is notified of child process exits based on the requested signal in `clone()` (`fork()` sets `SIGCHLD`).
 3. If a parent process terminates itself, the child processes will generally be reparented to the init process, unless a grandparent process has set the subreaper attribute.
-    - See [prctl(2) - man](https://linux.die.net/man/2/prctl).
+    - See [PR_SET_CHILD_SUBREAPER(2const) - man](https://man7.org/linux/man-pages/man2/PR_SET_CHILD_SUBREAPER.2const.html).
 4. A process can exit either by calling `exit()` , return-from-main(), due to signals or an unrecoverable CPU exception.
 5. For user-space threads, no signal is generated.
     - It may still be possible to monitor thread exits, e.g. `pthread_join()` .
@@ -205,10 +205,10 @@
 2. Kernel generally tries to keep tasks on the same CPU to avoid migration overhead.
 3. A task can be assigned an affinity to inform kernel **what CPUs it is allowed to be scheduled on**.
     - Affinity is typically specified as a bit mask of CPUs.
-    - Can be done via `taskset` over command-line. See [taskset(1) - man](https://linux.die.net/man/1/taskset).
-    - Can be done via `sched_setaffinity()` in user-space code. See [sched_setaffinity(2) - man](https://linux.die.net/man/2/sched_setaffinity).
+    - Can be done via `taskset` over command-line. See [taskset(1) - man](https://man7.org/linux/man-pages/man1/taskset.1.html).
+    - Can be done via `sched_setaffinity()` in user-space code. See [sched_setaffinity(2) - man](https://man7.org/linux/man-pages/man2/sched_setaffinity.2.html).
     - CPU currently being used for execution can also be checked in code.
-        - User-space code: See [sched_getcpu(3) - man](https://linux.die.net/man/3/sched_getcpu).
+        - User-space code: See [sched_getcpu(3) - man](https://man7.org/linux/man-pages/man3/sched_getcpu.3.html).
         - Kernel-space code: See `smp_processor_id()` .
 4. Affinity can also be applied to IRQs, to direct execution of their handler on specific CPUs.
     - Can be done via `/proc/irq/<irq-num>/smp_affinity` .
@@ -232,7 +232,7 @@
 9. Kernel also provides the means to define per-CPU variables (e.g. `DEFINE_PER_CPU()`).
 10. Besides affinities, Linux also has the process limit mechanism (rlimit) and additional cgroup features for process resource management.
     - See [cgroup v2 - The Linux Kernel Documentation](https://docs.kernel.org/admin-guide/cgroup-v2.html).
-    - See [setrlimit(2) - man](https://linux.die.net/man/2/setrlimit).
+    - See [setrlimit(2) - man](https://man7.org/linux/man-pages/man3/setrlimit.3p.html).
 
 ### Scheduling Policies For User-Space Tasks
 
@@ -241,7 +241,7 @@
 2. Common policies are mentioned below:
     - `SCHED_OTHER` : Default policy.
         - Tasks are assigned a time-slice and the scheduler will rotate among them.
-        - Dynamic priority (nice) can be used to affect time slice length. See [setpriority(2) - man](https://linux.die.net/man/2/setpriority).
+        - Dynamic priority (nice) can be used to affect time slice length. See [setpriority(2) - man](https://man7.org/linux/man-pages/man3/setpriority.3p.html).
     -  `SCHED_FIFO` : Soft RT policy.
         - Uses static priority which is higher than dynamic priorities of `SCHED_OTHER` .
         - A running task will continue running (as long as its runnable) if no runnable task exists with higher-priority.
@@ -249,7 +249,7 @@
     - `SCHED_RR` : Soft RT policy.
         - Same as `SCHED_FIFO` except that the scheduler will rotate among `SCHED_RR` tasks of same priority.
         - Will not preempt a running `SCHED_FIFO` task of same priority.
-3. To configure these policies, see [sched_setscheduler(2) - man](https://linux.die.net/man/2/sched_setscheduler).
+3. To configure these policies, see [sched_setscheduler(2) - man](https://man7.org/linux/man-pages/man2/sched_setscheduler.2.html).
 
 ### Running User-Space Tasks From Kernel-Space
 
@@ -382,13 +382,24 @@ Presence of an MMU is one the minimum requirements to run Linux.
 
     - 3-level page tables lack P4D and PUD.
     - 4-level page tables lack P4D.
-8. Each page frame has a `struct page` associated with it.
+8. There are several system calls that involve manipulation of memory regions in process address space:
+
+| System Call | Purpose |
+| ---------- | ------------ |
+| `brk()` , `sbrk()` | Change size of heap region in address space. |
+| `fork()` | Create a new address space as part of process creation. |
+| `execve()` | Change address space while starting a new process with the same PID. |
+| `exit()` | Destroy address space as part of process termination. |
+| `mmap()` , `mremap()` , `munmap()` | Handle mapping of a memory region into address space. |
+| `shmat()` , `shmdt()` | Handle attachment of a System V IPC shared memory region into address space. |
+
+9. Each page frame has a `struct page` associated with it.
     - `pfn_to_page()` and `page_to_pfn()` can be used to map page frames to `struct page` and vice versa.
     - `virt_to_page` can be used to map a kernel virtual address to a `struct page` .
-9. Each memory region has a `struct vm_area_struct` associated with it.
+10. Each memory region has a `struct vm_area_struct` associated with it.
     - For memory regions shared between user-space processes, they will still have their own copies of `struct vm_area_struct` for a given memory region.
     - For memory regions shared between user-space threads, they may share the same `struct vm_area_struct` for a given memory region.
-10. The address space of a task has a `struct mm_struct` associated with it.
+11. The address space of a task has a `struct mm_struct` associated with it.
 
 ### Page Fault Handling
 
@@ -484,18 +495,19 @@ These also guide the kernel in assigning memory from an appropriate source. Comm
         - Use the huge pages via `mmap()` .
             - Regular read/write access will not work.
             - If file-backed huge pages are needed (i.e. not using `MAP_ANONYMOUS`), a `hugetlbfs` mount is also required: `mount -t hugetlbfs none /path/to/mount/at -o size=<size-of-mount>`
-        - Use the huge pages as System V shared memory. See [shmget(2) - man](https://linux.die.net/man/2/shmget).
+        - Use the huge pages as System V shared memory. See [shmget(2) - man](https://man7.org/linux/man-pages/man2/shmget.2.html).
             - May require changes to shared memory settings.
                 - `/proc/sys/vm/hugetlb_shm_group`
                 - `/proc/sys/kernel/shmmax`
                 - `/proc/sys/kernel/shmall`
                 - `/proc/sys/kernel/shmmni`
-        - Use libhugetlbfs. See [libhugetlbfs(7) - man](https://linux.die.net/man/7/libhugetlbfs).
+        - Use libhugetlbfs.
 4. Transparent Huge Pages makes it possible for applications to use huge pages on demand, w/o the administrative setup that is required otherwise.
     - Can be configured in 2 ways:
         - `CONFIG_TRANSPARENT_HUGEPAGE_ALWAYS` : Kernel will automatically assign huge pages for an application.
+            - Can be toggled per process via `PR_SET_THP_DISABLE` . See [PR_SET_THP_DISABLE(2const) - man](https://man7.org/linux/man-pages/man2/PR_SET_THP_DISABLE.2const.html).
         - `CONFIG_TRANSPARENT_HUGEPAGE_MADVISE` : Kernel will assign huge pages if application requests it via `madvise()` .
-            - See [madvise(2) - man](https://linux.die.net/man/2/madvise).
+            - See [madvise(2) - man](https://man7.org/linux/man-pages/man2/madvise.2.html).
     - Note that transparent huge page support may also enable memory compaction (defragmentation support in kernel).
     - See [Transparent Huge Pages - The Linux Kernel Documentation](https://docs.kernel.org/admin-guide/mm/transhuge.html).
 
@@ -503,4 +515,4 @@ These also guide the kernel in assigning memory from an appropriate source. Comm
 
 1. Prevents pages of a user-space task from being swapped out.
     - Limit set by process limits (rlimit) mechanism.
-2. See [mlock(2) - man](https://linux.die.net/man/2/mlock).
+2. See [mlock(2) - man](https://man7.org/linux/man-pages/man2/mlock.2.html).

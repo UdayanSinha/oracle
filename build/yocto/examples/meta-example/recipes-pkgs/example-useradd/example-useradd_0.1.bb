@@ -24,13 +24,13 @@ RECIPE_USER_PASSWD = "\$5\$Y8nS8gke8teWfqYS\$JzzaGIMgeG1./DK.6.8px94ZStZKueBzGrw
 # define package which will add the user
 USERADD_PACKAGES = "${PN}"
 
-# see: https://linux.die.net/man/8/useradd
+# see: https://man7.org/linux/man-pages/man8/useradd.8.html
 USERADD_PARAM:${PN} += "-d /home/${RECIPE_USER} -p '${RECIPE_USER_PASSWD}' ${RECIPE_USER}"
 
-# see: https://linux.die.net/man/8/groupadd
+# see: https://man7.org/linux/man-pages/man8/groupadd.8.html
 GROUPADD_PARAM:${PN} += "${RECIPE_GRP}"
 
-# see: https://linux.die.net/man/8/groupmems
+# see: https://man7.org/linux/man-pages/man8/groupmems.8.html
 GROUPMEMS_PARAM:${PN} += "-g ${RECIPE_GRP} -a ${RECIPE_USER}"
 
 # indicate home directory and its contents to be part of the package
