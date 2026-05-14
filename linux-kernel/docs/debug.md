@@ -44,6 +44,7 @@
 ## Basic System Information
 
 1. CPU information: `/proc/cpuinfo`
+    - Cache information: `/sys/devices/system/cpu/cpu<n>/cache`
 2. Memory information:
     - `/proc/meminfo`
     - `/proc/buddyinfo`
@@ -60,21 +61,23 @@
 6. Kernel parameters: `sysctl -a`
     - See [sysctl(8) - man](https://man7.org/linux/man-pages/man8/sysctl.8.html).
 7. Supported filesystems: `/proc/filesystems`
+8. Swap areas: `/proc/swaps`
 
 
 ## Boot Firmware Information
 
-Check settings for relevant boot firmware (BIOS, UEFI, U-Boot, etc).
+1. Check settings for relevant boot firmware (BIOS, UEFI, U-Boot, etc).
+2. Kernel also provides some information here: `/sys/firmware`
 
 
 ## Tracing In Code
 
-Other than `printk()`, OOPS messages are also a useful source of debug info.
-See `WARN()` , `BUG()` and its variants.
-Note that `WARN()` and its variants will result in an OOPS message w/o further action.
-`BUG()` and its variants will result in an OOPS message and may kill the user-space process (process context).
-`/proc/sys/kernel/panic_on_oops` or `CONFIG_PANIC_ON_OOPS` will affect behavior of `BUG()` .
-It is also possible to call `panic()` , which will result in an OOPS message and cause a crash.
+1. Other than `printk()`, OOPS messages are also a useful source of debug info.
+    - See `WARN()` , `BUG()` and its variants.
+2. Note that `WARN()` and its variants will result in an OOPS message w/o further action.
+3. `BUG()` and its variants will result in an OOPS message and may kill the user-space process (process context).
+4. `/proc/sys/kernel/panic_on_oops` or `CONFIG_PANIC_ON_OOPS` will affect behavior of `BUG()` .
+5. It is also possible to call `panic()` , which will result in an OOPS message and cause a crash.
 
 
 ## strace
@@ -109,6 +112,7 @@ Mapping information of a process address space can be viewed here:
 ## Dynamic Debug
 
 Enable dynamic debug, see [Dynamic debug - The Linux Kernel documentation](https://docs.kernel.org/admin-guide/dynamic-debug-howto.html).
+
 E.g. To see pr_debug() logs for a kernel module: `echo "module <module_name> +p" > /sys/kernel/debug/dynamic_debug/control`
 
 
@@ -137,16 +141,19 @@ Trace logs can be found at: `/sys/kernel/debug/tracing/per_cpu/cpu<n>/trace`
 ## SysRq
 
 Use sysrq, as explained in [Linux Magic System Request Key Hack - The Linux Kernel documentation](https://docs.kernel.org/admin-guide/sysrq.html).
+
 E.g. Trigger kernel panic: `echo c > /proc/sysrq-trigger`
 
 
 ## Lockdep
 
 Enable lock-validation via lockdep. See [Runtime locking correctness validator - The Linux Kernel documentation](https://docs.kernel.org/locking/lockdep-design.html).
+
 `Hacking Options` in the defconfig lists lockdep settings.
 
 
 ## kdump
 
 If available, use kdump to troubleshoot kernel panics by analyzing the system memory dump.
+
 See [Documentation for Kdump - The kexec-based Crash Dumping Solution](https://docs.kernel.org/admin-guide/kdump/kdump.html).

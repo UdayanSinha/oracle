@@ -491,6 +491,7 @@ These also guide the kernel in assigning memory from an appropriate source. Comm
     - To reduce MMU pressure due to frequent address translation.
 3. Traditional way of using huge pages requires that the pages be made available in the system first (e.g. during system initialization).
     - `echo <num-huge-pages> > /proc/sys/vm/nr_hugepages`
+        - Can also be done via kernel command-line parameters.
     - After that, there are 3 ways to use the huge pages:
         - Use the huge pages via `mmap()` .
             - Regular read/write access will not work.
@@ -512,8 +513,83 @@ These also guide the kernel in assigning memory from an appropriate source. Comm
     - Note that transparent huge page support may also enable memory compaction (defragmentation support in kernel).
     - See [Transparent Huge Pages - The Linux Kernel Documentation](https://docs.kernel.org/admin-guide/mm/transhuge.html).
 
-### User-Space Page Locking
+
+## Caches & Swap
+
+Besides HW caches, Linux uses several SW caches too.
+
+1. Dentry cache: Keeps recently used mappings between pathnames and inodes.
+2. Inode cache: Keeps recently used inodes.
+3. Page cache: Keeps recently accessed pages in RAM.
+
+The caches are shared by the entire system i.e. they are not per-task.
+For page cache, the pages may not correspond to contiguous disk/device blocks.
+
+### Page Cache
+
+1. Pages may or may not be backed by devices (e.g. files on storage).
+2. Device-backed pages benefit from requiring fewer I/O transactions.
+3. For device-backed pages (e.g. storage), the device may itself store data in terms of fixed-size blocks.
+4. Modified data for device-backed pages are written back to them at regular intervals to keep the cache up to date.
+    - Can be forced via:
+    - `fsync()` : [fsync(2) - man](https://man7.org/linux/man-pages/man2/fsync.2.html).
+    - `sync()` : See [sync(2) - man](https://man7.org/linux/man-pages/man2/sync.2.html).
+    - Using `O_SYNC` with `open()` : See [open(2) - man](https://man7.org/linux/man-pages/man2/open.2.html).
+5. An integral number of such blocks must fit into a page.
+6. Cache size is elastic, depending on memory pressure.
+
+### Swap
+
+1. Increases effective available system memory by using part of storage as an extension of physical memory (swap area).
+    - Hence, swapping is the logical inverse of page caching.
+    - Pages are *swapped out* due to memory pressure.
+    - Pages are *swapped in* when access to their contents are required, and they are not present in memory (page fault handling).
+    - Swapping is transparent to user-space, beside potential performance penalty from storage I/O.
+2. A swap area may be a dedicated storage partition, or a special file residing on a partition alongside other files.
+    - Currently deployed swap areas can be viewed here: `/proc/swaps`
+    - Swap areas have priorities. Faster access => Higher priority.
+        - Lower priority areas will only be used when higher priority areas are unavailable.
+    - Maximum number of swap areas is set by `MAX_SWAPFILES` in kernel code.
+    - Swap areas are divided into slots, each of which contains a single page.
+        - Kernel prefers swapping pages into physically contigous slots.
+        - Kernel usually starts swap operations with the process which induced the swap.
+3. Following types of user-space pages are targeted in swap operations:
+    - Anonymous memory regions (user-space stack, heap, etc).
+    - Huge pages (transparent or otherwise).
+    - Memory-backed filesystem based objects (tmpfs, System V or POSIX shared memory, etc).
+4. Device-backed pages (e.g. files on storage) are never swapped out.
+    - They are simply removed from page cache during memory pressure, since the device itself already contains contents of those pages.
+5. As mentioned earlier, kernel-space pages are never swapped out either.
+6. Swap mechanism has to balance between preferring to keep device-backed pages vs non device-backed pages in page cache.
+    - Can be controlled: `/proc/sys/vm/swappiness`
+    - Values are typically between 0 - 200.
+    - 0 - 99: Kernel prefers to keep non device-backed pages in memory.
+    - 100: Kernel applies equal preference for both.
+    - 100 - 200: Kernel prefers to keep device-backed pages in memory (typically worth it if the swap is fast e.g. zram/zswap).
+    - See [swappiness - The Linux Kernel Documentation](https://docs.kernel.org/admin-guide/sysctl/vm.html#swappiness).
+7. Swap use can be enabled/disabled from user-space.
+    - See [swapon(8) - man](https://man7.org/linux/man-pages/man8/swapon.8.html).
+
+#### User-Space Page Locking
 
 1. Prevents pages of a user-space task from being swapped out.
     - Limit set by process limits (rlimit) mechanism.
 2. See [mlock(2) - man](https://man7.org/linux/man-pages/man2/mlock.2.html).
+
+### Out-Of-Memory (OOM) Killer
+
+1. Linux will over-commit memory for user-space i.e. memory request may be granted, but actual pages are only allocated on use.
+    - Based on the premise that not all requested memory may actually get used.
+    - Process may `fork()` which commits a copy of parent address space for the child, but the child may `execve()` right after.
+    - Process may heap-allocate a large buffer, but only use a few pages.
+2. As mentioned before, kernel always allocates its own memory with urgency (i.e. no overcommit).
+3. Over-commited memory may therefore exceed overall size of physical memory + swap areas.
+4. Over-commit behavior can be tuned: `/proc/sys/vm/overcommit_memory`
+    - See [overcommit-memory - The Linux Kernel Documentation](https://docs.kernel.org/admin-guide/sysctl/vm.html#overcommit-memory).
+5. In connection with over-commit behavior, OOM-Killer is invoked to terminate user-space processes when available memory is exhausted.
+6. Each process has a OOM kill score calculated for itself.
+    - Higher score => Higher probablity of OOM kill.
+    - Can be viewed in `/proc/<PID>/oom_score` (should be 0 for critical system processes).
+    - OOM kill probablity for a process can be adjusted: `/proc/3006/oom_score_adj`
+        - Values typically range from -1000 (nearly unkillable) - 1000 (most-preferred kill).
+6. Kernel can be configured to panic on OOM kills: `/proc/sys/vm/panic_on_oom`
