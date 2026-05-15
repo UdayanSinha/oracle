@@ -27,7 +27,7 @@
     make
     ```
 
-5. See [Kernel Build System - The Linux Kernel documentation](https://docs.kernel.org/kbuild/index.html).
+5. See [Kernel Build System - The Linux Kernel Documentation](https://docs.kernel.org/kbuild/index.html).
 
 
 ## Modules
@@ -55,7 +55,7 @@
 
 ## Coding Guidelines
 
-1. See [Linux Kernel Coding Style](https://docs.kernel.org/process/coding-style.html).
+1. See [Linux Kernel Coding Style- The Linux Kernel Documentation](https://docs.kernel.org/process/coding-style.html).
 2. Use `indent` to enforce coding style.
     - It has a built-in style for Linux Kernel use.
 
@@ -83,7 +83,7 @@
     - Instead use general variable types and definitions that kernel provides.
     - E.g. Use `offset_t` for file offsets.
 7. Always use generic kernel methods/utilities if they are available.
-8. See [Working with Kernel development](https://docs.kernel.org/process/index.html).
+8. See [Working with Kernel Development - The Linux Kernel Documentation](https://docs.kernel.org/process/index.html).
 
 
 ## Boot Flow
@@ -121,10 +121,10 @@
                                 |      (optional)      |
                                 |                      |
                                 | - Prepare to mount   |
-                                |   rootfs             |
+                                |   REAL rootfs        |
                                 +----------------------+
                                   |---> +----------------------+
-                                        |    Mount rootfs      |
+                                        |     Mount rootfs     |
                                         +----------------------+
                                           |---> +----------------------+
                                                 |      Start PID 1     |
@@ -233,6 +233,7 @@
 10. Besides affinities, Linux also has the process limit mechanism (rlimit) and additional cgroup features for process resource management.
     - See [cgroup v2 - The Linux Kernel Documentation](https://docs.kernel.org/admin-guide/cgroup-v2.html).
     - See [setrlimit(2) - man](https://man7.org/linux/man-pages/man3/setrlimit.3p.html).
+    - Note that some rlimit parameters apply to a user, instead of only applying to a process. E.g. `RLIMIT_SIGPENDING` .
 
 ### Scheduling Policies For User-Space Tasks
 
@@ -257,6 +258,49 @@
 2. A valid use for this is `modprobe`.
 3. Kernel provides `call_usermodehelper()` to do this, if needed.
 
+### Signals
+
+1. Short messages to tasks analogous to SW IRQs.
+    - Typically applies to user-space processes.
+    - Can be sent to kthreads in theory, but most signals may be ignored.
+2. Signals can either be ignored, handled via Linux default handler, or be handled via a process-installed handler.
+    - Processes may choose to block/mask certain signals.
+    - Not all signals are blockable, or allow a process to install a handler. E.g. `SIGKILL` , `SIGSTOP` .
+    - Many signals result in process termination.
+3. Signals of the same type cannot be queued generally.
+    - RT signals are an exception (`SIGRT*` between `SIGRTMIN` and `SIGRTMAX`).
+    - Signal queue limits are specified via process limit (rlimit) mechanism.
+4. Following behavior applies when there are multiple signals pending:
+    - RT signals are delivered in FIFO order for the same signal number.
+    - Lower numbered RT signals are prioritized first.
+    - General signal handling is prioritized over RT signals.
+    - For multiple pending general signals, order of handling is non-deterministic.
+5. Available signals on the system (platform-specific): `kill -l`
+6. To send signals, one of the following system calls are common (there may be more):
+    - `kill()` : See [kill(2) - man](https://man7.org/linux/man-pages/man2/kill.2.html).
+    - `raise()` : See [raise(3) - man](https://man7.org/linux/man-pages/man3/raise.3.html).
+7. Kernel will typically not wake a process for signal handling (e.g. if its sleeping).
+    - Some signals like `SIGKILL` are an exception.
+8. Kernel typically checks for pending signals when:
+    - The process is being scheduled in.
+    - After IRQ execution.
+    - After return from a system call that was made by the process.
+9. Following behavior applies for signal handling in multi-threaded processes:
+    - Installed signal handlers are shared across all threads.
+    - Each thread may have its own mask of allowed and blocked signals.
+        - For pthreads, see [pthread_sigmask(3) - man](https://man7.org/linux/man-pages/man3/pthread_sigmask.3.html).
+    - A termination signal will terminate all threads.
+    - If a signal is sent via `kill()` , any thread may receive it.
+        - `tgkill()` can be used to send a signal to a specific thread. See [tgkill(2) - man](https://man7.org/linux/man-pages/man2/tgkill.2.html).
+    - If a signal is sent via `raise()` , the calling thread receives it.
+10. If signals are sent between processes across CPUs, an IPI may be used to invoke the scheduler so the signal can be dealt with.
+11. Signal handling via own handler can be done in a process in 2 ways:
+    - Asynchronous (SW IRQ style approach): Install signal handler as traditionally done.
+    - Synchrounous (polled approach): Use `signalfd()` .
+        - Can be used in conjunction with `epoll()`.
+        - See [signalfd(2) - man](https://man7.org/linux/man-pages/man2/signalfd.2.html).
+12. See [signal(7) - man](https://man7.org/linux/man-pages/man7/signal.7.html).
+
 
 ## Synchronization Methods
 
@@ -275,6 +319,7 @@ Following table lists key mechanisms available in kernel, in approximate order o
 | Read-Copy-Update (RCU) | Similar use cases as that of seqlocks. Can be used in any context (unless sleepable variant is used). |
 
 Note:
+
 1. Kernel also provides a reference counter utility (kref).
 2. Spinlocks and rwlocks have variants that allow disabling IRQ handling (only on current CPU) while in the critical section.
 3. Seqlocks can result in reader starvation if there are too many writers, frequent writes or writers take too much time within the lock.
@@ -471,8 +516,8 @@ These also guide the kernel in assigning memory from an appropriate source. Comm
 5. Only used for kernel-space allocations.
 6. `/proc/slabinfo` shows current slab status.
     - `vmstat -m` is also another option.
-8. Additional caches can be added if needed, see `struct kmem_cache` and its interfaces.
-9. `kmalloc()` and its variants use caches underneath to provide a physically contiguous memory segment (object) of requested size.
+7. Additional caches can be added if needed, see `struct kmem_cache` and its interfaces.
+8. `kmalloc()` and its variants use caches underneath to provide a physically contiguous memory segment (object) of requested size.
 
 ### vmalloc()
 
@@ -520,23 +565,22 @@ Besides HW caches, Linux uses several SW caches too.
 
 1. Dentry cache: Keeps recently used mappings between pathnames and inodes.
 2. Inode cache: Keeps recently used inodes.
-3. Page cache: Keeps recently accessed pages in RAM.
+3. Page cache: Keeps recently accessed device-backed pages (e.g. files on storage) in RAM.
 
 The caches are shared by the entire system i.e. they are not per-task.
 For page cache, the pages may not correspond to contiguous disk/device blocks.
 
 ### Page Cache
 
-1. Pages may or may not be backed by devices (e.g. files on storage).
-2. Device-backed pages benefit from requiring fewer I/O transactions.
-3. For device-backed pages (e.g. storage), the device may itself store data in terms of fixed-size blocks.
-4. Modified data for device-backed pages are written back to them at regular intervals to keep the cache up to date.
+1. Device-backed pages benefit from requiring fewer I/O transactions.
+2. Device may physically store data in terms of fixed-size blocks.
+    - An integral number of such blocks must fit into a page.
+3. Modified data is written back to devices at regular intervals.
     - Can be forced via:
     - `fsync()` : [fsync(2) - man](https://man7.org/linux/man-pages/man2/fsync.2.html).
     - `sync()` : See [sync(2) - man](https://man7.org/linux/man-pages/man2/sync.2.html).
     - Using `O_SYNC` with `open()` : See [open(2) - man](https://man7.org/linux/man-pages/man2/open.2.html).
-5. An integral number of such blocks must fit into a page.
-6. Cache size is elastic, depending on memory pressure.
+4. Cache size is elastic, depending on memory pressure.
 
 ### Swap
 
@@ -560,10 +604,10 @@ For page cache, the pages may not correspond to contiguous disk/device blocks.
 4. Device-backed pages (e.g. files on storage) are never swapped out.
     - They are simply removed from page cache during memory pressure, since the device itself already contains contents of those pages.
 5. As mentioned earlier, kernel-space pages are never swapped out either.
-6. Swap mechanism has to balance between preferring to keep device-backed pages vs non device-backed pages in page cache.
+6. Swap mechanism has to balance between preferring to keep device-backed pages vs non-device-backed pages in page cache.
     - Can be controlled: `/proc/sys/vm/swappiness`
     - Values are typically between 0 - 200.
-    - 0 - 99: Kernel prefers to keep non device-backed pages in memory.
+    - 0 - 99: Kernel prefers to keep non-device-backed pages in memory.
     - 100: Kernel applies equal preference for both.
     - 100 - 200: Kernel prefers to keep device-backed pages in memory (typically worth it if the swap is fast e.g. zram/zswap).
     - See [swappiness - The Linux Kernel Documentation](https://docs.kernel.org/admin-guide/sysctl/vm.html#swappiness).
@@ -592,4 +636,4 @@ For page cache, the pages may not correspond to contiguous disk/device blocks.
     - Can be viewed in `/proc/<PID>/oom_score` (should be 0 for critical system processes).
     - OOM kill probablity for a process can be adjusted: `/proc/3006/oom_score_adj`
         - Values typically range from -1000 (nearly unkillable) - 1000 (most-preferred kill).
-6. Kernel can be configured to panic on OOM kills: `/proc/sys/vm/panic_on_oom`
+7. Kernel can be configured to panic on OOM kills: `/proc/sys/vm/panic_on_oom`

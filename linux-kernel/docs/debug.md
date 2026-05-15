@@ -116,7 +116,7 @@ Enable dynamic debug, see [Dynamic debug - The Linux Kernel documentation](https
 E.g. To see pr_debug() logs for a kernel module: `echo "module <module_name> +p" > /sys/kernel/debug/dynamic_debug/control`
 
 
-## Event-Tracing (ftrace)
+## Event-Tracing (kprobes)
 
 Enable event-tracing, see [Event Tracing - The Linux Kernel documentation](https://docs.kernel.org/trace/events.html).
 
