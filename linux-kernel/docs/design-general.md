@@ -135,13 +135,13 @@
                                 |      (optional)      |
                                 |                      |
                                 | - Prepare to mount   |
-                                |   REAL rootfs        |
+                                |   "real" rootfs      |
                                 +----------------------+
                                   |---> +----------------------+
                                         |     Mount rootfs     |
                                         +----------------------+
                                           |---> +----------------------+
-                                                |      Start PID 1     |
+                                                |  Start "real" PID 1  |
                                                 |                      |
                                                 | - Setup user-space   |
                                                 +----------------------+
@@ -177,7 +177,7 @@
     - The underlying system call to spawn processes and threads is the same as well (`clone()`). See [clone(2) - man](https://man7.org/linux/man-pages/man2/clone.2.html).
 3. Kernel can execute in 2 contexts:
     - Atomic/interrupt context: Cannot sleep.
-    - Process context: Executing on behalf of a user-space process. Can sleep.
+    - Process context: Typically executing on behalf of a user-space process. Can sleep.
 4. Execution transferred from user-space to kernel-space via system calls (exceptions) or asynchronous IRQs (HW).
 5. Nested-handling of IRQs is not considered as "sleep" for a pre-empted IRQ.
 6. Kernel may be configured to have its own code be preemptible or non-preemptible.
@@ -185,7 +185,7 @@
     - All kernel code must be fully-reentrant to allow safe execution in multi-core systems.
     - Code running in user-space is always preemptible.
 7. Using `PREEMPT_RT` will alter scheduling behavior.
-    - E.g.  IRQ handlers may become threaded and spin-locks may become preemptible.
+    - E.g. IRQ handlers may become threaded and spin-locks may become preemptible.
 8. `current` points to currently running task on the CPU.
 9. Maximum number of allowed tasks: `/proc/sys/kernel/threads-max`
 10. Maximum allowed PID value: `/proc/sys/kernel/pid_max`
@@ -298,7 +298,7 @@
 8. Kernel typically checks for pending signals when:
     - The process is being scheduled in.
     - After IRQ execution.
-    - After return from a system call that was made by the process.
+    - After return from a system call (which is a scheduling point in general) that was made by the process.
 9. Following behavior applies for signal handling in multi-threaded processes:
     - Installed signal handlers are shared across all threads.
     - Each thread may have its own mask of allowed and blocked signals.
@@ -329,14 +329,14 @@ Following table lists key mechanisms available in kernel, in approximate order o
 | Rwlocks | Spinlocks with reader/writer lock variants. Prone to cause writer starvation if there are many readers. Same context constraints as spinlock. |
 | Seqlocks | Spinlocks that are optimized to prevent writer starvation. Same context constraints as spinlock. |
 | Mutexes | Self-explanatory. Will sleep i.e. can be used in process context only. Owner of the mutex is the task in whos context the mutex was taken. |
-| Completion functions | Ideal for high resource contention cases. Will sleeps i.e. process context only. |
+| Completion functions | Ideal for high resource contention cases. Will sleep i.e. process context only. |
 | Read-Copy-Update (RCU) | Similar use cases as that of seqlocks. Can be used in any context (unless sleepable variant is used). |
 
 Note:
 
 1. Kernel also provides a reference counter utility (kref).
 2. Spinlocks and rwlocks have variants that allow disabling IRQ handling (only on current CPU) while in the critical section.
-3. Seqlocks can result in reader starvation if there are too many writers, frequent writes or writers take too much time within the lock.
+3. Seqlocks can result in reader starvation if there are too many writers, frequent writes or writers taking too much time within the lock.
     - This is because readers do not actually take a lock.
 4. Mutex-use violations (use in atomic context, unlocking done by task who is not the owner, etc) can only be detected when mutex debugging is enabled in kernel.
 
@@ -360,7 +360,7 @@ Presence of an MMU is one the minimum requirements to run Linux.
     ```
     +================================+
     |                                |
-    |        Kernel Addresses        | (typically linear mapping of physical RAM, kernel code + data, devices)
+    |        Kernel Addresses        | (mapping of physical RAM, kernel code + data, devices)
     |      (global, privileged)      |
     +================================+  address space boundary (PAGE_OFFSET in many architectures)
     |                                |
@@ -369,10 +369,10 @@ Presence of an MMU is one the minimum requirements to run Linux.
     +================================+  0x00000000
     ```
 
-    - Kernel addresses are a linear map: Virtual Address = Physical Address + Address Space Boundary Offset
+    - Kernel virtual addresses are typically a linear map of physical addresses: Virtual Address = Physical Address + Address Space Boundary Offset
         - The mapping of kernel addresses is shared/global, i.e. the same mapping applies for all tasks.
     - The address space boundary offset is very high for 64-bit systems, making the effective user address space be unlimited.
-3. Kernel-space tasks (like kthread) have a similar address map model, but the user address range may be empty/unused.
+3. Kernel-space tasks (like kthreads) have a similar address map model, but the user address range may be empty/unused.
 4. Systems may divide kernel addressable memory into "high" and "low" (typical in 32-bit systems):
     - Low memory is permanently mapped in kernel address space.
     - High memory is not permanently mapped in kernel address space.
@@ -503,7 +503,7 @@ These also guide the kernel in assigning memory from an appropriate source. Comm
     - Fragmentation cannot be solved with MMU:
         - Frequent page table updates would be needed (overhead).
         - DMA bypasses memory paging.
-    - Multiple blocks of physically contiguous pages maintained per zone.
+    - Total memory split into multiple blocks of physically contiguous pages per zone.
     - Pages per-block are in increasing order of 2 (may be multiple blocks per order).
         - E.g. Blocks may have quantity of pages like so: 1, 2, 4, 8, 16, 32, ...
     - When pages are requested, kernel tries to fulfill the request (also in order of 2) from a block of that size.
@@ -516,7 +516,7 @@ These also guide the kernel in assigning memory from an appropriate source. Comm
     - Will result in pages being allocated to the process address space.
     - User-space libraries like libc will have their own allocator.
     - This will then break pages upto into smaller segments to allocate the requested memory sizes.
-    - If more memory is needed, it will use `brk()` or `mmap()` to request from the kernel.
+    - If more memory is needed, it will use `brk()` , `sbrk()` or `mmap()` to request from the kernel.
 
 ### Slab Allocator
 
@@ -552,10 +552,9 @@ These also guide the kernel in assigning memory from an appropriate source. Comm
     - `echo <num-huge-pages> > /proc/sys/vm/nr_hugepages`
         - Can also be done via kernel command-line parameters.
     - After that, there are 3 ways to use the huge pages:
-        - Use the huge pages via `mmap()` .
-            - Regular read/write access will not work.
-            - If file-backed huge pages are needed (i.e. not using `MAP_ANONYMOUS`), a `hugetlbfs` mount is also required.
-                - Can be done like so: `mount -t hugetlbfs none /path/to/mount/at -o size=<size-of-mount>`
+        - Use the huge pages via `mmap()` (`MAP_ANONYMOUS`) or files on a `hugetlbfs` mount.
+            - Regular `read()` / `write()` on `hugetlbfs` will not work.
+            - `hugetlbfs` can be mounted like so: `mount -t hugetlbfs none /path/to/mount/at -o size=<size-of-mount>`
         - Use the huge pages as System V shared memory. See [shmget(2) - man](https://man7.org/linux/man-pages/man2/shmget.2.html).
             - May require changes to shared memory settings.
                 - `/proc/sys/vm/hugetlb_shm_group`
@@ -579,17 +578,17 @@ Besides HW caches, Linux uses several SW caches too.
 
 1. Dentry cache: Keeps recently used mappings between pathnames and inodes.
 2. Inode cache: Keeps recently used inodes.
-3. Page cache: Keeps recently accessed device-backed pages (e.g. files on storage) in RAM.
+3. Page cache: Keeps recently accessed storage-backed pages (e.g. files) in RAM.
 
 The caches are shared by the entire system i.e. they are not per-task.
-For page cache, the pages may not correspond to contiguous disk/device blocks.
+For page cache, the pages may not correspond to contiguous storage blocks.
 
 ### Page Cache
 
-1. Device-backed pages benefit from requiring fewer I/O transactions.
-2. Device may physically store data in terms of fixed-size blocks.
+1. Storage-backed pages benefit from requiring fewer I/O transactions.
+2. Storage device may physically store data in terms of fixed-size blocks.
     - An integral number of such blocks must fit into a page.
-3. Modified data is written back to devices at regular intervals.
+3. Modified data is written back to storage devices at regular intervals.
     - Can be forced via:
     - `fsync()` : [fsync(2) - man](https://man7.org/linux/man-pages/man2/fsync.2.html).
     - `sync()` : See [sync(2) - man](https://man7.org/linux/man-pages/man2/sync.2.html).
@@ -618,7 +617,7 @@ For page cache, the pages may not correspond to contiguous disk/device blocks.
 4. Device-backed pages (e.g. files on storage) are never swapped out.
     - They are simply removed from page cache during memory pressure, since the device itself already contains contents of those pages.
 5. As mentioned earlier, kernel-space pages are never swapped out either.
-6. Swap mechanism has to balance between preferring to keep device-backed pages vs non-device-backed pages in page cache.
+6. Swap mechanism has to balance between preferring to keep device-backed pages vs non-device-backed pages in memory.
     - Can be controlled: `/proc/sys/vm/swappiness`
     - Values are typically between 0 - 200.
     - 0 - 99: Kernel prefers to keep non-device-backed pages in memory.
@@ -649,5 +648,5 @@ For page cache, the pages may not correspond to contiguous disk/device blocks.
     - Higher score => Higher probablity of OOM kill.
     - Can be viewed in `/proc/<PID>/oom_score` (should be 0 for critical system processes).
     - OOM kill probablity for a process can be adjusted: `/proc/3006/oom_score_adj`
-        - Values typically range from -1000 (nearly unkillable) - 1000 (most-preferred kill).
+        - Values typically range from -1000 (nearly unkillable) to 1000 (most-preferred kill).
 7. Kernel can be configured to panic on OOM kills: `/proc/sys/vm/panic_on_oom`
