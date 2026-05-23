@@ -58,7 +58,7 @@
     ```
 
 5. Loading an OOT module taints the kernel.
-6. Modules can access kernel interfaces exported via `EXPORT_*()`.
+6. Loadable modules can only access kernel interfaces exported via `EXPORT_*()`.
     - E.g. `EXPORT_SYMBOL()` , `EXPORT_SYMBOL_GPL()` (for modules with closed licenses).
     - Can be done by modules for other modules too.
     - Symbol use by the kernel is resolved at boot. Therefore, it will not be able to access symbols exported by kernel modules which are loaded afterwards.

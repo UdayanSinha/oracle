@@ -39,6 +39,7 @@
 
 1. Kernel message buffer can be viewed with the `dmesg` utility. See [dmesg(1) - man](https://man7.org/linux/man-pages/man1/dmesg.1.html).
 2. Syslog location varies depending on the installation.
+3. It is possible to have rate-limiting and delays on `printk()` , see settings in `sysctl` .
 
 
 ## Basic System Information
