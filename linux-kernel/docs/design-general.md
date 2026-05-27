@@ -91,6 +91,7 @@
 5. User-space parameters (e.g. system call arguments) should not be trusted by default.
     - User-space pointers may be invalid, or the pages may have been swapped.
     - Use `copy_to_user()` and `copy_from_user()` instead.
+        - Note that these functions may sleep.
     - Kernel never swaps out its own pages and always allocates its memory with urgency (i.e. no demand/lazy paging).
     - Page faults will result in panic, except in few places like the `copy_*()` functions show above, which will result in demand-paging of those pages.
 6. Do not assume page size, address lengths, etc.
@@ -98,6 +99,15 @@
     - E.g. Use `offset_t` for file offsets.
 7. Always use generic kernel methods/utilities if they are available.
 8. See [Working with Kernel Development - The Linux Kernel Documentation](https://docs.kernel.org/process/index.html).
+
+### printk
+
+1. Analogous to `printf()` in user-space.
+2. Provides the means to log messages from kernel code into the kernel log buffer.
+3. Supports toggle-able verbosity levels, along with convenience variants for each level (e.g. `pr_info()`).
+4. Device drivers are recommended to use `dev_printk()` and its corresponding variants.
+5. Kernel log buffer can typically be viewed in system logs (varies per distro).
+    - `dmesg` typically always provides access to these logs. See [dmesg(1) - man](https://man7.org/linux/man-pages/man1/dmesg.1.html).
 
 
 ## Boot Flow
@@ -499,6 +509,7 @@ These also guide the kernel in assigning memory from an appropriate source. Comm
     - `kmap()` (may sleep), `kmap_atomic()` (will not sleep)
     - `kunmap()` (may sleep), `kunmap_atomic()` (will not sleep)
     - The above functions are safe to use on low memory allocations too (no effect).
+    - The above functions can also be used to map user-space pages into kernel-space.
 4. Buddy system used to prevent memory fragmentation due to frequent page allocation and freeing:
     - Fragmentation cannot be solved with MMU:
         - Frequent page table updates would be needed (overhead).

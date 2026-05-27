@@ -25,7 +25,7 @@ Typically divided into 3 basic types:
     - Accessed typically via socket interfaces.
     - E.g. Network Interface Controller (NIC) devices.
 
-Character and block devices typically have nodes under `devtmpfs` whereas network devices do not have such a node.
+Character and block devices have filesystem nodes (typically under `devtmpfs`) whereas network devices do not.
 They are identified by an interface name instead.
 
 The diagram below shows the interaction of applications with these devices via the kernel:
