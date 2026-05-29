@@ -188,7 +188,7 @@
 3. Kernel can execute in 2 contexts:
     - Atomic/interrupt context: Cannot sleep.
     - Process context: Typically executing on behalf of a user-space process. Can sleep.
-4. Execution transferred from user-space to kernel-space via system calls (exceptions) or asynchronous IRQs (HW).
+4. Execution transferred from user-space to kernel-space via synchronous IRQs (exceptions) or asynchronous IRQs.
 5. Nested-handling of IRQs is not considered as "sleep" for a pre-empted IRQ.
 6. Kernel may be configured to have its own code be preemptible or non-preemptible.
     - All kernel code must be written with this in mind.
@@ -237,7 +237,8 @@
 4. Affinity can also be applied to IRQs, to direct execution of their handler on specific CPUs.
     - Can be done via `/proc/irq/<irq-num>/smp_affinity` .
     - Requires support in HW.
-    - Note that a system may also be running a user-space daemon to balance IRQ handling load.
+    - A system may also be running a user-space daemon to balance IRQ handling load.
+    - Only 1 CPU can handle an IRQ of a certain type at any given point.
 5. Kernel code (e.g drivers) can also recommend affinity behavior via `irq_set_affinity_and_hint()` and `irq_update_affinity_hint()` .
     - Not used very often, a user-space solution is preferred for this.
 6. Cpuset cgroup controller can be used to inform kernel **what tasks are allowed to be scheduled on the specified CPUs**.
