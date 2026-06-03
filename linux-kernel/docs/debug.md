@@ -63,6 +63,7 @@
     - See [sysctl(8) - man](https://man7.org/linux/man-pages/man8/sysctl.8.html).
 7. Supported filesystems: `/proc/filesystems`
 8. Swap areas: `/proc/swaps`
+9. Timer information: `/proc/timer_list`
 
 
 ## Boot Firmware Information

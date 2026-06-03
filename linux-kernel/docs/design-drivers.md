@@ -183,3 +183,30 @@ It can automatically handle most of the steps above, including:
 
 1. Dynamic minor number assignment (major number is fixed for miscellaneous character devices).
 2. Filesystem node creation and removal.
+
+
+## Timing Measurement
+
+1. Linux systems support traditional Unix-style of measuring time since the "epoch" (January 1st, 1970).
+2. Clock sources are HW-specific.
+    - Popular clock sources in x86 include Time Stamp Counter (TSC) and High Precision Event Timer (HPET).
+        - TSC can be read via `rdtsc` instruction (also has a corresponding helper in kernel code).
+    - Clock source for kernel's primary timekeeping can be specified via `clocksource` on the kernel command-line.
+        - See [Kernel Parameters - The Linux Kernel Documentation](https://docs.kernel.org/admin-guide/kernel-parameters.html).
+        - Clock source information on a running system can be found at `/sys/devices/system/clocksource/clocksource<n>` .
+3. Timer frequency for scheduling ticks is defined by `CONFIG_HZ` .
+    - Higher frequencies may potentially improve kernel responsiveness, but can also increase overhead due to more frequent timer IRQs (more time spent in kernel mode).
+4. In kernel code, measurement is provided by:
+    - Jiffies.
+        - Conceptually a counter of scheduling ticks (typically IRQ #0 per-CPU).
+            - In reality, it is a global counter shared by all CPUs.
+            - May not match tick frequency at all, especially for tickless scheduling.
+        - 64-bit wide counter (`jiffies`) on 64-bit systems.
+        - 32-bit (`jiffies`, lower 32-bit) and 64-bit (`jiffies_64`) wide counters on 32-bit systems.
+    - Low-resolution timers.
+    - High-resolution timers.
+5. Several system-calls exist for timing measurements in user-space. Refer relevant man pages.
+    - E.g. `alarm()` , `clock_gettime()` , `clock_settime()` , `getitimer()` , `setitimer()` , etc.
+6. Information about currently running timers and clocksources is available in `/proc/timer_list` .
+7. Use of tickless scheduling is beneficial for specific workloads. See general design guide for details.
+    - Note that not all CPUs can be set to use tickless mode. Typically, the bootstrap CPU cannot be set to tickless.
