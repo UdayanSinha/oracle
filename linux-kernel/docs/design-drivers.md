@@ -198,15 +198,47 @@ It can automatically handle most of the steps above, including:
     - Higher frequencies may potentially improve kernel responsiveness, but can also increase overhead due to more frequent timer IRQs (more time spent in kernel mode).
 4. In kernel code, measurement is provided by:
     - Jiffies.
-        - Conceptually a counter of scheduling ticks (typically IRQ #0 per-CPU).
-            - In reality, it is a global counter shared by all CPUs.
-            - May not match tick frequency at all, especially for tickless scheduling.
-        - 64-bit wide counter (`jiffies`) on 64-bit systems.
-        - 32-bit (`jiffies`, lower 32-bit) and 64-bit (`jiffies_64`) wide counters on 32-bit systems.
-    - Low-resolution timers.
-    - High-resolution timers.
+    - Kernel timers.
+    - Delay functions equivalent to `sleep()` or similar in user-space.
+        - E.g.`msleep()` (will sleep), `mdelay()` (will busy-wait).
 5. Several system-calls exist for timing measurements in user-space. Refer relevant man pages.
     - E.g. `alarm()` , `clock_gettime()` , `clock_settime()` , `getitimer()` , `setitimer()` , etc.
-6. Information about currently running timers and clocksources is available in `/proc/timer_list` .
-7. Use of tickless scheduling is beneficial for specific workloads. See general design guide for details.
+6. Use of tickless scheduling is beneficial for specific workloads. See general design guide for details.
     - Note that not all CPUs can be set to use tickless mode. Typically, the bootstrap CPU cannot be set to tickless.
+
+### Jiffies
+
+1. Global counter shared by all CPUs.
+2. Conceptually a counter of scheduling ticks (typically IRQ #0 per-CPU).
+    - In reality, it may not match the tick frequency at all, especially for tickless scheduling.
+3. 64-bit wide counter (`jiffies`) on 64-bit systems.
+4. 32-bit (`jiffies`, lower 32-bit) and 64-bit (`jiffies_64`) wide counters on 32-bit systems.
+
+### Kernel Timers
+
+1. Delays execution of a certain function until a specified time period has elapsed.
+    - Function will execute in atomic context (softirq).
+    - Function will execute on the CPU on which the timer was started.
+        - Note that it is possible that there is a task migration to another CPU inside the kernel function which starts the timer.
+        - In that case, the CPU on which the function executes will be the CPU on which the task was migrated to.
+    - CPU may not be immediately available when the time period elapses i.e. there may additional delay before function is executed.
+2. Typical use of kernel timers is of 2 types:
+    - *Timeout* use:
+        - Timer-callback will execute only if an event does not occur within a specific time window.
+        - In most cases, the timer-callback is never run.
+        - Generally relaxed time resolution requirements.
+    - *Timer* use:
+        - Timer-callabcks are actually intended to run.
+        - Generally stricter time resolution requirements.
+3. Kernel provides following timer types:
+    - Low-resolution timers.
+        - Uses `jiffies` underneath, hence will only provide equivalent time resolution.
+        - Supports one-shot use only, but can be re-installed recursively if periodic triggering is needed.
+        - Efficient timer creation and deletion.
+        - Better suited for *timeout* use-cases.
+    - High-resolution timers.
+        - Nanosecond time resolution.
+        - Supports one-shot and periodic use.
+        - Higher overhead in timer creation and deletion compared to low-resolution timers.
+        - Better suited for *timer* use-cases.
+4. Information about currently used timers in the system is available in `/proc/timer_list` .
