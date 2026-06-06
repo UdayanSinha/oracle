@@ -8,9 +8,9 @@
     - v6.18.X used as baseline.
 
 
-## Device Types
+## Traditional Device Taxonomy
 
-Typically divided into 3 basic types:
+Devices are typically divided into 3 traditional types, depending on how user-space interactions occur:
 
 1. Character devices
     - Read/write access is in terms of (typically sequential) byte streams.
@@ -79,14 +79,22 @@ Applications interact with device drivers via system calls.
 In addition, the kernel may also interact with device drivers for the purpose of IRQ handling, power management, etc.
 
 
-## Mechanism vs Policy
+## Unified/Integrated Device Model
 
-*Mechanism* provides the means to access HW.
-*Policy* provides directives on how the mechanisms should be utilized.
-
-Generally, a device driver should aim to provide mechanisms, not dictate policy (unless there is a HW limitation or similar).
-The reason for this is that the use-cases may evolve/change over time and the original policies may become irrelevant.
-In practice, the device driver may be provided with a user-space program or similar that uses the driver mechanisms to help in dictating policy.
+1. Traditional device taxonomy classifies devices based on user-space interaction.
+2. Unified Device Model defines how kernel represents devices and their drivers internally.
+    - For every device, there is a fundamental struct: `struct device`
+        - It includes 2 additional fundamental structs: `struct device_driver` , `struct bus_type`
+        - Together, these describe the device, bus it is connected to and the corresponding driver.
+    - Information and parameter controls about the devices is exposed via sysfs.
+    - Drivers can be registered (`driver_register()`) and de-registered (`driver_unregister()`).
+3. Driver code will rarely use these structs or functions directly.
+    - Instead the corresponding structs and functions for the specific device type are used, which use the fundamental code internally.
+    - E.g. for a PCIe device:
+        - `struct pci_dev` includes `struct device` .
+        - `struct pci_driver` includes `struct device_driver` .
+        - Registration done via `pci_register_driver()` which calls `driver_register()` internally.
+        - De-registration done via `pci_unregister_driver()` which calls `driver_unregister()` internally.
 
 
 ## Modules
@@ -98,8 +106,94 @@ In practice, the device driver may be provided with a user-space program or simi
 3. These macros typically take a struct as an argument.
     - E.g. `module_pci_driver()` expects a `struct pci_driver` .
     - Defines driver call-backs, parameters and other config. relevant to that device driver type.
-4. An important aspect of this struct is the ID table of devices that this driver supports.
-5. E.g. If a PCIe device is found where the VID:DID combination match what a driver supports, it will be loaded into the kernel if not already loaded or built-in.
+    - An important aspect of this struct is the ID table of devices that this driver supports.
+    - E.g. If a PCIe device is found where the VID:DID combination match what a driver supports, it will be loaded into the kernel if not already loaded or built-in.
+
+
+## Mechanism vs Policy
+
+*Mechanism* provides the means to access HW.
+*Policy* provides directives on how the mechanisms should be utilized.
+
+Generally, a device driver should aim to provide mechanisms, not dictate policy (unless there is a HW limitation or similar).
+The reason for this is that the use-cases may evolve/change over time and the original policies may become irrelevant.
+In practice, the device driver may be provided with a user-space program or similar that uses the driver mechanisms to help in dictating policy.
+
+
+## Major & Minor Numbers
+
+1. Device filesystem nodes (character, block) have a set of major and minor numbers that associates them with a specific device driver.
+2. The nodes can generally be interacted with like regular files (character) or filesystem images (block).
+3. Created with `mknod()` , see [mknod(2) - man](https://man7.org/linux/man-pages/man2/mknod.2.html).
+4. In kernel code, `dev_t` encodes the major and minor number combination.
+5. A single combination of major and minor number can only have one driver associated with it.
+6. Kernel has an internal table of all registered major and minor numbers, and their corresponding drivers.
+7. An access to a device node will result in a call into the appropriate device driver.
+8. Many device numbers are reserved, see [Allocated Devices - The Linux Kernel Documentation](https://docs.kernel.org/admin-guide/devices.html).
+
+
+## File Operations
+
+1. `struct file_operations` provides a jump-table of operations related to file management.
+    - Provides an entrypoint to the kernel code from user-space system calls (`open()` , `read()` , `write()` , `close()` , etc).
+    - Used not just by device drivers, but also by other drivers like filesystem drivers.
+    - Not all operations are relevant to a given driver type.
+    - Unimplemented operations may result in an error (e.g. `mmap()`) or may call the default kernel-provided operation (e.g. `open()` , `close()`).
+    - The operations in this struct may not share the same name as the system call. Mapping for common operations are shown below:
+
+        | `struct file_operations` call-back | System call |
+        | ---------- | ------------ |
+        | `open()` | `open()` |
+        | `read()` | `read()` |
+        | `write()` | `write()` |
+        | `release()` | `release()` |
+        | `mmap()` | `mmap()` |
+        | `unlocked_ioctl()` | `ioctl()` |
+
+2. Each filesystem entry has an inode (index node) associated with it, that is represented by `struct inode` .
+    - For device filesystem nodes, it is associated with the major and minor number internally.
+3. Each time a file/directory is opened, a `struct file` is associated with the file descriptor that is returned to user-space.
+    - Associated with the corresponding `struct inode` internally.
+    - Created upon `open()` and destroyed upon `close()` .
+4. A filesystem entry may have several instances of `struct file` (one per `open()`), but only one `struct inode` .
+
+### ioctl()
+
+1. Allows sending and receiving **custom** information for devices by user-space programs.
+2. Implemented as device-specific commands.
+    - Each command (32-bit) has the following parts:
+        - Type (8-bit): Magic number to be used throughout the driver.
+        - Number (8-bit): Command number (typically sequential).
+        - Size (14-bit): Data transfer size.
+        - Direction (2-bit): Direction of data transfer from user-space PoV (read, write, none).
+    - Max. size of allowed data transfer is thus set to 16kB (14-bit) by default, but it is possible to be platform-specific.
+    - It is recommended to keep the commands as unique as possible.
+        - For known commands, see [ioctl numbers - The Linux Kernel Documentation](https://docs.kernel.org/userspace-api/ioctl/ioctl-number.html).
+    - Use kernel-provided helpers for command encoding (`_IO()` , `_IOR()` , `_IOW()` , `_IOWR()` , etc).
+    - Use kernel-provided helpers for command decoding (`_IOC_DIR()` , `IOC_TYPE()` , `IOC_NR` , `IOC_SIZE()` , etc).
+3. While `ioctl()` allows for a variable number of arguments, the number of them needs to match what `unlocked_ioctl()` supports.
+    - The variable arguments technique is used to prevent type-checking of the 3rd argument.
+4. Excessive use of `ioctl()` is discouraged, as the commands can tend to essentially be new system calls.
+3. See [ioctl(2) - man](https://man7.org/linux/man-pages/man2/ioctl.2.html).
+
+
+## Character Devices
+
+The setup process for a character device driver is the following:
+
+1. Reserve a major and minor number range.
+2. Register the driver as a character device driver.
+    - A key aspect of this is the `struct file_operations` which provides the jump-table of driver entrypoints.
+3. Perform any device-specific setup.
+4. Create filesystem nodes.
+    - Can be done manually or automatically (e.g. via `udev` which receives notifications from kernel to trigger node creation/removal).
+    - For `udev` , see [udev(7) - man](https://man7.org/linux/man-pages/man7/udev.7.html).
+
+For simple character devices, the drivers may be registered as a miscellaneous character driver.
+It can automatically handle most of the steps above, including:
+
+1. Dynamic minor number assignment (major number is fixed for miscellaneous character devices).
+2. Filesystem node creation and removal.
 
 
 ## Interrupts
@@ -136,53 +230,6 @@ In practice, the device driver may be provided with a user-space program or simi
         - This is different from the enable/disable done by synchronization primitives like spin-lock, which only disables IRQ handling on a given CPU.
         - These functions have depth e.g. if `disable_irq()` was called 3 times to disable an IRQ, then `enable_irq()` must also be called 3 times to enable it back.
 8. For MSI/MSI-x in PCI-e devices, see [MSI/MSI-x - The Linux Kernel Documentation](https://docs.kernel.org/PCI/msi-howto.html).
-
-
-## Major & Minor Numbers
-
-1. Device filesystem nodes (character, block) have a set of major and minor numbers that associates them with a specific device driver.
-2. The nodes can generally be interacted with like regular files (character) or filesystem images (block).
-3. Created with `mknod()` , see [mknod(2) - man](https://man7.org/linux/man-pages/man2/mknod.2.html).
-4. In kernel code, `dev_t` encodes the major and minor number combination.
-5. A single combination of major and minor number can only have one driver associated with it.
-6. Kernel has an internal table of all register major and minor numbers, and their corresponding drivers.
-7. An access to a device node will result in a call into the appropriate device driver.
-8. Many device numbers are reserved, see [Allocated Devices - The Linux Kernel Documentation](https://docs.kernel.org/admin-guide/devices.html).
-
-
-## File Operations
-
-1. `struct file_operations` provides a jump-table of operations related to file management.
-    - Provides an entrypoint to the kernel code from user-space system calls (`open()` , `read()` , `write()` , `close()` , etc).
-    - Used not just by device drivers, but also by other drivers like filesystem drivers.
-    - Not all operations are relevant to a given driver type.
-    - Unimplemented operations may result in an error (e.g. `mmap()`) or may call the default kernel-provided operation (e.g. `open()` , `close()`).
-    - The operations in this struct may not share the same name as the system call. E.g. operation for `close()` is `release()` .
-2. Each filesystem entry has an inode (index node) associated with it, that is represented by `struct inode` .
-    - For device filesystem nodes, it is associated with the major and minor number internally.
-3. Each time a file/directory is opened, a `struct file` is associated with the file descriptor that is returned to user-space.
-    - Associated with the corresponding `struct inode` internally.
-    - Created upon `open()` and destroyed upon `close()` .
-4. A filesystem entry may have several instances of `struct file` (one per `open()`), but only one `struct inode` .
-
-
-## Character Devices
-
-The setup process for a character device driver is the following:
-
-1. Reserve a major and minor number range.
-2. Register the driver as a character device driver.
-    - A key aspect of this is the `struct file_operations` which provides the jump-table of driver entrypoints.
-3. Perform any device-specific setup.
-4. Create filesystem nodes.
-    - Can be done manually or automatically (e.g. via `udev` which receives notifications from kernel to trigger node creation/removal).
-    - For `udev` , see [udev(7) - man](https://man7.org/linux/man-pages/man7/udev.7.html).
-
-For simple character devices, the drivers may be registered as a miscellaneous character driver.
-It can automatically handle most of the steps above, including:
-
-1. Dynamic minor number assignment (major number is fixed for miscellaneous character devices).
-2. Filesystem node creation and removal.
 
 
 ## Timing Measurement
