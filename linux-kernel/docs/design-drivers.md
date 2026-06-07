@@ -146,7 +146,7 @@ In practice, the device driver may be provided with a user-space program or simi
         | `open()` | `open()` |
         | `read()` | `read()` |
         | `write()` | `write()` |
-        | `release()` | `release()` |
+        | `release()` | `close()` |
         | `mmap()` | `mmap()` |
         | `unlocked_ioctl()` | `ioctl()` |
 
@@ -270,11 +270,11 @@ It can automatically handle most of the steps above, including:
         - In that case, the CPU on which the function executes will be the CPU on which the task was migrated to.
     - CPU may not be immediately available when the time period elapses i.e. there may additional delay before function is executed.
 2. Typical use of kernel timers is of 2 types:
-    - *Timeout* use:
+    - *Timeout* use-case:
         - Timer-callback will execute only if an event does not occur within a specific time window.
         - In most cases, the timer-callback is never run.
         - Generally relaxed time resolution requirements.
-    - *Timer* use:
+    - *Timer* use-case:
         - Timer-callabcks are actually intended to run.
         - Generally stricter time resolution requirements.
 3. Kernel provides following timer types:
