@@ -17,14 +17,12 @@ struct callback_struct {
 	ktime_t delay;
 };
 
-static struct callback_struct *sample_data;
+static struct callback_struct *sample_data = NULL;
 
-enum hrtimer_restart timer_callback(struct hrtimer *t)
+static enum hrtimer_restart timer_callback(struct hrtimer *t)
 {
 	struct callback_struct *data_struct = container_of(t,
 			struct callback_struct, timer);
-
-	ktime_t now = t->base->get_time();	/* current absolute time */
 
 	pr_debug("Callback executing in timer_highres, data: 0x%llu\n",
 			data_struct->data);
@@ -36,7 +34,7 @@ enum hrtimer_restart timer_callback(struct hrtimer *t)
 		data_struct->data++;
 
 	/* re-activate timer */
-	(void)hrtimer_forward(t, now, data_struct->delay);
+	(void) hrtimer_forward_now(t, data_struct->delay);
 
 	/*
 	 * HRTIMER_RESTART: recurring timer
@@ -56,8 +54,7 @@ static int __init timer_highres_init(void)
 
 	/* setup timer struct */
 	sample_data->delay = ktime_set(1, 0);	/* 1 second */
-	hrtimer_init(&sample_data->timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
-	sample_data->timer.function = timer_callback;
+	hrtimer_setup(&sample_data->timer, timer_callback, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 
 	/* activate timer */
 	hrtimer_start(&sample_data->timer, sample_data->delay, HRTIMER_MODE_REL);
@@ -67,7 +64,7 @@ static int __init timer_highres_init(void)
 static void __exit timer_highres_exit(void)
 {
 	/* cancel timer */
-	(void)hrtimer_cancel(&sample_data->timer);
+	(void) hrtimer_cancel(&sample_data->timer);
 
 	kfree(sample_data);
 	return;
@@ -78,3 +75,4 @@ module_exit(timer_highres_exit);
 
 MODULE_AUTHOR("Udayan Prabir Sinha");
 MODULE_LICENSE("Dual MIT/GPL");
+MODULE_DESCRIPTION("High-Resolution Timer Example");

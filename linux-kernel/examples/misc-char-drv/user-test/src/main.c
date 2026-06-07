@@ -20,6 +20,7 @@ static void print_usage(void)
 {
 	printf("Usage:\n\t");
 	printf("%s read node-path num-bytes\n\t", PROG_NAME);
+	printf("%s write node-path num-bytes\n\t", PROG_NAME);
 	printf("%s ioctl node-path cmd\n\n", PROG_NAME);
 }
 
@@ -42,7 +43,7 @@ static int op_read(char *node_path, char *num_bytes_str)
 	}
 
 	printf("Successful open(), attempting to malloc() read buffer\n");
-	read_data = (uint8_t *)malloc(read_num);
+	read_data = (uint8_t *) malloc(read_num);
 	if (!read_data) {
 		perror("malloc() failed");
 		ret = -1;
@@ -67,6 +68,61 @@ out:
 
 	if (read_data)
 		free(read_data);
+
+	return ret;
+}
+
+static int op_write(char *node_path, char *num_bytes_str)
+{
+	int fd = -1;
+	int ret = 0;
+	size_t write_lim = 100;
+	size_t write_num = strtoul(num_bytes_str, NULL, 0);
+	ssize_t bytes_sent = 0;
+	uint8_t *write_data = NULL;
+	uint32_t i;
+
+	if (!write_num || (write_num > write_lim)) {
+		printf("Cannot write more than %d bytes\n", write_lim);
+		return -1;
+	}
+
+	printf("Number of bytes to write to %s: %lu\n", node_path, write_num);
+
+	printf("Attempting to open %s\n", node_path);
+	fd = open(node_path, O_WRONLY, S_IRUSR | S_IRGRP | S_IROTH);
+	if (fd < 0) {
+		perror("open() failed");
+		return -1;
+	}
+
+	printf("Successful open(), preparing write buffer\n");
+	write_data = (uint8_t *) malloc(write_num);
+	if (!write_data) {
+		perror("malloc() failed");
+		ret = -1;
+		goto out;
+	}
+
+	for (i = 0; i < write_num; i++) {
+		write_data[i] = i;
+		printf("Write Data[%u]: 0x%x\n", i, write_data[i]);
+	}
+
+	printf("Write buffer ready, attempting write()\n");
+	bytes_sent = write(fd, (void *)write_data, write_num);
+	if (bytes_sent < 0) {
+		perror("write() failed");
+		ret = -1;
+	}
+
+out:
+	printf("Closing %s\n", node_path);
+	if (close(fd) < 0)
+		perror("close() failed");
+
+	if (write_data)
+		free(write_data);
 
 	return ret;
 }
@@ -117,6 +173,8 @@ int main (int argc, char *argv[])
 	} else {
 		if (!strcmp(argv[1], "read")) {
 			ret = op_read(argv[2], argv[3]);
+		} else if (!strcmp(argv[1], "write")) {
+			ret = op_write(argv[2], argv[3]);
 		} else if (!strcmp(argv[1], "ioctl")) {
 			ret = op_ioctl(argv[2], argv[3]);
 		} else {

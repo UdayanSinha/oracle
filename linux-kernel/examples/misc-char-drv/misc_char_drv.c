@@ -13,13 +13,11 @@
 #include <linux/random.h>	/* random-number APIs */
 #include <linux/panic.h>	/* panic() */
 
-#define DEV_NAME "misc_char_drv"		/* name under /dev */
+#define DEV_NAME "misc_char_drv"
 
 /* ioctl() commands */
 #define MISC_CHAR_DRV_BASE	'X'
 #define MISC_CHAR_DRV_PANIC	_IO(MISC_CHAR_DRV_BASE, 0)
-
-static void *rand_num_buf = NULL;
 
 static int misc_chardrv_open(struct inode *inode, struct file *filep)
 {
@@ -37,24 +35,48 @@ static int misc_chardrv_release(struct inode *inode, struct file *filep)
 	return 0;
 }
 
-static ssize_t misc_chardrv_read(struct file *filep, char __user *buf,
+static ssize_t misc_chardrv_read(struct file *filep, char __user *ubuf,
 		size_t lbuf, loff_t *ppos)
 {
-	unsigned long num_bytes_read = 0;
+	static void *rbuf = NULL;
+	unsigned long rbytes = 0;
 
 	pr_debug("read() called. Major: %u, Minor: %u\n",
 		imajor(filep->f_inode), iminor(filep->f_inode));
 
-	rand_num_buf = kzalloc(lbuf, GFP_KERNEL);
-	if (!rand_num_buf)
+	rbuf = kzalloc(lbuf, GFP_KERNEL);
+	if (!rbuf)
 		return -ENOMEM;
 
-	get_random_bytes(rand_num_buf, (int)lbuf);
-	num_bytes_read = lbuf - copy_to_user(buf, rand_num_buf, lbuf);
-	*ppos += num_bytes_read;
+	get_random_bytes(rbuf, (int) lbuf);
 
-	kfree(rand_num_buf);
-	return num_bytes_read;
+	/* copy_to_user() returns number of bytes not copied */
+	rbytes = lbuf - copy_to_user(ubuf, rbuf, lbuf);
+	kfree(rbuf);
+
+	*ppos += rbytes;
+	return rbytes;
+}
+
+static ssize_t misc_chardrv_write(struct file *filep, const char __user *ubuf,
+		size_t lbuf, loff_t *ppos)
+{
+	static void *wbuf = NULL;
+	unsigned long wbytes = 0;
+
+	pr_debug("write() called. Major: %u, Minor: %u\n",
+		imajor(filep->f_inode), iminor(filep->f_inode));
+
+	wbuf = kzalloc(lbuf, GFP_KERNEL);
+	if (!wbuf)
+		return -ENOMEM;
+
+	/* copy_from_user() returns number of bytes not copied */
+	wbytes = lbuf - copy_from_user(wbuf, ubuf, lbuf);
+	kfree(wbuf);
+
+	*ppos += wbytes;
+	return wbytes;
 }
 
 static void misc_chardrv_unlocked_ioctl_usage(unsigned int cmd)
@@ -95,12 +117,13 @@ static const struct file_operations misc_chardrv_ops = {
 	.open = misc_chardrv_open,
 	.release = misc_chardrv_release,
 	.read = misc_chardrv_read,
+	.write = misc_chardrv_write,
 	.unlocked_ioctl = misc_chardrv_unlocked_ioctl,
 };
 
 static struct miscdevice misc_chardrv = {
-	.name = DEV_NAME,
-	.minor = MISC_DYNAMIC_MINOR,
+	.name = DEV_NAME,		/* name under /dev */
+	.minor = MISC_DYNAMIC_MINOR,	/* dynamically-assigned minor number, major number is common */
 	.fops = &misc_chardrv_ops,
 };
 
@@ -126,3 +149,4 @@ module_exit(misc_chardrv_exit);
 
 MODULE_AUTHOR("Udayan Prabir Sinha");
 MODULE_LICENSE("Dual MIT/GPL");
+MODULE_DESCRIPTION("Miscellaneous Character Device Driver Example");
