@@ -59,7 +59,7 @@
 
 5. Loading an OOT module taints the kernel.
 6. Loadable modules can only access kernel interfaces exported via `EXPORT_*()`.
-    - E.g. `EXPORT_SYMBOL()` , `EXPORT_SYMBOL_GPL()` (for modules with closed licenses).
+    - E.g. `EXPORT_SYMBOL()` , `EXPORT_SYMBOL_GPL()` (for modules with the corresponding licenses).
     - Can be done by modules for other modules too.
     - Symbol use by the kernel is resolved at boot. Therefore, it will not be able to access symbols exported by kernel modules which are loaded afterwards.
     - Symbol use by a module is resolved when it is loaded. This may introduce load dependencies across modules.
@@ -107,14 +107,15 @@
 3. Supports toggle-able verbosity levels, along with convenience variants for each level (e.g. `pr_info()`).
 4. Device drivers are recommended to use `dev_printk()` and its corresponding variants.
 5. Kernel log buffer can typically be viewed in system logs (varies per distro).
-    - `dmesg` typically always provides access to these logs. See [dmesg(1) - man](https://man7.org/linux/man-pages/man1/dmesg.1.html).
+    - `/dev/kmsg` typically always provides access to these logs.
+    - `dmesg` uses `/dev/kmsg`, see [dmesg(1) - man](https://man7.org/linux/man-pages/man1/dmesg.1.html).
 
 
 ## Boot Flow
 
 ```
 +----------------------+
-|   Power On / Reset   |
+|   Power On / Reset   |    (start execution from boot vector in boot ROM)
 +----------------------+
   |---> +----------------------+
         |       Firmware       |
@@ -196,7 +197,7 @@
     - Code running in user-space is always preemptible.
 7. Using `PREEMPT_RT` will alter scheduling behavior.
     - E.g. IRQ handlers may become threaded and spin-locks may become preemptible.
-8. `current` points to currently running task on the CPU.
+8. `current` points to the currently running task on the CPU.
 9. Maximum number of allowed tasks: `/proc/sys/kernel/threads-max`
 10. Maximum allowed PID value: `/proc/sys/kernel/pid_max`
 11. Common task states in `struct task_struct` include the following.
@@ -238,7 +239,7 @@
     - Can be done via `/proc/irq/<irq-num>/smp_affinity` .
     - Requires support in HW.
     - A system may also be running a user-space daemon to balance IRQ handling load.
-    - Only 1 CPU can handle an IRQ of a certain type at any given point.
+    - Only 1 CPU can handle an IRQ of a certain type at any given point (see driver design guide for details).
 5. Kernel code (e.g drivers) can also recommend affinity behavior via `irq_set_affinity_and_hint()` and `irq_update_affinity_hint()` .
     - Not used very often, a user-space solution is preferred for this.
 6. Cpuset cgroup controller can be used to inform kernel **what tasks are allowed to be scheduled on the specified CPUs**.
@@ -267,7 +268,7 @@
 2. Common policies are mentioned below:
     - `SCHED_OTHER` : Default policy.
         - Tasks are assigned a time-slice and the scheduler will rotate among them.
-        - Dynamic priority (nice) can be used to affect time slice length. See [setpriority(2) - man](https://man7.org/linux/man-pages/man3/setpriority.3p.html).
+        - Dynamic priority (`nice`) can be used to affect time slice length. See [setpriority(2) - man](https://man7.org/linux/man-pages/man3/setpriority.3p.html).
     -  `SCHED_FIFO` : Soft RT policy.
         - Uses static priority which is higher than dynamic priorities of `SCHED_OTHER` .
         - A running task will continue running (as long as its runnable) if no runnable task exists with higher-priority.
@@ -522,7 +523,7 @@ These also guide the kernel in assigning memory from an appropriate source. Comm
     - If the block of that size is not available, it will move to the block in the next order.
         - This continues until a block is found which can satisfy the request.
         - The block may then be split into smaller blocks if needed.
-    - When freeing memory, attempt is made to merge eligible (buddies) blocks into larger blocks.
+    - When freeing memory, attempt is made to merge eligible blocks (buddies) into larger blocks.
     - `/proc/buddyinfo` will show number of free blocks per order.
 5. User-space allocations (e.g. `malloc()`)  also go through page allocation.
     - Will result in pages being allocated to the process address space.
@@ -549,8 +550,8 @@ These also guide the kernel in assigning memory from an appropriate source. Comm
 
 1. Provided memory may not be physically contiguous.
 2. Goes via page allocator (i.e. not slab allocator) for the assigned memory.
-3. Unsuitable for DMA, as page tables are not involved.
-4. Useful for very large allocations (in theory, up to full size of physical memory), where memory may be access seldom.
+3. Unsuitable for DMA, as page tables are needed.
+4. Useful for very large allocations (in theory, up to full size of physical memory), where memory access may be seldom.
 5. `/proc/vmallocinfo` shows current `vmalloc()` allocations.
 6. May sleep during allocation.
 
@@ -599,7 +600,7 @@ For page cache, the pages may not correspond to contiguous storage blocks.
 
 1. Storage-backed pages benefit from requiring fewer I/O transactions.
 2. Storage device may physically store data in terms of fixed-size blocks.
-    - An integral number of such blocks must fit into a page.
+    - An integral number of such blocks must fit into a page (typically 4kB).
 3. Modified data is written back to storage devices at regular intervals.
     - Can be forced via:
     - `fsync()` : [fsync(2) - man](https://man7.org/linux/man-pages/man2/fsync.2.html).
@@ -623,7 +624,7 @@ For page cache, the pages may not correspond to contiguous storage blocks.
         - Kernel prefers swapping pages into physically contigous slots.
         - Kernel usually starts swap operations with the process which induced the swap.
 3. Following types of user-space pages are targeted in swap operations:
-    - Anonymous memory regions (user-space stack, heap, etc).
+    - Anonymous (i.e. not file-backed) memory regions (e.g. user-space stack, heap, etc).
     - Huge pages (transparent or otherwise).
     - Memory-backed filesystem based objects (tmpfs, System V or POSIX shared memory, etc).
 4. Device-backed pages (e.g. files on storage) are never swapped out.
