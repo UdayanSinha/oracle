@@ -247,7 +247,7 @@
     - Can be used to implement *task pinning* when combined with affinity settings.
     - CPUs for task pinning = `affinity-mask & cpuset-mask`
         - Note that if no CPUs are found common, the task will be unpinned/floating.
-7. Kernel also provides tickless scheduling to further isolate workloads on specific CPUs.
+7. Kernel also provides adaptive-tick scheduling to further isolate workloads on specific CPUs.
     - See [NO_HZ - The Linux Kernel Documentation](https://docs.kernel.org/timers/no_hz.html).
 8. Following guide shows how to combine all of the above-mentioned concepts:
     - [CPU Isolation by SUSE Labs #1](https://www.suse.com/c/cpu-isolation-introduction-part-1/).
@@ -332,25 +332,66 @@
 
 There are several methods available for synchronization.
 The choice depends on context (process/atomic) of use, number and nature of operations and expected resource contention.
-Following table lists key mechanisms available in kernel, in approximate order of increasing overhead.
+Key synchronization mechanisms available in kernel are listed below:
 
-| Method | Notes |
-| ---------- | ------------ |
-| Atomic operations | Self-explanatory. Also includes bit operations. Never sleeps i.e. can be used in any context. |
-| Spinlocks | Self-explanatory. Will block, but never sleep i.e. can be used in any context. |
-| Rwlocks | Spinlocks with reader/writer lock variants. Prone to cause writer starvation if there are many readers. Same context constraints as spinlock. |
-| Seqlocks | Spinlocks that are optimized to prevent writer starvation. Same context constraints as spinlock. |
-| Mutexes | Self-explanatory. Will sleep i.e. can be used in process context only. Owner of the mutex is the task in whos context the mutex was taken. |
-| Completion functions | Ideal for high resource contention cases. Will sleep i.e. process context only. |
-| Read-Copy-Update (RCU) | Similar use cases as that of seqlocks. Can be used in any context (unless sleepable variant is used). |
+1. Atomic operations:
+    - Self-explanatory.
+    - Also includes bit operations.
+    - Never sleeps i.e. can be used in any context.
+    - See:
+        - [Atomic types - The Linux Kernel Documentation](https://docs.kernel.org/core-api/wrappers/atomic_t.html).
+        - [Atomic bitops - The Linux Kernel Documentation](https://docs.kernel.org/core-api/wrappers/atomic_bitops.html).
+2. Spinlocks:
+    - Self-explanatory.
+    - Will block, but never sleep i.e. can be used in any context.
+    - Has variants that allow disabling IRQ handling (only on current CPU) while in the critical section.
+    - See [Spinlocks - The Linux Kernel Documentation](https://docs.kernel.org/locking/spinlocks.html).
+3. Rwlocks:
+    - Spinlocks with reader/writer lock variants.
+    - Prone to cause writer starvation if there are many readers.
+    - Same context constraints as spinlock.
+    - Has variants that allow disabling IRQ handling (only on current CPU) while in the critical section.
+    - See [Rwlocks - The Linux Kernel Documentation](https://docs.kernel.org/locking/spinlocks.html).
+4. Seqlocks:
+    - Spinlocks that are optimized to prevent writer starvation.
+    - Writers take a lock (which updates a *sequence* value) to modify the data.
+    - Readers do not take a lock, instead they simply read the data and check the *sequence* which indicates if the data was modified by a writer during the read.
+        - If the data was modified during the read, the reader must re-try.
+    - Same context constraints as spinlock.
+    - Has variants that allow disabling IRQ handling (only on current CPU) while in the critical section.
+    - As readers do not actually take a lock, it can result in reader starvation if there are too many writers, frequent writes or writers taking too much time within the lock.
+    - No side effects should result from writes.
+    - See [Sequential locks - The Linux Kernel Documentation](https://docs.kernel.org/locking/seqlock.html).
+5. Mutexes:
+    - Self-explanatory.
+    - Will sleep i.e. can be used in process context only.
+    - Owner of the mutex is the task in whose context the mutex was taken.
+    - Usage violations (use in atomic context, unlocking done by task who is not the owner, etc) can only be detected when mutex debugging is enabled in kernel.
+    - See [Mutex subsystem - The Linux Kernel Documentation](https://docs.kernel.org/locking/mutex-design.html).
+6. Wait-Queues:
+    - Tasks can be put to sleep (on a wait-queue) while waiting for a certain condition.
+    - Tasks on a wait-queue are woken up if a wake notification was received and the condition is satisfied.
+        - Generally, all tasks on the wait-queue will wake up unless exclusive variants are used to wake up only some tasks (wake-up order is non-deterministic either way).
+    - As this sleeps it should only be used in process context.
+7. Completion Functions:
+    - Will sleep i.e. process context only.
+    - See [Completions - The Linux Kernel Documentation](https://docs.kernel.org/scheduler/completion.html).
+8. Read-Copy-Update (RCU):
+    - Optimized for frequent low-overhead reads, and seldom writes.
+    - Readers take a lock to *read* the data.
+    - Writers modify a *copy* of the data in a temporary location.
+    - Both the old and new data are retained for a period of time (grace period):
+        - Readers already accessing the old data are allowed to finish their work.
+        - Access from new readers is given to the new data.
+    - When it is guaranteed (*quiescent state*) that no readers are accessing the old data, it is *updated* with the new data and the temporary location is cleaned up.
+        - Essentially tracks certain events (context switch, system calls, etc) to infer if code running on any CPU is still using the old data.
+        - Update and clean-up generally occur via call-backs.
+        - Quiescent state tracking has considerations for nohz_full use.
+    - Suitable for either context, unless sleepable variants are used.
+    - See [RCU subsystem - The Linux Kernel Documentation](https://docs.kernel.org/next/RCU/whatisRCU.html).
 
-Note:
-
-1. Kernel also provides a reference counter utility (kref).
-2. Spinlocks and rwlocks have variants that allow disabling IRQ handling (only on current CPU) while in the critical section.
-3. Seqlocks can result in reader starvation if there are too many writers, frequent writes or writers taking too much time within the lock.
-    - This is because readers do not actually take a lock.
-4. Mutex-use violations (use in atomic context, unlocking done by task who is not the owner, etc) can only be detected when mutex debugging is enabled in kernel.
+Note that the kernel also provides a reference counter utility (kref).
+See [kref - The Linux Kernel Documentation](https://docs.kernel.org/core-api/kref.html).
 
 There also exists functions to enable and disable kernel preemption: `preempt_enable()`, `preempt_disable()`
 Note that `preempt_disable()` may have been called several times (count can be obtained via `preempt_count()` ).
