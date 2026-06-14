@@ -231,6 +231,40 @@ It can automatically handle most of the steps above, including:
         - These functions have depth e.g. if `disable_irq()` was called 3 times to disable an IRQ, then `enable_irq()` must also be called 3 times to enable it back.
 8. For MSI/MSI-x in PCI-e devices, see [MSI/MSI-x - The Linux Kernel Documentation](https://docs.kernel.org/PCI/msi-howto.html).
 
+### SoftIRQ
+
+1. SW-triggered IRQ mechanism, which may itself trigger as a result of a HW IRQ.
+2. Used to handle specific kernel functions like network activity (TX/RX), scheduling ticks, etc.
+    - Each softIRQ source has an assigned priority in the kernel.
+3. SoftIRQ statistics can be checked here: `/proc/softirqs`
+4. SoftIRQs may be executed in the following ways:
+    - Via kernel checks for pending softIRQs (e.g. after execution of a IRQ).
+    - Via scheduling-in of `ksoftirqd/*` tasks.
+5. If pending, softIRQs are executed in priority order.
+
+### Deferred Handling
+
+1. IRQ handling may be split into top and bottom halves:
+    - Top half is executed ASAP, as part of the IRQ handler call-back.
+    - Bottom half (if used) may be used to execute deferred (usually less urgent) operations at a later point.
+2. Bottom half can be implemented in 3 ways:
+    - Tasklets:
+        - Runs in atomic context based on triggering via softIRQs.
+        - Runs only on the CPU where the request was made.
+        - Multiple tasklets execute in parallel, but the same tasklet can only be run one at a time.
+        - Invoked as a result of kernel checks at specific points (e.g. scheduling tick IRQs, user-kernel mode transition, etc), if needed.
+        - It is a general deferred execution mechanism i.e. they can be used for non-IRQ related work too.
+        - Considered deprecated, but significant legacy driver code still use it today.
+    - Workqueues:
+        - Runs in process context via kthreads (pool of `kworker/*`).
+        - Scheduled like any other task.
+        - Depending on the workqueue settings, submitted work may run on a specific CPU (bound) or on any CPU (unbound).
+        - It is a general deferred execution mechanism i.e. it can be used for non-IRQ related work too.
+    - Threaded IRQs:
+        - Runs in process context via kthreads (pool of `irq/*`).
+        - While regular kthread interfaces can be used for this, kernel provides a dedicated set of interfaces to setup threaded IRQ handling.
+        - Scheduled like any other task.
+
 
 ## Timing Measurement
 
