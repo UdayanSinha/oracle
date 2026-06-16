@@ -167,8 +167,8 @@
     - Normally wrapped by library functions. E.g. `open()` .
     - A user-space program may not necessarily know when a system call could result from a library function call.
     - See [syscall(2) - man](https://man7.org/linux/man-pages/man2/syscall.2.html).
-3. System calls are typically implemented via exceptions (synchronous IRQs), but this is architecture-specific.
-    - System calls available for a platform may also be architecture-specific.
+3. System calls are typically implemented via exceptions (synchronous IRQs), but this is platform-specific.
+    - System calls available for a platform may also be platform-specific.
 4. In kernel, a new system call is typically defined via the `SYSCALL_DEFINE<n>()` macro.
     - `n` is the number of arguments to the system call.
     - There may be other variations of this macro, e.g. `COMPAT_SYSCALL_DEFINE<n>()` .
@@ -390,8 +390,17 @@ Key synchronization mechanisms available in kernel are listed below:
     - Suitable for either context, unless sleepable variants are used.
     - See [RCU subsystem - The Linux Kernel Documentation](https://docs.kernel.org/next/RCU/whatisRCU.html).
 
-Note that the kernel also provides a reference counter utility (kref).
-See [kref - The Linux Kernel Documentation](https://docs.kernel.org/core-api/kref.html).
+Note that the kernel also provides:
+
+1. Reference counter utility (kref)i for object life-cycle management.
+    - See [kref - The Linux Kernel Documentation](https://docs.kernel.org/core-api/kref.html).
+2. Memory barriers functions for controlling access reordering by the CPU.
+    - One must include the platform-specific header to use it on a given platform. E.g. for x86, see `arch/x86/include/asm/barrier.h` .
+    - There are barriers specific to controlling reordering of reads, writes and both reads and writes.
+        - E.g. a read barrier would ensure that all reads before that point are complete.
+        - These come with a performance cost, so it is important to use the appropriate one.
+    - Note that there are SMP variants of the same as well, which only insert memory barriers on SMP systems.
+    - See [Memory Barriers - The Linux Kernel Documentation](https://docs.kernel.org/core-api/wrappers/memory-barriers.html).
 
 There also exists functions to enable and disable kernel preemption: `preempt_enable()`, `preempt_disable()`
 Note that `preempt_disable()` may have been called several times (count can be obtained via `preempt_count()` ).
