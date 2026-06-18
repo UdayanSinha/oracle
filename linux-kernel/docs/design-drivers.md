@@ -102,7 +102,10 @@ In addition, the kernel may also interact with device drivers for the purpose of
 1. Device drivers may be built as loadable modules or may be built-in.
 2. `module_driver()` family of macros are preferred for device drivers instead of standard `module_init()` and `module_exit` interfaces.
     - Avoids repetition of boilerplate initialization and clean-up code.
-    - Each driver type has its own variant. E.g. `module_pci_driver()` , `module_usb_driver()` , etc.
+        - For drivers, these may just call `driver_register()` and `driver_unregister()` respectively.
+        - Unless additional operations are needed, `module_driver()` macros will suffice.
+    - Each driver type has its own variant, which calls the correct `driver_register()` and `driver_unregister()` variant internally.
+        - E.g. `module_pci_driver()` , `module_usb_driver()` , etc.
 3. These macros typically take a struct as an argument.
     - E.g. `module_pci_driver()` expects a `struct pci_driver` .
     - Defines driver call-backs, parameters and other config. relevant to that device driver type.
@@ -156,6 +159,7 @@ In practice, the device driver may be provided with a user-space program or simi
     - Associated with the corresponding `struct inode` internally.
     - Created upon `open()` and destroyed upon `close()` .
 4. A filesystem entry may have several instances of `struct file` (one per `open()`), but only one `struct inode` .
+5. For `mmap()` , `remap_pfn_range()` or `vm_iomap_memory()` is typically used to map the memory region in user-space.
 
 ### ioctl()
 
@@ -323,3 +327,48 @@ It can automatically handle most of the steps above, including:
         - Higher overhead in timer creation and deletion compared to low-resolution timers.
         - Better suited for *timer* use-cases.
 4. Information about currently used timers in the system is available in `/proc/timer_list` .
+
+
+## PCI/PCIe Device Drivers
+
+1. Drivers provide a list of relevant device IDs via `module_pci_driver()` .
+2. Matched IDs during enumeration will result in `probe()` call-back being called in the driver, to perform necessary setup. Common actions include:
+    - Calling `pci_enable_device()` which includes (if not already done) enabling access to memory and I/O regions.
+    - Calling `pci_set_master()` to enable Bus Master capability.
+    - Setting up IRQ handling in the driver.
+    - Claim ownership of the BARs via `pci_request_regions()` .
+        - If kernel code will access this memory, it will also need to be mapped into kernel virtual address space via `pci_iomap()` .
+    - Setting up applicable user-space interfaces (e.g. registering as a network/character/block device).
+    - Other device-specific setup.
+3. `probe()` will also be called if a driver is manually attached to a device (done via sysfs).
+4. Likewise, `remove()` will be called to perform necessary clean-up for these situations:
+    - Device (hot-)unplug.
+    - Driver unload.
+    - Manual detach (done via sysfs) of a driver from a device.
+5. Configuration space access is provided via `pci_read_config_*()` and `pci_write_config_*()` functions.
+    - E.g. `pci_read_config_byte()` , `pci_write_config_dword()` , etc.
+6. BAR ranges and flags can be retrieved via `pci_resource_*()` functions.
+    - E.g. `pci_resource_start()` , `pci_resource_end()` , `pci_resource_flags()` , etc.
+    - They should not be read from the configuration space directly.
+7. If `mmap()` of BAR regions is needed, it can be done by passing BAR start and end addresses to `vm_iomap_memory()` .
+8. See:
+    - [System Address Map Initialization in x86_64 PCI/PCIe-based Systems #1](https://www.infosecinstitute.com/resources/hacking/system-address-map-initialization-in-x86x64-architecture-part-1-pci-based-systems).
+    - [System Address Map Initialization in x86_64 PCI/PCIe-based Systems #2](https://www.infosecinstitute.com/resources/reverse-engineering/system-address-map-initialization-x86x64-architecture-part-2-pci-express-based-systems)
+    - [PCI/PCIe Device Drivers - The Linux Kernel Documentation](https://docs.kernel.org/PCI/pci.html).
+
+
+## Platform Device Drivers
+
+1. Devices on major interfaces like PCIe/USB have defined methods of device discovery and removal.
+    - These result in corresponding `probe()` and `remove()` call-backs in the matching driver being called.
+    - Device matching done via defined IDs for the device.
+    - The matched driver would have provided these IDs previously, usually as part of `module_<device-type>_driver()` .
+2. Many devices (typically built into a SoC) are directly addressible by the CPU.
+    - E.g. LED devices, host bus controllers, etc.
+    - Collectively called *platform* devices.
+3. Platform driver interface provides a way to attach/detach drivers to such devices in a way that mimics the approach for devices on a major interface like PCIe.
+4. Note that the ID matching mechanism can vary. It may be done based on:
+    - Hardcoded data in the kernel source code. Not preferred as it makes the kernel build be specific to that device.
+    - Device trees (`compatible`).
+    - ACPI tables.
+5. See [Platform Device Drivers - The Linux Kernel Documentation](https://docs.kernel.org/driver-api/driver-model/platform.html).
