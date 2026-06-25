@@ -70,6 +70,8 @@
 
 1. Check settings for relevant boot firmware (BIOS, UEFI, U-Boot, etc).
 2. Kernel also provides some information here: `/sys/firmware`
+    - UEFI: `/sys/firmware/efi`
+    - Device trees: `/sys/firmware/devicetree`
 
 
 ## Tracing In Code

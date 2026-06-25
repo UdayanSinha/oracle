@@ -111,6 +111,10 @@ In addition, the kernel may also interact with device drivers for the purpose of
     - Defines driver call-backs, parameters and other config. relevant to that device driver type.
     - An important aspect of this struct is the ID table of devices that this driver supports.
     - E.g. If a PCIe device is found where the VID:DID combination match what a driver supports, it will be loaded into the kernel if not already loaded or built-in.
+4. Kernel also provides the means to allow easy clean-up of allocated memory in driver code via `devm_*()` functions.
+    - E.g. `devm_kzalloc()` .
+    - Avoids the need to clean-up during driver unload or detach.
+    - Avoids the need to clean-up during failed driver setup (e.g. failure in `probe()`).
 
 
 ## Mechanism vs Policy
@@ -369,6 +373,28 @@ It can automatically handle most of the steps above, including:
 3. Platform driver interface provides a way to attach/detach drivers to such devices in a way that mimics the approach for devices on a major interface like PCIe.
 4. Note that the ID matching mechanism can vary. It may be done based on:
     - Hardcoded data in the kernel source code. Not preferred as it makes the kernel build be specific to that device.
-    - Device trees (`compatible`).
+    - Device trees.
     - ACPI tables.
+        - Provided by the firmware to the kernel.
+        - OS-agnostic in principle.
 5. See [Platform Device Drivers - The Linux Kernel Documentation](https://docs.kernel.org/driver-api/driver-model/platform.html).
+
+### Device Tree
+
+1. Represents integration (i.e. connection between them, not internal details) of HW blocks.
+    - Essentially a tree of nodes.
+    - Each node represents a device or HW block.
+    - Properties of the node represent the characteristics of the device or HW block.
+2. Written in `.dts` (device tree source) files, which are compiled into `.dtb` (device tree binary/blob) files.
+3. The information can be split into `.dtsi` files which are then included into `.dts` files (device tree inheritance) for modularity.
+    - Note that the contents of a `.dts` file is *applied onto* the contents of the included `.dtsi` files.
+    - E.g. Device tree of a SoC may be in a `.dtsi` file which is included in a`.dts` file describing the board.
+4. Can be updated at runtime via device tree *overlays* (essentially device tree snippets).
+5. OS-agnostic in principle. However the source files can typically be found in the kernel source tree (and built as part of kernel build): `arch/<ISA>/boot/dts`
+6. Can be passed by the bootloader/firmware to the kernel at start-up, or built into the kernel image itself (`CONFIG_BUILTIN_DTB`).
+7. Matched to drivers based on the `compatible` field in the device trees.
+8. For the base specification, see [Specifications - Device Tree](https://www.devicetree.org/specifications).
+    - Only describes the base syntax and some common properties.
+9. Kernel provides further guidelines on how to describe different device types (device tree bindings).
+    - See [Firmware & Device Trees - The Linux Kernel Documentation](https://docs.kernel.org/devicetree/index.html).
+10. For further guidance, see [Device Trees 101: Linux Foundation](https://www.youtube.com/watch?v=TeygIvk4UHg&pp).

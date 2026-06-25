@@ -662,7 +662,7 @@ For page cache, the pages may not correspond to contiguous storage blocks.
 
 1. Increases effective available system memory by using part of storage as an extension of physical memory (swap area).
     - Hence, swapping is the logical inverse of page caching.
-    - Pages are *swapped out* due to memory pressure.
+    - Pages are *swapped out* due to memory pressure (also called page reclaim).
     - Pages are *swapped in* when access to their contents are required, and they are not present in memory (page fault handling).
     - Swapping is transparent to user-space, beside potential performance penalty from storage I/O.
 2. A swap area may be a dedicated storage partition, or a special file residing on a partition alongside other files.
