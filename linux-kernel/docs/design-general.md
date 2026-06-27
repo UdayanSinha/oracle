@@ -26,15 +26,17 @@
 
 1. Download kernel source tree (e.g. from [The Linux Kernel Archives](https://kernel.org)).
 2. Setup the build environment.
-3. Select a kernel defconfig. (see `arch/<ISA>/configs/`). E.g. for x86_64
+3. Select a kernel defconfig. (see `arch/<ISA>/configs/`). E.g. to select the default defconfig for x86_64
 
     ```console
     make help    # if usage info is needed
-    make x86_64_defconfig
+    make ARCH=x86_64 defconfig
     make <menuconfig, nconfig>    # to make changes
     # .config file created at the end which contains finished defconfig.
     ```
 
+    - To list available defconfigs: `make ARCH=x86_64 help | grep defconfig`
+    - To load a specific defconfig via menuconfig: `export KBUILD_CONFIG=/path/to/file.config`
 4. Compile the kernel.
 
     ```console
@@ -163,7 +165,7 @@
 
 1. Provides mechanism for user-space to invoke the kernel to get work done.
     - The work may be HW access or services provided by kernel infrastructure.
-2. `syscall()` is interface for user-space to make system-calls.
+2. `syscall()` is the interface for user-space to make system-calls.
     - Normally wrapped by library functions. E.g. `open()` .
     - A user-space program may not necessarily know when a system call could result from a library function call.
     - See [syscall(2) - man](https://man7.org/linux/man-pages/man2/syscall.2.html).
@@ -189,23 +191,23 @@
 3. Kernel can execute in 2 contexts:
     - Atomic/interrupt context: Cannot sleep.
     - Process context: Typically executing on behalf of a user-space process. Can sleep.
-4. Execution transferred from user-space to kernel-space via synchronous IRQs (exceptions) or asynchronous IRQs.
+4. Execution is transferred from user-space to kernel-space via synchronous IRQs (exceptions) or asynchronous IRQs.
 5. Nested-handling of IRQs is not considered as "sleep" for a pre-empted IRQ.
 6. Kernel may be configured to have its own code be preemptible or non-preemptible.
     - All kernel code must be written with this in mind.
-    - All kernel code must be fully-reentrant to allow safe execution in multi-core systems.
+    - Even if the kernel is configured to be non-preemptible, all kernel code must be fully-reentrant to allow safe execution in multi-core systems.
     - Code running in user-space is always preemptible.
 7. Using `PREEMPT_RT` will alter scheduling behavior.
-    - E.g. IRQ handlers may become threaded and spin-locks may become preemptible.
-8. `current` points to the currently running task on the CPU.
+    - E.g. IRQ handlers may become threaded and critical sections guarded by spin-locks may become preemptible.
+8. `current` points to the currently running task on a given CPU.
 9. Maximum number of allowed tasks: `/proc/sys/kernel/threads-max`
 10. Maximum allowed PID value: `/proc/sys/kernel/pid_max`
-11. Common task states in `struct task_struct` include the following.
+11. Common task states in `struct task_struct` include the following:
 
     | State | Purpose |
     | ---------- | ------------ |
     | `TASK_RUNNING` | Running, or waiting to be scheduled, on a CPU. |
-    | `TASK_INTERRUPTIBLE` | Sleeping conditionally, i.e. can be woken up on signals (i.e. become `TASK_RUNNING`). |
+    | `TASK_INTERRUPTIBLE` | Sleeping conditionally, i.e. can be woken up on signals (and become `TASK_RUNNING`). |
     | `TASK_UNINTERRUPTIBLE` | Sleeping unconditionally, i.e. cannot be woken up on signals. |
     | `TASK_STOPPED` | Stopped due to `SIGSTOP` , `SIGTSTP` , `SIGTTIN` , `SIGTTOU` . |
     | `TASK_TRACED` | Under tracing (`ptrace()`). |
@@ -247,7 +249,7 @@
     - Can be used to implement *task pinning* when combined with affinity settings.
     - CPUs for task pinning = `affinity-mask & cpuset-mask`
         - Note that if no CPUs are found common, the task will be unpinned/floating.
-7. Kernel also provides adaptive-tick scheduling to further isolate workloads on specific CPUs.
+7. Kernel also provides adaptive-tick (dyntick) scheduling to further isolate workloads on specific CPUs.
     - See [NO_HZ - The Linux Kernel Documentation](https://docs.kernel.org/timers/no_hz.html).
 8. Following guide shows how to combine all of the above-mentioned concepts:
     - [CPU Isolation by SUSE Labs #1](https://www.suse.com/c/cpu-isolation-introduction-part-1/).
@@ -258,7 +260,7 @@
 9. Kernel also provides the means to define per-CPU variables (e.g. `DEFINE_PER_CPU()`).
 10. Besides affinities, Linux also has the process limit mechanism (rlimit) and additional cgroup features for process resource management.
     - See [cgroup v2 - The Linux Kernel Documentation](https://docs.kernel.org/admin-guide/cgroup-v2.html).
-    - See [setrlimit(2) - man](https://man7.org/linux/man-pages/man3/setrlimit.3p.html).
+    - See [getrlimit(2) - man](https://man7.org/linux/man-pages/man2/getrlimit.2.html).
     - Note that some rlimit parameters apply to a user, instead of only applying to a process. E.g. `RLIMIT_SIGPENDING` .
 
 ### Scheduling Policies For User-Space Tasks
@@ -300,7 +302,7 @@
     - RT signals are delivered in FIFO order for the same signal number.
     - Lower numbered RT signals are prioritized first.
     - General signal handling is prioritized over RT signals.
-    - For multiple pending general signals, order of handling is non-deterministic.
+    - For multiple pending general signals, order of delivery is non-deterministic.
 5. Available signals on the system (platform-specific): `kill -l`
 6. To send signals, one of the following system calls are common (there may be more):
     - `kill()` : See [kill(2) - man](https://man7.org/linux/man-pages/man2/kill.2.html).
@@ -309,17 +311,17 @@
     - Some signals like `SIGKILL` are an exception.
 8. Kernel typically checks for pending signals when:
     - The process is being scheduled in.
-    - After IRQ execution.
+    - On return from IRQ.
     - After return from a system call (which is a scheduling point in general) that was made by the process.
 9. Following behavior applies for signal handling in multi-threaded processes:
     - Installed signal handlers are shared across all threads.
     - Each thread may have its own mask of allowed and blocked signals.
         - For pthreads, see [pthread_sigmask(3) - man](https://man7.org/linux/man-pages/man3/pthread_sigmask.3.html).
     - A termination signal will terminate all threads.
-    - If a signal is sent via `kill()` , any thread may receive it.
+    - If a signal is sent via `kill()` , any thread (which is not blocking it) may receive it.
         - `tgkill()` can be used to send a signal to a specific thread. See [tgkill(2) - man](https://man7.org/linux/man-pages/man2/tgkill.2.html).
     - If a signal is sent via `raise()` , the calling thread receives it.
-10. If signals are sent between processes across CPUs, an IPI may be used to invoke the scheduler so the signal can be dealt with.
+10. If signals are sent between processes across CPUs, an IPI may be used to internally invoke the scheduler so the signal can be dealt with.
 11. Signal handling via own handler can be done in a process in 2 ways:
     - Asynchronous (SW IRQ style approach): Install signal handler as traditionally done.
     - Synchrounous (polled approach): Use `signalfd()` .
@@ -331,7 +333,7 @@
 ## Synchronization Methods
 
 There are several methods available for synchronization.
-The choice depends on context (process/atomic) of use, number and nature of operations and expected resource contention.
+The choice depends on context (process/atomic), number and nature of operations and expected resource contention.
 Key synchronization mechanisms available in kernel are listed below:
 
 1. Atomic operations:
@@ -348,6 +350,7 @@ Key synchronization mechanisms available in kernel are listed below:
     - See [Spinlocks - The Linux Kernel Documentation](https://docs.kernel.org/locking/spinlocks.html).
 3. Rwlocks:
     - Spinlocks with reader/writer lock variants.
+    - Readers can access the resource in parallel, while writers will be granted exclusive access to the resource.
     - Prone to cause writer starvation if there are many readers.
     - Same context constraints as spinlock.
     - Has variants that allow disabling IRQ handling (only on current CPU) while in the critical section.
@@ -370,7 +373,7 @@ Key synchronization mechanisms available in kernel are listed below:
     - See [Mutex subsystem - The Linux Kernel Documentation](https://docs.kernel.org/locking/mutex-design.html).
 6. Wait-Queues:
     - Tasks can be put to sleep (on a wait-queue) while waiting for a certain condition.
-    - Tasks on a wait-queue are woken up if a wake notification was received and the condition is satisfied.
+    - Tasks on a wait-queue are woken up if a wake notification was received AND the condition is satisfied.
         - Generally, all tasks on the wait-queue will wake up unless exclusive variants are used to wake up only some tasks (wake-up order is non-deterministic either way).
     - As this sleeps it should only be used in process context.
 7. Completion Functions:
@@ -409,7 +412,6 @@ Note that `preempt_enable()` is a scheduling point i.e. it may lead to a context
 There is a `preempt_enable_no_resched()` to avoid that.
 
 Note that taking a spinlock may disable preemption.
-Always select the simplest possible synchronization primitive.
 
 
 ## Memory Addressing
@@ -422,7 +424,7 @@ Presence of an MMU is one the minimum requirements to run Linux.
     ```
     +================================+
     |                                |
-    |        Kernel Addresses        | (mapping of physical RAM, kernel code + data, devices)
+    |        Kernel Addresses        | (mapping of physical RAM, kernel code + data, device memory mappings)
     |      (global, privileged)      |
     +================================+  address space boundary (PAGE_OFFSET in many architectures)
     |                                |
@@ -457,19 +459,19 @@ Presence of an MMU is one the minimum requirements to run Linux.
     - Kernel view of the NUMA topology is exposed here: `/sys/devices/system/cpu/cpu<n>/topology`
     - See [CPU Topology - The Linux Kernel Documentation](https://docs.kernel.org/admin-guide/cputopology.html).
 7. The virtual address space of a task consists of one or more memory regions.
+    - Virtual addresses may always be contiguous in this address space.
     - Each region consists of virtually addressed fixed-sized segments called pages (typical size is 4kB).
         - Tasks may share memory regions (e.g. for user-space threads).
         - Memory regions in a task's address space can be viewed here: `/proc/<PID>/maps`
             - Detailed statistics for each region can be viewed here: `/proc/<PID>/smaps`
-    - Virtual addresses may always be contiguous in this address space.
-    - The physical addresses are only contiguous within a memory region.
+        - Physical addresses are only guaranteed to be contiguous within a memory region.
     - Flags w.r.t memory is typically specified at page-level, not address-level.
         - Flags determine aspects like dirty state (page updated but not written to storage), update policies (write-back/write-through), etc.
         - `enum pageflags` defines page flags used by Linux.
     - `PAGE_SIZE` defines the size of a page in kernel code (should NEVER be assumed).
     - A page frame (physical memory page) is a fixed-size segment of physical memory.
     - A page may reside in a page frame, storage, device, etc.
-    - Page tables (typically 3, 4 or 5 levels) used to map virtual to physical addresses.
+    - Page tables (typically 3, 4 or 5 levels) are used to map virtual to physical addresses.
     - Each task has its own page table to translate for its address space.
         - Loaded into MMU during context switch.
     - E.g. A 5-level page table is shown below:
@@ -515,7 +517,7 @@ Presence of an MMU is one the minimum requirements to run Linux.
 | `shmat()` , `shmdt()` | Handle attachment of a System V IPC shared memory region into address space. |
 
 9. Each page frame has a `struct page` associated with it.
-    - `pfn_to_page()` and `page_to_pfn()` can be used to map page frames to `struct page` and vice versa.
+    - `pfn_to_page()` and `page_to_pfn()` can be used to map page frame numbers to `struct page` and vice versa.
     - `virt_to_page` can be used to map a kernel virtual address to a `struct page` .
 10. Each memory region has a `struct vm_area_struct` associated with it.
     - For memory regions shared between user-space processes, they will still have their own copies of `struct vm_area_struct` for a given memory region.
@@ -525,14 +527,15 @@ Presence of an MMU is one the minimum requirements to run Linux.
 ### Page Fault Handling
 
 1. For user-space allocations, kernel may assign pages to the task address space w/o page frames being actually assigned.
-2. Page frames will be assigned when the memory is actually attempted to be used and may be swapped out.
-3. When a user-space process attempts to access memory, the address is checked by the kernel:
+2. Page frames will be assigned when the memory is actually attempted to be used.
+3. In-use page frames may also be swapped out.
+4. When a user-space process attempts to access memory, the address is checked by the kernel:
     - If address is valid (access is allowed):
-        - If page frames were assigned and pages were not swapped out, the access will be allowed (no page fault).
+        - If page frames were assigned and not swapped out, the access will be allowed (no page fault).
         - If page frames were not assigned, page fault handling will assign page frames and allow access.
-        - If page frames were assigned but pages are swapped out, page fault handling will bring those pages back into memory.
-    - If address is invalid (access not allowed, or not yet assigned in address space), page fault handling will result in `SIGSEGV` being sent back to the process.
-4. For kernel-space allocations, page frames are always assigned when the memory was requested, and never swapped out.
+        - If page frames were assigned but are swapped out, page fault handling will bring them back into memory.
+    - If address is invalid (access not allowed), page fault handling will result in `SIGSEGV` being sent back to the process.
+5. For kernel-space allocations, page frames are always assigned when the memory was requested, and never swapped out.
     - Hence why page faults in kernel-space will generally cause a panic.
 
 
@@ -554,8 +557,8 @@ These also guide the kernel in assigning memory from an appropriate source. Comm
 ### Page Allocator
 
 1. Physically contiguous memory allocated in multiple of pages.
-2. Interfaces (multiple pages specified in order of 2):
-    - Allocate (pointer to 1st page returned):  `__get_free_page()`, `__get_free_pages()`
+2. Interfaces:
+    - Allocate (pointer to 1st page returned):  `__get_free_page()`, `__get_free_pages()` (multiple pages specified in order of 2)
     - Free: `free_page()`, `free_pages()`
 3. May result in allocation being done from high memory. Use following interfaces to map them into kernel virtual address space:
     - `kmap()` (may sleep), `kmap_atomic()` (will not sleep)
@@ -566,7 +569,7 @@ These also guide the kernel in assigning memory from an appropriate source. Comm
     - Fragmentation cannot be solved with MMU:
         - Frequent page table updates would be needed (overhead).
         - DMA bypasses memory paging.
-    - Total memory split into multiple blocks of physically contiguous pages per zone.
+    - Total memory split into multiple blocks of physically contiguous pages (done per zone).
     - Pages per-block are in increasing order of 2 (may be multiple blocks per order).
         - E.g. Blocks may have quantity of pages like so: 1, 2, 4, 8, 16, 32, ...
     - When pages are requested, kernel tries to fulfill the request (also in order of 2) from a block of that size.
@@ -650,7 +653,7 @@ For page cache, the pages may not correspond to contiguous storage blocks.
 
 1. Storage-backed pages benefit from requiring fewer I/O transactions.
 2. Storage device may physically store data in terms of fixed-size blocks.
-    - An integral number of such blocks must fit into a page (typically 4kB).
+    - An integral number of such blocks must fit into a page (the block size is typically also 4kB).
 3. Modified data is written back to storage devices at regular intervals.
     - Can be forced via:
     - `fsync()` : [fsync(2) - man](https://man7.org/linux/man-pages/man2/fsync.2.html).
@@ -671,8 +674,8 @@ For page cache, the pages may not correspond to contiguous storage blocks.
         - Lower priority areas will only be used when higher priority areas are unavailable.
     - Maximum number of swap areas is set by `MAX_SWAPFILES` in kernel code.
     - Swap areas are divided into slots, each of which contains a single page.
-        - Kernel prefers swapping pages into physically contigous slots.
-        - Kernel usually starts swap operations with the process which induced the swap.
+        - Kernel prefers swapping pages into physically contiguous slots.
+        - Kernel typically starts swap operations with the process which induced the swap.
 3. Following types of user-space pages are targeted in swap operations:
     - Anonymous (i.e. not file-backed) memory regions (e.g. user-space stack, heap, etc).
     - Huge pages (transparent or otherwise).
@@ -698,10 +701,10 @@ For page cache, the pages may not correspond to contiguous storage blocks.
 
 ### Out-Of-Memory (OOM) Killer
 
-1. Linux will over-commit memory for user-space i.e. memory request may be granted, but actual pages are only allocated on use.
+1. Linux will typically over-commit memory for user-space i.e. memory request may be granted, but actual pages are only allocated on use.
     - Based on the premise that not all requested memory may actually get used.
-    - Process may `fork()` which commits a copy of parent address space for the child, but the child may `execve()` right after.
-    - Process may heap-allocate a large buffer, but only use a few pages.
+    - A process may call `fork()` which commits a copy of parent address space for the child, but the child may call `execve()` right after.
+    - A process may heap-allocate a large buffer, but only use a few pages.
 2. As mentioned before, kernel always allocates its own memory with urgency (i.e. no overcommit).
 3. Over-commited memory may therefore exceed overall size of physical memory + swap areas.
 4. Over-commit behavior can be tuned: `/proc/sys/vm/overcommit_memory`
@@ -710,6 +713,6 @@ For page cache, the pages may not correspond to contiguous storage blocks.
 6. Each process has a OOM kill score calculated for itself.
     - Higher score => Higher probablity of OOM kill.
     - Can be viewed in `/proc/<PID>/oom_score` (should be 0 for critical system processes).
-    - OOM kill probablity for a process can be adjusted: `/proc/3006/oom_score_adj`
+    - OOM kill probablity for a process can be adjusted: `/proc/<PID>/oom_score_adj`
         - Values typically range from -1000 (nearly unkillable) to 1000 (most-preferred kill).
 7. Kernel can be configured to panic on OOM kills: `/proc/sys/vm/panic_on_oom`

@@ -7,7 +7,7 @@
 - For details on QEMU, see [qemu.org](https://www.qemu.org).
 
 
-## Setup Kernel Development Environment
+## Setup Kernel Build Environment
 
 ### Install dependencies needed to compile kernel builds.
 
@@ -20,16 +20,13 @@ sudo apt install indent sparse stress    # Ubuntu
 sudo dnf install indent sparse stress    # Fedora
 ```
 
-### Download and build the kernel. Suggested defconfig options show below.
+### Download and build the kernel.
 
 ```console
-make x86_64_defconfig        # using default x86_64 as an example
-make ARCH=arm64 defconfig    # using default ARM64 as an example
+make ARCH=x86_64 defconfig    # using default x86_64 as an example
+make ARCH=arm64 defconfig     # using default ARM64 as an example
 # Modify defconfig further if needed, and compile
 ```
-
-- To list available defconfigs: `make ARCH=x86 help | grep defconfig`
-- To load a specific defconfig via menuconfig: `export KBUILD_CONFIG=/path/to/file.config`
 
 
 ## Setup QEMU
