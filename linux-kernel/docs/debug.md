@@ -16,13 +16,11 @@
     - `CONFIG_DEBUG_KERNEL` : Enable kernel debugging.
     - `CONFIG_DETECT_HUNG_TASK` : Enable identification of kernel-freeze culprits.
     - `CONFIG_DEBUG_INFO` : Allows decoding of kernel OOPS symbols.
-    - `CONFIG_LOG_BUF_SHIFT=21` : Sets the kernel buffer log size to the biggest
-    possible value.
+    - `CONFIG_LOG_BUF_SHIFT=21` : Sets the kernel log buffer size to the biggest possible value.
     - `CONFIG_PRINTK_TIME` : Enables time-stamping when using printk().
 2. The defconfig for the running kernel may be possible to examine.
     - This requires that the kernel was built with `CONFIG_IKCONFIG_PROC` enabled.
-    - The location varies depending on the installation, but is usually found
-    in one of the following places:
+    - The location varies depending on the installation, but is usually found in one of the following places:
         - `/proc/config.gz`
         - `/boot/config`
         - `/boot/config-$(uname -r)`
@@ -37,7 +35,7 @@
 
 ## Dmesg & Syslog
 
-1. Kernel message buffer can be viewed with the `dmesg` utility. See [dmesg(1) - man](https://man7.org/linux/man-pages/man1/dmesg.1.html).
+1. Kernel log buffer can be viewed with the `dmesg` utility. See [dmesg(1) - man](https://man7.org/linux/man-pages/man1/dmesg.1.html).
 2. Syslog location varies depending on the installation.
 3. It is possible to have rate-limiting and delays on `printk()` , see settings in `sysctl` .
 
@@ -57,19 +55,20 @@
 3. Interrupt status:
     - `/proc/interrupts`
     - `/proc/softirqs`
-4. Kernel taint status: `/proc/sys/kernel/tainted`
-5. Kernel symbol table: `/proc/kallsyms`
-6. Kernel parameters: `sysctl -a`
+4. Storage status: `du` , `df`
+5. Kernel taint status: `/proc/sys/kernel/tainted`
+6. Kernel symbol table: `/proc/kallsyms`
+7. Kernel parameters: `sysctl -a`
     - See [sysctl(8) - man](https://man7.org/linux/man-pages/man8/sysctl.8.html).
-7. Supported filesystems: `/proc/filesystems`
-8. Swap areas: `/proc/swaps`
-9. Timer information: `/proc/timer_list`
+8. Supported filesystems: `/proc/filesystems`
+9. Swap areas: `/proc/swaps`
+10. Timer information: `/proc/timer_list`
 
 
 ## Boot Firmware Information
 
 1. Check settings for relevant boot firmware (BIOS, UEFI, U-Boot, etc).
-2. Kernel also provides some information here: `/sys/firmware`
+2. Kernel also provides some information in sysfs:
     - UEFI: `/sys/firmware/efi`
     - Device trees: `/sys/firmware/devicetree`
 
@@ -80,8 +79,8 @@
     - See `WARN()` , `BUG()` and its variants.
 2. Note that `WARN()` and its variants will result in an OOPS message w/o further action.
 3. `BUG()` and its variants will result in an OOPS message and may kill the user-space process (process context).
-4. `/proc/sys/kernel/panic_on_oops` or `CONFIG_PANIC_ON_OOPS` will affect behavior of `BUG()` .
-5. It is also possible to call `panic()` , which will result in an OOPS message and cause a crash.
+    - `/proc/sys/kernel/panic_on_oops` or `CONFIG_PANIC_ON_OOPS` will affect behavior of `BUG()` .
+4. It is also possible to call `panic()` , which will result in an OOPS message and cause a crash.
 
 
 ## strace
@@ -120,7 +119,7 @@ Enable dynamic debug, see [Dynamic debug - The Linux Kernel documentation](https
 E.g. To see pr_debug() logs for a kernel module: `echo "module <module_name> +p" > /sys/kernel/debug/dynamic_debug/control`
 
 
-## Event-Tracing (kprobes)
+## Event-Tracing
 
 Enable event-tracing, see [Event Tracing - The Linux Kernel documentation](https://docs.kernel.org/trace/events.html).
 
@@ -134,6 +133,8 @@ echo 1 > /sys/kernel/debug/tracing/tracing_on                          # enable 
 ```
 
 Trace logs can be found at: `/sys/kernel/debug/tracing/per_cpu/cpu<n>/trace`
+
+Note that LTTng can also be used to trace many events in both kernel and user-space.
 
 
 ## Memory-Profiling
