@@ -406,7 +406,7 @@ Note that the kernel also provides:
     - See [Memory Barriers - The Linux Kernel Documentation](https://docs.kernel.org/core-api/wrappers/memory-barriers.html).
 
 There also exists functions to enable and disable kernel preemption: `preempt_enable()`, `preempt_disable()`
-Note that `preempt_disable()` may have been called several times (count can be obtained via `preempt_count()` ).
+Note that `preempt_disable()` has depth i.e. it may have been called several times (count can be obtained via `preempt_count()` ).
 In that case, `preempt_enable()` should also be called a corresponding number of times to re-enable preemption.
 Note that `preempt_enable()` is a scheduling point i.e. it may lead to a context switch when preemption actually gets re-enabled.
 There is a `preempt_enable_no_resched()` to avoid that.

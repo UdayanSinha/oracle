@@ -108,9 +108,10 @@ In addition, the kernel may also interact with device drivers for the purpose of
         - E.g. `module_pci_driver()` , `module_usb_driver()` , etc.
 3. These macros typically take a struct as an argument.
     - E.g. `module_pci_driver()` expects a `struct pci_driver` .
-    - Defines driver call-backs, parameters and other config. relevant to that device driver type.
+    - Defines driver call-backs (e.g. `probe()` , `remove()`), parameters and other config. relevant to that device driver type.
     - An important aspect of this struct is the ID table of devices that this driver supports.
-    - E.g. If a PCIe device is found where the VID:DID combination match what a driver supports, it will be loaded into the kernel if not already loaded or built-in.
+    - E.g. If a PCIe device is found where the VID:DID combination match what a driver supports, it will be bound to this driver.
+        - This assumes that the device is not already bound.
 4. Kernel also provides the means to allow easy clean-up of allocated memory in driver code via `devm_*()` functions.
     - E.g. `devm_kzalloc()` .
     - Avoids the need to clean-up during driver unload or detach.
@@ -178,7 +179,7 @@ In practice, the device driver may be provided with a user-space program or simi
     - It is recommended to keep the commands as unique as possible.
         - For known commands, see [ioctl numbers - The Linux Kernel Documentation](https://docs.kernel.org/userspace-api/ioctl/ioctl-number.html).
     - Use kernel-provided helpers for command encoding (`_IO()` , `_IOR()` , `_IOW()` , `_IOWR()` , etc).
-    - Use kernel-provided helpers for command decoding (`_IOC_DIR()` , `IOC_TYPE()` , `IOC_NR` , `IOC_SIZE()` , etc).
+    - Use kernel-provided helpers for command decoding (`_IOC_DIR()` , `_IOC_TYPE()` , `_IOC_NR` , `_IOC_SIZE()` , etc).
 3. While `ioctl()` allows for a variable number of arguments, the number of them needs to match what `unlocked_ioctl()` supports.
     - The variable arguments technique is used to prevent type-checking of the 3rd argument.
 4. Excessive use of `ioctl()` is discouraged, as the commands can tend to essentially be new system calls.
@@ -245,7 +246,7 @@ It can automatically handle most of the steps above, including:
 2. Used to handle specific kernel functions like network activity (TX/RX), scheduling ticks, etc.
     - Each softIRQ source has an assigned priority in the kernel.
 3. SoftIRQ statistics can be checked here: `/proc/softirqs`
-4. SoftIRQs may be executed in the following ways:
+4. SoftIRQ handlers may be executed in the following ways:
     - Via kernel checks for pending softIRQs (e.g. after execution of a IRQ).
     - Via scheduling-in of `ksoftirqd/*` tasks.
 5. If pending, softIRQs are executed in priority order.
@@ -310,14 +311,14 @@ It can automatically handle most of the steps above, including:
     - Function will execute on the CPU on which the timer was started.
         - Note that it is possible that there is a task migration to another CPU inside the kernel function which starts the timer.
         - In that case, the CPU on which the function executes will be the CPU on which the task was migrated to.
-    - CPU may not be immediately available when the time period elapses i.e. there may additional delay before function is executed.
+    - CPU may not be immediately available when the time period elapses i.e. there may additional delay before the function is executed.
 2. Typical use of kernel timers is of 2 types:
     - *Timeout* use-case:
         - Timer-callback will execute only if an event does not occur within a specific time window.
         - In most cases, the timer-callback is never run.
         - Generally relaxed time resolution requirements.
     - *Timer* use-case:
-        - Timer-callabcks are actually intended to run.
+        - Timer-callbacks are actually intended to run.
         - Generally stricter time resolution requirements.
 3. Kernel provides following timer types:
     - Low-resolution timers.
@@ -354,7 +355,7 @@ It can automatically handle most of the steps above, including:
 6. BAR ranges and flags can be retrieved via `pci_resource_*()` functions.
     - E.g. `pci_resource_start()` , `pci_resource_end()` , `pci_resource_flags()` , etc.
     - They should not be read from the configuration space directly.
-7. If `mmap()` of BAR regions is needed, it can be done by passing BAR start and end addresses to `vm_iomap_memory()` .
+7. If `mmap()` of BAR regions is needed, it can be done by passing BAR start and end addresses to `vm_iomap_memory()` or `remap_pfn_range()` .
 8. See:
     - [System Address Map Initialization in x86_64 PCI/PCIe-based Systems #1](https://www.infosecinstitute.com/resources/hacking/system-address-map-initialization-in-x86x64-architecture-part-1-pci-based-systems).
     - [System Address Map Initialization in x86_64 PCI/PCIe-based Systems #2](https://www.infosecinstitute.com/resources/reverse-engineering/system-address-map-initialization-x86x64-architecture-part-2-pci-express-based-systems)
@@ -381,7 +382,7 @@ It can automatically handle most of the steps above, including:
 
 ### Device Tree
 
-1. Represents integration (i.e. connection between them, not internal details) of HW blocks.
+1. Represents integration of HW blocks i.e. connection between them, not their internal details.
     - Essentially a tree of nodes.
     - Each node represents a device or HW block.
     - Properties of the node represent the characteristics of the device or HW block.
