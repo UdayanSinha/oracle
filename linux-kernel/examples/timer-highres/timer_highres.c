@@ -33,12 +33,12 @@ static enum hrtimer_restart timer_callback(struct hrtimer *t)
 	else
 		data_struct->data++;
 
-	/* re-activate timer */
+	/* update timer expiry */
 	(void) hrtimer_forward_now(t, data_struct->delay);
 
 	/*
-	 * HRTIMER_RESTART: recurring timer
-	 * HRTIMER_NORESTART: one-shot timer
+	 * HRTIMER_RESTART: recurring timer, reactivate it
+	 * HRTIMER_NORESTART: one-shot timer, do not reactivate it
 	 */
 	return HRTIMER_RESTART;
 }

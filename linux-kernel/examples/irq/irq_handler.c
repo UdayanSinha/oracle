@@ -26,9 +26,8 @@ static irqreturn_t irq_handler(int irq, void *ptr)
 	*data = (*data == 0xFFFFFFFF) ? 0 : (*data + 1);
 
 	/*
-	 * If no IRQ handler for a given IRQ returns
-	 * IRQ_HANDLED/IRQ_WAKE_THREAD, it will result in warnings from the
-	 * kernel.
+	 * If no IRQ handler for an IRQ returns IRQ_HANDLED/IRQ_WAKE_THREAD,
+	 * it will result in warnings from the kernel.
 	 */
 	return IRQ_HANDLED;
 }

@@ -36,7 +36,7 @@ static int op_read(char *node_path, char *num_bytes_str)
 	printf("Number of bytes to read from %s: %lu\n", node_path, read_num);
 
 	printf("Attempting to open %s\n", node_path);
-	fd = open(node_path, O_RDONLY, S_IRUSR | S_IRGRP | S_IROTH);
+	fd = open(node_path, O_RDONLY, 0);
 	if (fd < 0) {
 		perror("open() failed");
 		return -1;
@@ -90,7 +90,7 @@ static int op_write(char *node_path, char *num_bytes_str)
 	printf("Number of bytes to write to %s: %lu\n", node_path, write_num);
 
 	printf("Attempting to open %s\n", node_path);
-	fd = open(node_path, O_WRONLY, S_IRUSR | S_IRGRP | S_IROTH);
+	fd = open(node_path, O_WRONLY, 0);
 	if (fd < 0) {
 		perror("open() failed");
 		return -1;
@@ -141,7 +141,7 @@ static int op_ioctl(char *node_path, char *cmd_str)
 	}
 
 	printf("Attempting to open %s\n", node_path);
-	fd = open(node_path, O_RDONLY, S_IRUSR | S_IRGRP | S_IROTH);
+	fd = open(node_path, O_RDONLY, 0);
 	if (fd < 0) {
 		perror("open() failed");
 		return -1;

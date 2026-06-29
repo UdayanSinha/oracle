@@ -65,13 +65,15 @@ static void log_page_statistics(void)
 
 static void kmem_cache_init(void)
 {
+	unsigned int obj_size = 256;
+
 	/*
 	 * SLAB_POISON: Fills allocated memory with known value to catch use of
 	 *              uninitialized memory.
 	 * SLAB_RED_ZONE: Surround allocated memory with "red zones" to detect
 	 *                out-of-bounds access.
 	 */
-	cache = kmem_cache_create("test-cache", 256, 0,
+	cache = kmem_cache_create("test-cache", obj_size, 0,
 			SLAB_POISON | SLAB_RED_ZONE, NULL);
 
 	/* object allocation can sleep */

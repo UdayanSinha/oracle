@@ -6,13 +6,11 @@
 #include <linux/init.h>		/* __init, __exit */
 #include <linux/printk.h>	/* printk() and utils */
 #include <linux/sched.h>	/* scheduler APIs */
-#include <linux/mm.h>		/* virtual memory management APIs */
 #include <linux/slab.h>		/* memory allocation APIs */
 #include <linux/list.h>		/* linked-list utils */
 #include <linux/percpu.h>	/* percpu utils */
 #include <linux/err.h>		/* error handling utils */
 #include <linux/preempt.h>	/* kernel preemption utils */
-#include <linux/irqflags.h>	/* IRQ flag utils */
 #include <linux/utsname.h>	/* sys info utils */
 #include <uapi/linux/utsname.h>	/* sys info utils */
 
@@ -137,8 +135,10 @@ static void list_usage(void)
 	list_for_each_entry(it, &lhead, link)
 		pr_info("Element String: %s\n", it->str);
 
-	list_for_each_entry_safe(it, tmp, &lhead, link)
+	list_for_each_entry_safe(it, tmp, &lhead, link) {
+		list_del(it->link);
 		kfree(it);
+	}
 }
 
 static void percpu_var_usage(void)

@@ -94,7 +94,6 @@ static int kt2_func(void *data)
 				KT2_NAME, shared);
 		} while (read_seqretry(&lock, seq));
 
-
 		schedule_timeout_interruptible(delay);
 	}
 
