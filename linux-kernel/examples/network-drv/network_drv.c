@@ -14,7 +14,7 @@
 
 static struct net_device *test_netdev = NULL;
 
-int test_ndo_open(struct net_device *dev)
+static int test_ndo_open(struct net_device *dev)
 {
 	pr_debug("Called ndo_open() for %s\n", dev->name);
 
@@ -26,14 +26,14 @@ int test_ndo_open(struct net_device *dev)
 	return 0;
 }
 
-int test_ndo_stop(struct net_device *dev)
+static int test_ndo_stop(struct net_device *dev)
 {
 	pr_debug("Called ndo_stop() for %s\n", dev->name);
 
-	/* de-initialize the network HW */
-
 	/* stop TX queue */
 	netif_stop_queue(dev);
+
+	/* de-initialize the network HW */
 
 	return 0;
 }
@@ -42,7 +42,7 @@ int test_ndo_stop(struct net_device *dev)
  * test_netif_rx() will normally be called from an interrupt handler
  * that is triggered when the network HW received a packet
  */
-void test_netif_rx(struct net_device *dev, unsigned int len, unsigned char *data)
+static void test_netif_rx(struct net_device *dev, unsigned int len, unsigned char *data)
 {
 	struct sk_buff *skb = netdev_alloc_skb(dev, len + 2);
 	int ret = 0;
@@ -80,7 +80,7 @@ void test_netif_rx(struct net_device *dev, unsigned int len, unsigned char *data
 	return;
 }
 
-netdev_tx_t test_ndo_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t test_ndo_start_xmit(struct sk_buff *skb, struct net_device *dev)
 {
 	unsigned int len = skb->len;
 	unsigned char *data = skb->data;
@@ -104,8 +104,8 @@ netdev_tx_t test_ndo_start_xmit(struct sk_buff *skb, struct net_device *dev)
 
 	/*
 	 * Free the sk_buff.
-	 * Usually done in an IRQ handler which is called
-	 * when HW finishes transmission.
+	 * Usually done in an IRQ handler (or equivalent) when HW finishes
+	 * transmission.
 	 */
 	dev_kfree_skb(skb);
 	return 0;
@@ -135,14 +135,14 @@ static struct net_device_ops ndo = {
 	.ndo_stop = test_ndo_stop,
 	.ndo_start_xmit = test_ndo_start_xmit,
 	.ndo_tx_timeout = test_ndo_tx_timeout,
-	.ndo_get_stats = test_ndo_get_stats,
+	.ndo_get_stats = test_ndo_get_stats,	/* TODO: deprecated, use ndo_get_stats64() */
 };
 
-void test_netdev_setup(struct net_device *dev)
+static void test_netdev_setup(struct net_device *dev)
 {
-	ether_setup(dev);	/* initialize with standard Ethernet config. */
+	ether_setup(dev);			/* initialize with standard Ethernet config. */
 	dev->netdev_ops = &ndo;
-	dev->watchdog_timeo = (1 * HZ);
+	dev->watchdog_timeo = (1 * HZ);		/* TX timeout of 1s */
 }
 
 static int __init network_drv_init(void)
@@ -177,3 +177,4 @@ module_exit(network_drv_exit);
 
 MODULE_AUTHOR("Udayan Prabir Sinha");
 MODULE_LICENSE("Dual MIT/GPL");
+MODULE_DESCRIPTION("Network Driver Example");
