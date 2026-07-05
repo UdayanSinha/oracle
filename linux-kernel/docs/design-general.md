@@ -108,6 +108,7 @@
 2. Provides the means to log messages from kernel code into the kernel log buffer.
 3. Supports toggle-able verbosity levels, along with convenience variants for each level (e.g. `pr_info()`).
 4. Device drivers are recommended to use `dev_printk()` and its corresponding variants.
+    - Network devices have their own version, see `netdev_printk()` and variants.
 5. Kernel log buffer can typically be viewed in system logs (varies per distro).
     - `/dev/kmsg` typically always provides access to these logs.
     - `dmesg` uses `/dev/kmsg`, see [dmesg(1) - man](https://man7.org/linux/man-pages/man1/dmesg.1.html).
@@ -230,6 +231,7 @@
 
 1. All CPUs are considered to have equal access to memory and I/O.
 2. Kernel generally tries to keep tasks on the same CPU to avoid migration overhead.
+    - Note that SMP support must be enabled in the kernel, see `CONFIG_SMP` .
 3. A task can be assigned an affinity to inform kernel **what CPUs it is allowed to be scheduled on**.
     - Affinity is typically specified as a bit mask of CPUs.
     - Can be done via `taskset` over command-line. See [taskset(1) - man](https://man7.org/linux/man-pages/man1/taskset.1.html).
@@ -262,6 +264,9 @@
     - See [cgroup v2 - The Linux Kernel Documentation](https://docs.kernel.org/admin-guide/cgroup-v2.html).
     - See [getrlimit(2) - man](https://man7.org/linux/man-pages/man2/getrlimit.2.html).
     - Note that some rlimit parameters apply to a user, instead of only applying to a process. E.g. `RLIMIT_SIGPENDING` .
+11. Note that SMP should not be confused with Simultaneous Multi-Threading (SMT), e.g. Intel Hyper-Threading.
+    - Individual CPUs are split into multiple logical cores for better utilization of internal processing resources.
+    - Settings to enable or disable SMT is typically present in the firmware (e.g. UEFI).
 
 ### Scheduling Policies For User-Space Tasks
 
@@ -455,9 +460,9 @@ Presence of an MMU is one the minimum requirements to run Linux.
     - `/proc/zoneinfo` will show status of page usage per zone.
     - Note that the address ranges differ by architecture, the numbers shown above apply to x86.
 6. Linux can be considered to be always NUMA-aware.
+    - Note that there is also a `CONFIG_NUMA` setting, which enhances the NUMA-awareness for better HW utilization.
     - Non-NUMA systems can just be considered to be a single NUMA node.
-    - Kernel view of the NUMA topology is exposed here: `/sys/devices/system/cpu/cpu<n>/topology`
-    - See [CPU Topology - The Linux Kernel Documentation](https://docs.kernel.org/admin-guide/cputopology.html).
+    - Kernel view of the NUMA topology is exposed here: `/sys/devices/system/node`
 7. The virtual address space of a task consists of one or more memory regions.
     - Virtual addresses may always be contiguous in this address space.
     - Each region consists of virtually addressed fixed-sized segments called pages (typical size is 4kB).

@@ -188,9 +188,10 @@ In practice, the device driver may be provided with a user-space program or simi
 
 ## Character Devices
 
+In the kernel, a character device is represented by `struct cdev` .
 The setup process for a character device driver is the following:
 
-1. Reserve a major and minor number range.
+1. Reserve a major and minor number range (see `dev_t`).
 2. Register the driver as a character device driver.
     - A key aspect of this is the `struct file_operations` which provides the jump-table of driver entrypoints.
 3. Perform any device-specific setup.
@@ -399,3 +400,101 @@ It can automatically handle most of the steps above, including:
 9. Kernel provides further guidelines on how to describe different device types (device tree bindings).
     - See [Firmware & Device Trees - The Linux Kernel Documentation](https://docs.kernel.org/devicetree/index.html).
 10. For further guidance, see [Device Trees 101: Linux Foundation](https://www.youtube.com/watch?v=TeygIvk4UHg&pp).
+
+
+## Network Stack
+
+The network stack in Linux follows a layered approach which maps to the OSI model:
+
+```
+      +-----------------------------+
+      |         Application         |
+      +-----------------------------+
+                     |  (socket interface)          User-space
+---------------------|-----------------------------------------
+                     |                             Kernel-space
+                     v
+    +---------------------------------+
+    |         Transport Layer         |
+    |    (TCP, UDP, ICMP, ARP, etc)   |
+    +---------------------------------+
+                     |
+                     v
+    +---------------------------------+
+    |          Network Layer          |
+    |    (routing tables, NAT, etc)   |
+    +---------------------------------+
+                     |
+                     v
+      +-----------------------------+
+      |        Data-Link Layer      |
+      | (qdisc, device driver, etc) |
+      +-----------------------------+
+                     |
+                     v
+      +-----------------------------+
+      |          Hardware           |
+      +-----------------------------+
+```
+
+For sending data (application -> network), the general flow is as follows:
+
+1. The application writes some data over the socket interface (`send()` or similar).
+2. The transport layer will creates a set of one or more packets with added control information, and forwards it to the network layer.
+    - Depending on the transport type, it may be connection-oriented (e.g. TCP) or connection-less (e.g. UDP).
+    - This layer is also responsible for transport-level error-handling (e.g. due to lost packets).
+3. The network layer adds additional control information and routes it towards the correct destination.
+    - The destination is expected to be reachable over one of the network interfaces.
+4. The network driver associated with the applicable network interface will receive the packet and transfer it to the network HW for transmission (e.g. via DMA).
+
+For receiving data (network -> application), the general flow is as follows:
+
+1. The network HW receives a packet, which is notified to the driver (e.g. via IRQs) and retrieved from it (e.g. via DMA).
+2. After verification, the packet is forwarded to the network and transport layers respectively, which may perform additional verification.
+3. The application is able to read the data over the socket interface (`recv()` or similar).
+
+Note the following:
+
+- For local machine communication (e.g. loopback device, local TCP), the packet will typically not proceed into the data-link layer at all.
+- For UDS (Unix Domain Socket) communication, it will bypass the network layers entirely.
+- An application is generally independent of the other layers and does not know which network interface will be used for its purpose.
+    - Specialized applications (e.g. network monitoring and debugging) are an exception.
+
+### Network Drivers
+
+1. Network devices are represented by `struct net_device` .
+    - Can be allocated and freed with `alloc_netdev()` and `free_netdev()` .
+    - To initialize most struct fields, there are convenience functions available.
+    - E.g. `struct net_device` can be allocated for Ethernet-based devices with `alloc_etherdev()` , which will initialize the struct fields accordingly.
+2. Operations related to the device can be defined as call-backs via `struct net_device_ops` .
+    - Common call-backs include:
+        - `ndo_open()`
+        - `ndo_stop()`
+        - `ndo_start_xmit()`
+        - `ndo_do_ioctl()`
+        - `ndo_get_stats64()`
+        - `ndo_tx_timeout`
+    - As mentioned before, unlike character/block devices, there are no filesystem nodes for a network device.
+        - Call-backs like `ndo_open()` , `ndo_stop()` and `ndo_do_ioctl()` are called from user-space based on `ioctl()` calls on the socket file descriptor.
+3. The struct is registered and un-registered with `register_netdev()` and `unregister_netdev()` .
+4. The device transmit queue can be managed with the following:
+    - Start the queue: `netif_start_queue()`
+    - Stop the queue: `netif_stop_queue()`
+    - Resume the queue from temporary shutdown: `netif_wake_queue()`
+5. Packets are represented by `struct sk_buff` .
+    - As done with `struct net_device` , there are convenience functions available for most struct fields.
+    - Broadly speaking, this struct is essentially metadata around the actual data.
+    - For more details about the layout of the struct, see [sk_buff - The Linux Kernel Documentation](https://docs.kernel.org/networking/skbuff.html).
+6. `struct net_device` also maintains packet statistics, which need to be updated (typically done in `struct net_device_ops` call-backs).
+7. The state information in the `struct net_device` may need to be updated due to changes in carrier state (e.g. plugging a cable in or out). See:
+    - `netif_carrier_on()`
+    - `netif_carrier_off()`
+    - `netif_carrier_ok()`
+8. Each socket file descriptor has a corresponding `struct socket` associated with it.
+    - Among other things, it includes a pointer to a `struct file` and `struct proto_ops` .
+    - Note that there is a `ioctl()` call-back in `struct proto_ops` too, which handles socket-level operations.
+    - Device-level operations are handled by `ndo_do_ioctl()` in `struct net_device` .
+9. `ioctl()` commands (both socket-level and device-level operations) are defined in `include/uapi/linux/sockios.h` .
+    - Custom device-level `ioctl()` commands can be defined, see `SIOCDEVPRIVATE` .
+    - Custom protocol-level `ioctl()` commands can be defined, see `SIOCPROTOPRIVATE` .
+10. `ip` can be used to manage configuration of network interfaces from user-space, see [ip(8) - man](https://man7.org/linux/man-pages/man8/ip.8.html).
