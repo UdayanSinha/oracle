@@ -95,6 +95,9 @@ In addition, the kernel may also interact with device drivers for the purpose of
         - `struct pci_driver` includes `struct device_driver` .
         - Registration done via `pci_register_driver()` which calls `driver_register()` internally.
         - De-registration done via `pci_unregister_driver()` which calls `driver_unregister()` internally.
+4. Note that for power management:
+    - Driver code would typically need to implement relevant call-backs (e.g. `suspend()` , `resume()` ) for its operations.
+    - Kernel keeps track of dependencies e.g. all PCIe end-point devices must be powered off before attempting to power off the PCIe root port.
 
 
 ## Modules
@@ -376,9 +379,7 @@ It can automatically handle most of the steps above, including:
 4. Note that the ID matching mechanism can vary. It may be done based on:
     - Hardcoded data in the kernel source code. Not preferred as it makes the kernel build be specific to that device.
     - Device trees.
-    - ACPI tables.
-        - Provided by the firmware to the kernel.
-        - OS-agnostic in principle.
+    - ACPI.
 5. See [Platform Device Drivers - The Linux Kernel Documentation](https://docs.kernel.org/driver-api/driver-model/platform.html).
 
 ### Device Tree
@@ -400,6 +401,13 @@ It can automatically handle most of the steps above, including:
 9. Kernel provides further guidelines on how to describe different device types (device tree bindings).
     - See [Firmware & Device Trees - The Linux Kernel Documentation](https://docs.kernel.org/devicetree/index.html).
 10. For further guidance, see [Device Trees 101: Linux Foundation](https://www.youtube.com/watch?v=TeygIvk4UHg&pp).
+
+### Advanced Configuration & Power Interface (ACPI)
+
+1. Provides the means to describe hardware and support OS-driven power management operations.
+2. Access provided to the kernel by the firmware.
+3. OS-agnostic in principle.
+4. For power management, ACPI defines several power states on different levels (i.e. system/global-level, device-level, CPU-level, etc).
 
 
 ## Network Stack
