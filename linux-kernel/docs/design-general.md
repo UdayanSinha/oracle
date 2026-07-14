@@ -227,7 +227,7 @@
 5. For user-space threads, no signal is generated.
     - It may still be possible to monitor thread exits, e.g. `pthread_join()` .
 
-### Symmetric Multi-Processing (SMP) & Task Isolation
+### Symmetric Multi-Processing (SMP) & CPU Isolation
 
 1. All CPUs are considered to have equal access to memory and I/O.
 2. Kernel generally tries to keep tasks on the same CPU to avoid migration overhead.
@@ -388,7 +388,7 @@ Key synchronization mechanisms available in kernel are listed below:
     - Optimized for frequent low-overhead reads, and seldom writes.
     - Readers take a lock to *read* the data.
     - Writers modify a *copy* of the data in a temporary location.
-    - Both the old and new data are retained for a period of time (grace period):
+    - Both the old and new data are retained for a period of time (*grace period*):
         - Readers already accessing the old data are allowed to finish their work.
         - Access from new readers is given to the new data.
     - When it is guaranteed (*quiescent state*) that no readers are accessing the old data, it is *updated* with the new data and the temporary location is cleaned up.
@@ -400,7 +400,7 @@ Key synchronization mechanisms available in kernel are listed below:
 
 Note that the kernel also provides:
 
-1. Reference counter utility (kref)i for object life-cycle management.
+1. Reference counter utility (kref) for object life-cycle management.
     - See [kref - The Linux Kernel Documentation](https://docs.kernel.org/core-api/kref.html).
 2. Memory barriers functions for controlling access reordering by the CPU.
     - One must include the platform-specific header to use it on a given platform. E.g. for x86, see `arch/x86/include/asm/barrier.h` .
@@ -475,7 +475,7 @@ Presence of an MMU is one the minimum requirements to run Linux.
         - `enum pageflags` defines page flags used by Linux.
     - `PAGE_SIZE` defines the size of a page in kernel code (should NEVER be assumed).
     - A page frame (physical memory page) is a fixed-size segment of physical memory.
-    - A page may reside in a page frame, storage, device, etc.
+        - A page will reside in a page frame.
     - Page tables (typically 3, 4 or 5 levels) are used to map virtual to physical addresses.
     - Each task has its own page table to translate for its address space.
         - Loaded into MMU during context switch.
@@ -484,8 +484,8 @@ Presence of an MMU is one the minimum requirements to run Linux.
         ```
         Example for a 57-bit total addressable space:
 
-        |  PGD  |  P4D  |  PUD  |  PMD  |  PTE  |  Offset  |
-        |  9b   |  9b   |  9b   |  9b   |  9b   |   12b    |
+        |  PGD  |  P4D  |  PUD  |  PMD  |  PTE  |  Page Offset  |
+        |  9b   |  9b   |  9b   |  9b   |  9b   |      12b      |
 
         +-----------------------------+
         | Page Global Directory (PGD) |  <------------ Virtual Address
@@ -502,9 +502,9 @@ Presence of an MMU is one the minimum requirements to run Linux.
                                            |---> +------------------------+
                                                  | Page Table Entry (PTE) |
                                                  +------------------------+
-                                                     |---> +------------+
-                                                           | Page Frame |
-                                                           +------------+
+                                                     |---> +------+
+                                                           | Page |
+                                                           +------+
                                                                |---> Physical Address
         ```
 
@@ -514,18 +514,18 @@ Presence of an MMU is one the minimum requirements to run Linux.
 
 | System Call | Purpose |
 | ---------- | ------------ |
-| `brk()` , `sbrk()` | Change size of heap region in address space. |
+| `brk()` , `sbrk()` | Change size of heap region in the address space. |
 | `fork()` | Create a new address space as part of process creation. |
-| `execve()` | Change address space while starting a new process with the same PID. |
-| `exit()` | Destroy address space as part of process termination. |
-| `mmap()` , `mremap()` , `munmap()` | Handle mapping of a memory region into address space. |
-| `shmat()` , `shmdt()` | Handle attachment of a System V IPC shared memory region into address space. |
+| `execve()` | Change the address space while starting a new process with the same PID. |
+| `exit()` | Destroy the address space as part of process termination. |
+| `mmap()` , `mremap()` , `munmap()` | Handle mapping of a memory region into the address space. |
+| `shmat()` , `shmdt()` | Handle attachment of a System V IPC shared memory region into the address space. |
 
 9. Each page frame has a `struct page` associated with it.
     - `pfn_to_page()` and `page_to_pfn()` can be used to map page frame numbers to `struct page` and vice versa.
-    - `virt_to_page` can be used to map a kernel virtual address to a `struct page` .
+    - `virt_to_page()` can be used to map a kernel virtual address to a `struct page` .
 10. Each memory region has a `struct vm_area_struct` associated with it.
-    - For memory regions shared between user-space processes, they will still have their own copies of `struct vm_area_struct` for a given memory region.
+    - For memory regions shared between user-space processes, they may still have their own copies of `struct vm_area_struct` for a given memory region.
     - For memory regions shared between user-space threads, they may share the same `struct vm_area_struct` for a given memory region.
 11. The address space of a task has a `struct mm_struct` associated with it.
 
@@ -591,7 +591,7 @@ These also guide the kernel in assigning memory from an appropriate source. Comm
 
 ### Slab Allocator
 
-1. For efficient handling of memory requests which are not a multiple of page size, or for frequent/repeated allocations.
+1. For efficient handling of memory requests which are not a multiple of page size.
 2. Blocks of memory (caches) assigned via the page allocator.
     - Divided internally into physically contiguous memory segments (slabs).
     - Slabs may not be physically contiguous between each other.
@@ -611,7 +611,8 @@ These also guide the kernel in assigning memory from an appropriate source. Comm
 3. Unsuitable for DMA, as page tables are needed.
 4. Useful for very large allocations (in theory, up to full size of physical memory), where memory access may be seldom.
 5. `/proc/vmallocinfo` shows current `vmalloc()` allocations.
-6. May sleep during allocation.
+6. Only used for kernel-space allocations.
+7. May sleep during allocation.
 
 ### Huge Pages
 
