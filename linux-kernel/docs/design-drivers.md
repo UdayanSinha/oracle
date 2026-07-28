@@ -195,7 +195,7 @@ In the kernel, a character device is represented by `struct cdev` .
 The setup process for a character device driver is the following:
 
 1. Reserve a major and minor number range (see `dev_t`).
-2. Register the driver as a character device driver.
+2. Register the driver as a character device driveri (`register_chrdev()` , likewise there is `unregister_chrdev()`).
     - A key aspect of this is the `struct file_operations` which provides the jump-table of driver entrypoints.
 3. Perform any device-specific setup.
 4. Create filesystem nodes.
@@ -506,3 +506,37 @@ Note the following:
     - Custom device-level `ioctl()` commands can be defined, see `SIOCDEVPRIVATE` .
     - Custom protocol-level `ioctl()` commands can be defined, see `SIOCPROTOPRIVATE` .
 10. `ip` can be used to manage configuration of network interfaces from user-space, see [ip(8) - man](https://man7.org/linux/man-pages/man8/ip.8.html).
+
+
+## Block Devices
+
+1. As mentioned earlier, random access of data is typically allowed.
+2. Access is typically cached (page cache), unless explicitly requested otherwise (e.g. `O_SYNC` via `open()`).
+    - Likewise, write-backs can be forced via `sync()` , `fsync()` or similar.
+3. Regardless of the amount of data requested by the system call, the low-level access is in-terms of multiple of a fixed *block* size.
+4. Block device driver registration is done via `register_blkdev()` (likewise there is `unregister_blkdev()`).
+    - Major number for the device node is specified via `register_blkdev()` .
+    - Note that this is no longer needed to be called in most cases for newer kernels.
+5. `struct gendisk` describes a partitionable device. Key elements include:
+    - `major` : Major number associated with the device.
+    - `disk_name` : Device node name w/o the partition number (e.g. `sda`).
+    - `fops` : Points to `struct block_device_operations` (equivalent to `struct file_operations`).
+    - `queue` : Points to `struct request_queue` . Tracks pending operations for the device (shared by all partitions on the device).
+    - `flags` : Device control flags (see `GENHD_FL_*`).
+6. Each device node will have a corresponding `struct gendisk` .
+    - Nodes are named like this: `<major-name><unit><partition>`
+    - E.g. `/dev/sda2` , where `sd` is the major name, `a` is the (first) unit, and `2` is the partition.
+    - Note that a block device may have multiple partitions.
+7. There is no `read()` or `write()` operations to be implemented as part of `struct block_device_operations`:
+    - That is handled by the filesystem and block layers.
+        - If the page cache is applicable in this case, it will be checked first.
+    - E.g. The filesytem layer will map `read(fd, ...)` to *read x bytes from sector y* (block I/O or BIO) towards the block layer.
+        - Each BIO is described by `struct bio` .
+    - The block layer will manage any necesssary merging and reordering of access requests (for efficency), and make *requests* towards the block device driver.
+        - See `queue_rq()` in `struct blk_mq_ops` .
+    - The requests will be put on the driver request queue and be processed (e.g. via storage controller commands).
+        - Each request is described by `struct request` .
+    - If the HW is capable of parallel requests, there may be parallel request queues in the driver too.
+8. Besides request queues, there are also means to submit BIOs directly to the driver.
+    - See `submit_bio()` in `struct block_device_operations` .
+    - Note that `queue_rq()` still needs to implemented, even if it is unused in this case.
