@@ -387,7 +387,7 @@ It can automatically handle most of the steps above, including:
 ## DMA
 
 1. DMA setup is typically very platform-specific, and kernel tries to provide an abstract interface for data transfer handling.
-2. DMA-based data transfer requires a physcially contigous memory (i.e. no paging involved) that is reachable by the device.
+2. DMA-based data transfer requires a physcially contiguous memory (i.e. no paging involved) that is reachable by the device.
 3. IRQs are typically involved to signal start and end of data transfer (or even data availability) between the CPU and the device.
 4. Besides any platform-specific steps, a buffer needs to be setup for the data transfer.
     - This buffer needs to be mapped both to kernel virtual address space and the bus of the device.
@@ -412,11 +412,12 @@ It can automatically handle most of the steps above, including:
 6. Similar to `struct kmem_cache` , kernel provides the ability to setup DMA pools as well.
     - For frequent **coherent** DMA transfers where the minimum-one-page restriction of `dma_alloc_coherent()` is not reasonable.
     - See `struct dma_pool` and its interfaces.
-7. Kernel also provides a way to perform parallel DMA transfers from several buffers (scatter/gather), each of which is intended for different (but contigous) address regions.
+7. Kernel also provides a way to perform parallel DMA transfers from several buffers (scatter/gather), each of which is intended for different (but contiguous) address regions.
     - Generally requires support in HW.
     - For **streaming** DMA transfers only.
     - See `struct scatterlist` and associated interfaces (e.g. `dma_map_sg()` , `dma_unmap_sg()` , `sg_set_page()`).
 8. Note that specific driver subsystems may have their own DMA interfaces that call these general interfaces underneath.
+9. See [DMA Mapping API- The Linux Kernel Documentation](https://docs.kernel.org/core-api/dma-api-howto.html).
 
 
 ## Platform Device Drivers
