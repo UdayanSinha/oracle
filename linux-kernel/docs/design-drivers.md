@@ -1,6 +1,24 @@
 # Kernel Development - Device Drivers
 
 
+## Table Of Contents
+- [Notes](#notes)
+- [Traditional Device Taxonomy](#traditional-device-taxonomy)
+- [Unified/Integrated Device Model](#unifiedintegrated-device-model)
+- [Modules](#modules)
+- [Mechanism vs Policy](#mechanism-vs-policy)
+- [Major & Minor Numbers](#major--minor-numbers)
+- [File Operations](#file-operations)
+- [Character Devices](#character-devices)
+- [Interrupts](#interrupts)
+- [Timing Measurement](#timing-measurement)
+- [PCI/PCIe Device Drivers](#pcipcie-device-drivers)
+- [DMA](#dma)
+- [Platform Device Drivers](#platform-device-drivers)
+- [Network Stack](#network-stack)
+- [Block Devices](#block-devices)
+
+
 ## Notes
 
 1. [The Linux Kernel Documentation](https://docs.kernel.org)
@@ -31,45 +49,45 @@ They are identified by an interface name instead.
 The diagram below shows the interaction of applications with these devices via the kernel:
 
 ```
-    +------------------------------------------------------------------+
-    |                           Application                            |
-    +------------------------------------------------------------------+
-          |                    |                       |
-          v                    v                       v
-    +-------------+     +-------------+         +------------+
-    |  character  |     | block node  |         |   socket   |
-    |    node     |     |             |         |            |
-    +-------------+     +-------------+         +------------+
-          |                    |                       |            User-space
-----------|--------------------|-----------------------|-----------------------
-          |                    |                       |           Kernel-space
-          +--------------------+                       |
-                     |                                 |
-                     v                                 |
-            +----------------------------------+       |
-            |     Virtual Filesystem (VFS)     |       |
-            +----------------------------------+       |
-                  |                    |               |
-                  v                    v               v
-         +----------------+   +----------------+   +----------------+
-         |    character   |   |   filesystem   |   | network layers |
-         |     driver     |   |     driver     |   | (TCP/IP, etc)  |
-         +----------------+   +----------------+   +----------------+
-                  |                    |                    |
-                  |                    v                    v
-                  |            +---------------+   +----------------+
-                  |            |  block layer  |   | network driver |
-                  |            +---------------+   +----------------+
-                  |                    |                    |
-                  |                    v                    |
-                  |           +----------------+            |
-                  |           |  block driver  |            |
-                  |           +----------------+            |
-                  |                    |                    |
-                  v                    v                    v
-              +-------------------------------------------------+
-              |                     Hardware                    |
-              +-------------------------------------------------+
+    +--------------------------------------------------------------------+
+    |                            Application                             |
+    +--------------------------------------------------------------------+
+          |                    |                                  |
+          v                    v                                  v
+    +-------------+     +--------------+                   +-------------+
+    |  Character  |     |  Block Node  |                   |    Socket   |
+    |    Node     |     |              |                   |  Interface  |
+    +-------------+     +--------------+                   +-------------+
+          |                    |                                  |          User-space
+----------|--------------------|----------------------------------|---------------------
+          |                    |                                  |         Kernel-space
+          +--------------------+                                  |
+                     |                                            v
+                     v                             +----------------------------+
+          +----------------------------------+     |      Transport Layer       |
+          |     Virtual Filesystem (VFS)     |     | (TCP, UDP, ICMP, ARP, etc) |
+          +----------------------------------+     +----------------------------+
+                  |                    |                          |
+                  v                    v                          v
+         +----------------+   +----------------+   +----------------------------+
+         |    Character   |   |   Filesystem   |   |       Network Layers       |
+         |     Driver     |   |     Driver     |   | (routing tables, NAT, etc) |
+         +----------------+   +----------------+   +----------------------------+
+                  |                    |                          |
+                  |                    v                          v
+                  |           +---------------+    +-----------------------------+
+                  |           |  Block Layer  |    |        Data-Link Layer      |
+                  |           +---------------+    | (qdisc, device driver, etc) |
+                  |                    |           +-----------------------------+
+                  |                    v                          |
+                  |           +----------------+                  |
+                  |           |  Block Driver  |                  |
+                  |           +----------------+                  |
+                  |                    |                          |
+                  v                    v                          v
+         +-----------------------------------------------------------------------+
+         |                                Hardware                               |
+         +-----------------------------------------------------------------------+
 ```
 
 In addition to these device types, the driver may additionally incorporate other kernel device controller interfaces.
@@ -366,6 +384,41 @@ It can automatically handle most of the steps above, including:
     - [PCI/PCIe Device Drivers - The Linux Kernel Documentation](https://docs.kernel.org/PCI/pci.html).
 
 
+## DMA
+
+1. DMA setup is typically very platform-specific, and kernel tries to provide an abstract interface for data transfer handling.
+2. DMA-based data transfer requires a physcially contigous memory (i.e. no paging involved) that is reachable by the device.
+3. IRQs are typically involved to signal start and end of data transfer (or even data availability) between the CPU and the device.
+4. Besides any platform-specific steps, a buffer needs to be setup for the data transfer.
+    - This buffer needs to be mapped both to kernel virtual address space and the bus of the device.
+5. Kernel supports 2 types of DMA buffer mappings:
+    - Synchronous/coherent:
+        - Higher overhead, intended for buffers that persist throughout the lifecycle of the driver.
+        - Involves use of `dma_alloc_coherent()` , `dma_free_coherent()` and associated interfaces.
+            - For `dma_alloc_coherent()` , the return value is the kernel virtual address.
+        - The buffer can be accessed in parallel by both the CPU and the device w/o cache coherency issues.
+            - Memory barriers may still be needed to account for CPU instruction reordering.
+        - The minimum buffer allocation size is generally a page.
+    - Asynchronous/streaming:
+        - Lower overhead, intended for one-time operations.
+        - Involves use of `dma_map_single()` , `dma_unmap_single()` and associated interfaces.
+            - `dma_map_single()` takes a pre-allocated memory that must be addressable by the device.
+        - Direction of data transfer must match the value provided during mapping.
+            - `DMA_NONE` is intended for debugging, any attempt to use the memory may cause an error.
+        - Once mapped, the buffer must not be touched by the CPU until it has been unmapped:
+            - For a write to the device, the data must be placed in the buffer before mapping.
+            - For a read from the device, the data must be read from the buffer after unmapping.
+    - Note that `dma_addr_t` represents the physical address on the bus of the device, and is intended to be used opaquely in kernel code.
+6. Similar to `struct kmem_cache` , kernel provides the ability to setup DMA pools as well.
+    - For frequent **coherent** DMA transfers where the minimum-one-page restriction of `dma_alloc_coherent()` is not reasonable.
+    - See `struct dma_pool` and its interfaces.
+7. Kernel also provides a way to perform parallel DMA transfers from several buffers (scatter/gather), each of which is intended for different (but contigous) address regions.
+    - Generally requires support in HW.
+    - For **streaming** DMA transfers only.
+    - See `struct scatterlist` and associated interfaces (e.g. `dma_map_sg()` , `dma_unmap_sg()` , `sg_set_page()`).
+8. Note that specific driver subsystems may have their own DMA interfaces that call these general interfaces underneath.
+
+
 ## Platform Device Drivers
 
 1. Devices on major interfaces like PCIe/USB have defined methods of device discovery and removal.
@@ -412,38 +465,7 @@ It can automatically handle most of the steps above, including:
 
 ## Network Stack
 
-The network stack in Linux follows a layered approach which maps to the OSI model:
-
-```
-      +-----------------------------+
-      |         Application         |
-      +-----------------------------+
-                     |  (socket interface)          User-space
----------------------|-----------------------------------------
-                     |                             Kernel-space
-                     v
-    +---------------------------------+
-    |         Transport Layer         |
-    |    (TCP, UDP, ICMP, ARP, etc)   |
-    +---------------------------------+
-                     |
-                     v
-    +---------------------------------+
-    |          Network Layer          |
-    |    (routing tables, NAT, etc)   |
-    +---------------------------------+
-                     |
-                     v
-      +-----------------------------+
-      |        Data-Link Layer      |
-      | (qdisc, device driver, etc) |
-      +-----------------------------+
-                     |
-                     v
-      +-----------------------------+
-      |          Hardware           |
-      +-----------------------------+
-```
+The network stack in Linux follows a layered approach which maps to the OSI model.
 
 For sending data (application -> network), the general flow is as follows:
 
