@@ -7,13 +7,17 @@
 #include <linux/printk.h>	/* printk() and utils */
 #include <linux/interrupt.h>	/* IRQ APIs */
 #include <linux/irqreturn.h>	/* irqreturn_t */
+#include <linux/moduleparam.h>	/* module parameter utils */
 
 #define IRQ_NAME "test-irq-threaded-handler"	/* will show up under /proc/interrupts */
-
 
 static unsigned int irq_num = 24;	/* IRQ line, see /proc/interrupts */
 static unsigned int irqf_flags = IRQF_SHARED;
 static unsigned int irq_data = 0;	/* dummy data to be used by handler */
+
+/* set IRQ to service during module loading, will use default (24) otherwise */
+module_param(irq_num, uint, 0644);
+MODULE_PARM_DESC(irq_num, "IRQ number to install handler for");
 
 static irqreturn_t irq_handler(int irq, void *ptr)
 {
