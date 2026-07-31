@@ -395,6 +395,8 @@ Key synchronization mechanisms available in kernel are listed below:
         - Essentially tracks certain events (context switch, system calls, etc) to infer if code running on any CPU is still using the old data.
         - Update and clean-up generally occur via call-backs.
         - Quiescent state tracking has considerations for nohz_full use.
+    - Note that there is no mechanism provided on RCU-side to safely synchronize parallel writers (i.e. no "write" lock).
+        - Another mechanism is needed on top of RCU in that case.
     - Suitable for either context, unless sleepable variants are used.
     - See [RCU subsystem - The Linux Kernel Documentation](https://docs.kernel.org/next/RCU/whatisRCU.html).
 

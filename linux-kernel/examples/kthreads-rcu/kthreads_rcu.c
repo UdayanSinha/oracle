@@ -37,7 +37,7 @@ static int rcu_writer_func(void *arg)
 
 		*new = i;
 
-		old = rcu_dereference_protected(data, 1);
+		old = rcu_dereference_protected(data, 1);	/* 2nd arg is intended to assist in parallel writer sync */
 		rcu_assign_pointer(data, new);
 		pr_debug("New data published: %u\n", *new);
 
