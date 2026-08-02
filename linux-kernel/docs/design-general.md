@@ -381,7 +381,8 @@ Key synchronization mechanisms available in kernel are listed below:
     - Tasks on a wait-queue are woken up if a wake notification was received AND the condition is satisfied.
         - Generally, all tasks on the wait-queue will wake up unless exclusive variants are used to wake up only some tasks (wake-up order is non-deterministic either way).
     - As this sleeps it should only be used in process context.
-7. Completion Functions:
+7. Completion:
+    - Wait for notification of an event (e.g. *something* to complete).
     - Will sleep i.e. process context only.
     - See [Completions - The Linux Kernel Documentation](https://docs.kernel.org/scheduler/completion.html).
 8. Read-Copy-Update (RCU):
