@@ -95,7 +95,7 @@
     - Use `copy_to_user()` and `copy_from_user()` instead.
         - Note that these functions may sleep.
     - Kernel never swaps out its own pages and always allocates its memory with urgency (i.e. no demand/lazy paging).
-    - Page faults will result in panic, except in few places like the `copy_*()` functions show above, which will result in demand-paging of those pages.
+    - Page faults will result in panic, except in few places like the `copy_*()` functions shown above, which will result in demand-paging of those pages.
 6. Do not assume page size, address lengths, etc.
     - Instead use general variable types and definitions that kernel provides.
     - E.g. Use `offset_t` for file offsets.
@@ -232,8 +232,8 @@
 1. All CPUs are considered to have equal access to memory and I/O.
 2. Kernel generally tries to keep tasks on the same CPU to avoid migration overhead.
     - Note that SMP support must be enabled in the kernel, see `CONFIG_SMP` .
-3. A task can be assigned an affinity to inform kernel **what CPUs it is allowed to be scheduled on**.
-    - Affinity is typically specified as a bit mask of CPUs.
+3. A task can be assigned an affinity to constrain what CPUs it is allowed to be scheduled on.
+    - Affinity is a per-process attribute typically specified as a bit mask of CPUs.
     - Can be done via `taskset` over command-line. See [taskset(1) - man](https://man7.org/linux/man-pages/man1/taskset.1.html).
     - Can be done via `sched_setaffinity()` in user-space code. See [sched_setaffinity(2) - man](https://man7.org/linux/man-pages/man2/sched_setaffinity.2.html).
     - CPU currently being used for execution can also be checked in code.
@@ -246,12 +246,10 @@
     - Only 1 CPU can handle an IRQ of a certain type at any given point (see driver design guide for details).
 5. Kernel code (e.g drivers) can also recommend affinity behavior via `irq_set_affinity_and_hint()` and `irq_update_affinity_hint()` .
     - Not used very often, a user-space solution is preferred for this.
-6. Cpuset cgroup controller can be used to inform kernel **what tasks are allowed to be scheduled on the specified CPUs**.
-    - Provides exclusivity.
-    - Can be used to implement *task pinning* when combined with affinity settings.
-    - CPUs for task pinning = `affinity-mask & cpuset-mask`
-        - Note that if no CPUs are found common, the task will be unpinned/floating.
-7. Kernel also provides adaptive-tick (dyntick) scheduling to further isolate workloads on specific CPUs.
+6. Cpuset cgroup controller can be used to constrain what CPUs a process is allowed to be scheduled on and which memory nodes (NUMA) it can access.
+    - Can span a hierarichal group of processes, as defined by the cgroup hierarchy.
+    - Allowed CPUs for a process = `affinity-mask & cpuset-mask`
+7. Kernel also provides adaptive-tick (dyntick) scheduling to isolate workloads on specific CPUs.
     - See [NO_HZ - The Linux Kernel Documentation](https://docs.kernel.org/timers/no_hz.html).
 8. Following guide shows how to combine all of the above-mentioned concepts:
     - [CPU Isolation by SUSE Labs #1](https://www.suse.com/c/cpu-isolation-introduction-part-1/).
@@ -368,7 +366,7 @@ Key synchronization mechanisms available in kernel are listed below:
     - Same context constraints as spinlock.
     - Has variants that allow disabling IRQ handling (only on current CPU) while in the critical section.
     - As readers do not actually take a lock, it can result in reader starvation if there are too many writers, frequent writes or writers taking too much time within the lock.
-    - No side effects should result from writes.
+    - No side effects should result from reads.
     - See [Sequential locks - The Linux Kernel Documentation](https://docs.kernel.org/locking/seqlock.html).
 5. Mutexes:
     - Self-explanatory.
@@ -663,8 +661,7 @@ For page cache, the pages may not correspond to contiguous storage blocks.
 1. Storage-backed pages benefit from requiring fewer I/O transactions.
 2. Storage device may physically store data in terms of fixed-size blocks.
     - An integral number of such blocks must fit into a page (the block size is typically also 4kB).
-3. Modified data is written back to storage devices at regular intervals.
-    - Can be forced via:
+3. Modified data is written back to storage devices at regular intervals. Can be forced via:
     - `fsync()` : [fsync(2) - man](https://man7.org/linux/man-pages/man2/fsync.2.html).
     - `sync()` : See [sync(2) - man](https://man7.org/linux/man-pages/man2/sync.2.html).
     - Using `O_SYNC` with `open()` : See [open(2) - man](https://man7.org/linux/man-pages/man2/open.2.html).
@@ -710,7 +707,7 @@ For page cache, the pages may not correspond to contiguous storage blocks.
 
 ### Out-Of-Memory (OOM) Killer
 
-1. Linux will typically over-commit memory for user-space i.e. memory request may be granted, but actual pages are only allocated on use.
+1. Linux will typically over-commit memory for user-space i.e. memory request may be granted, but actual memory is only allocated on use.
     - Based on the premise that not all requested memory may actually get used.
     - A process may call `fork()` which commits a copy of parent address space for the child, but the child may call `execve()` right after.
     - A process may heap-allocate a large buffer, but only use a few pages.
