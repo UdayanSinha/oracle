@@ -1,0 +1,93 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[a4paper,margin=1.65cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{tabularx}
+\definecolor{heading}{HTML}{000000}
+\definecolor{secondary}{HTML}{000000}
+\hypersetup{colorlinks=true,urlcolor=heading,linkcolor=heading}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{3pt}
+\setlist[itemize]{leftmargin=1.3em,itemsep=2pt,topsep=3pt,parsep=0pt}
+\titleformat{\section}{\large\bfseries\color{heading}}{}{0pt}{}[\vspace{-3pt}\titlerule]
+\titlespacing*{\section}{0pt}{12pt}{6pt}
+\newcommand{\job}[4]{\textbf{#1} \hfill \textit{#2}\\\textit{\color{secondary}#3}\hfill\textit{\color{secondary}#4}\vspace{-2pt}}
+\newcommand{\skill}[2]{\textbf{#1:} #2\\}
+\begin{document}
+\begin{center}
+{\LARGE\bfseries UDAYAN PRABIR SINHA}\\[4pt]
+{\large\color{heading} Senior Embedded Linux \& Platform Software Engineer}\\[7pt]
+Sweden \quad | \quad +46-72-594-8719 \quad | \quad \href{mailto:udayanprabirsinha@gmail.com}{udayanprabirsinha@gmail.com}\\[3pt]
+\href{https://www.linkedin.com/in/udayan-prabir-sinha-27799580/}{linkedin.com/in/udayan-prabir-sinha-27799580}
+\end{center}
+\section{Professional Summary}
+Senior Embedded Linux and Platform Software Engineer with approximately 10 years of experience spanning Linux kernel development, device drivers, low-level system software, platform bring-up, and pre-silicon hardware emulation for embedded computing platforms. Experienced in system analysis \& troubleshooting, integrating software using Yocto-based workflows, evaluating new kernel technologies, and designing Embedded Linux platform solutions. Currently combining hands-on kernel engineering with technical leadership and architectural responsibilities across cross-functional engineering teams.
+\section{Technical Expertise}
+\skill{Embedded Linux}{Linux Kernel Development, New Kernel Feature Analysis, Device Drivers, Platform Bring-Up \& Trouble-Shooting}
+\skill{System Design \& Modeling}{Containerization Technologies (runtime, orchestration, image build), System Capacity Dimensioning \& Profiling, System Telemetry, SystemC TLM Based Emulations}
+\skill{Debugging, Tracing \& Diagnostics}{ftrace/tracefs, procfs, sysfs, perf, LTTng, lockdep, pstore, kdump, dmesg, strace, gdb, Valgrind, Sanitizer, QEMU}
+\skill{Programming Languages}{C, C++, Python, Shell Scripting (BASH), Assembly}
+\skill{Build Systems}{Yocto Project, Make, Autotools, CMake}
+\skill{Development Tools}{Git, JIRA, AI-Enhanced Workflows}
+\section{Professional Experience}
+\textbf{Ericsson} \hfill Stockholm, Sweden\\
+\job{Technical Lead (Product Guardian)}{July 2024 -- Present}{Technical Leadership / Platform Software Architecture}{Concurrent Role}
+\begin{itemize}
+\item \textbf{Containerization Technologies:} Lead the architecture and development of in-house container runtime, orchestration and image build solutions for embedded Linux platforms, addressing platform-specific performance and security requirements. Also resulted in architectural improvements to software modularity with the aim to reduce distribution upgrade costs.
+\item \textbf{Adaptive CPU Dimensioning:} Develop a scalable, adaptive CPU dimensioning architecture using policy-driven resource allocation to balance workload fairness and performance requirements.
+\item \textbf{SoC Utilization \& Telemetry:} Architect a SoC utilization monitoring architecture that integrates hardware telemetry, including CPU and cache utilization, resource pressure, and temperature monitoring, into the existing Ericsson product telemetry framework.
+\item \textbf{Cross-Functional Leadership:} Provide technical steering, architectural mentorship and project alignment across multiple cross-functional engineering teams.
+\end{itemize}
+\vspace{5pt}
+\job{Software Developer}{October 2021 -- Present}{Linux Kernel \& Device Drivers}{Concurrent Role}
+\begin{itemize}
+\item \textbf{Kernel Feature Evaluation \& Profiling:} Conduct deep feasibility studies for back-porting and integrating new kernel capabilities (e.g. CPU Isolation, Linux Audit, kdump) on embedded computing platforms. Also includes system profiling studies such as kernel behavior analysis on massively parallel (100+ CPUs) embedded systems.
+\item \textbf{Kernel-Space Device Drivers \& Features:} Develop and maintain kernel-space device drivers (e.g. for PCIe endpoints), kernel panic post-mortem diagnostics infrastructure and custom network layers.
+\item \textbf{User-Space Device Drivers:} Developed low-level userspace drivers for proprietary SoCs handling early platform initialization (clock and power rail setup), alongside monitoring functionality for SoC bring-up diagnostics.
+\textbf{Platform Bring-Up \& Troubleshooting:} Led troubleshooting of critical platform bring-up faults, tracing panics to microcode defects and resolving PCIe device initialization errors linked to UEFI configuration settings.
+\item \textbf{Build System Integration:} Maintain Yocto recipes and integrate software components into embedded Linux distributions.
+\end{itemize}
+\vspace{5pt}
+\newpage
+\textbf{Ericsson} \hfill Stockholm, Sweden\\
+\job{HW \& SW Virtualization Developer}{July 2017 -- October 2021}{Pre-Silicon Hardware Emulation}{}
+\begin{itemize}
+\item \textbf{Pre-Silicon Simulation Design:} Architected high-quality simulation platforms for embedded Linux-based targets based on deep analysis of hardware specifications and hardware/software interfaces.
+\item \textbf{Simulation IP Development:} Designed and implemented reusable simulation IPs including FPGA device models, interface controllers (PCIe, I2C, SPI), power/clock management controllers, microcontrollers, retimers, SFP modules, and GPIO controllers.
+\item \textbf{Third-Party IP Integration:} Integrated third-party simulation IP, including PCIe controllers and instruction-set simulators (ISS), into Ericsson pre-silicon simulation environments.
+\item \textbf{Standards Contribution:} Actively contributed to the evolution of the SystemC TLM standard through Accellera Systems Initiative working groups.
+\end{itemize}
+\vspace{5pt}
+\job{Master Thesis Student}{January 2017 -- June 2017}{Thesis For M.S. In Embedded Systems}{}
+\begin{itemize}
+\item Researched and implemented a customized memory-error detection tool tailored for a proprietary DSP architecture, significantly improving runtime software stability.
+\end{itemize}
+\vspace{5pt}
+\textbf{Imagimob} \hfill Stockholm, Sweden\\
+\job{Firmware Developer}{April 2016 -- June 2016}{Embedded Firmware}{}
+\begin{itemize}
+\item Engineered low-latency multi-sensor data fusion firmware optimized for memory- and power-constrained edge computing hardware platforms.
+\end{itemize}
+\section{Professional Training}
+\begin{itemize}
+\item Linux Kernel Internals \& Development (LFD420) -- The Linux Foundation.
+\item Developing Linux Device Drivers (LFD430) -- The Linux Foundation.
+\item Security \& The Linux Kernel (LFD441) -- The Linux Foundation.
+\item Wind River Linux LTS Application Development -- Wind River.
+\item C \& C++ SEI CERT Based Secure Coding (ARM) -- SCADEMY Human-AI Symbiosis Academy
+\end{itemize}
+\section{Education}
+\textbf{M.S. in Embedded Systems} \hfill August 2015 -- December 2017\\
+KTH Royal Institute of Technology, Sweden\par\vspace{4pt}
+\textbf{B.Tech. in Instrumentation \& Control} \hfill July 2011 -- June 2015\\
+Manipal Institute of Technology, India
+\section{Languages}
+English \quad Hindi \quad Bengali \quad Swedish \quad Gujarati
+\end{document}
